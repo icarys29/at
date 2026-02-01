@@ -88,30 +88,52 @@ def main() -> int:
             "docs/DOCUMENTATION_REGISTRY.json",
         )
     )
+
+    # Docs templates (project-local; used by docs-keeper).
+    for rel in (
+        "docs/_templates/PROJECT_CONTEXT.md.tpl",
+        "docs/_templates/ARCHITECTURE.md.tpl",
+        "docs/_templates/ADR.md.tpl",
+        "docs/_templates/ARD.md.tpl",
+        "docs/_templates/PATTERN.md.tpl",
+        "docs/_templates/RUNBOOK.md.tpl",
+    ):
+        results.append((_write_if_missing(project_root / rel, _read_template(rel), force=args.force), rel))
+
+    # Core docs (initial copies from templates; safe placeholders).
     results.append(
         (
-            _write_if_missing(project_root / "docs" / "ARCHITECTURE.md", _read_template("docs/ARCHITECTURE.md"), force=args.force),
-            "docs/ARCHITECTURE.md",
-        )
-    )
-    results.append(
-        (
-            _write_if_missing(project_root / "docs" / "adr" / "README.md", _read_template("docs/adr/README.md"), force=args.force),
-            "docs/adr/README.md",
-        )
-    )
-    results.append(
-        (
-            _write_if_missing(project_root / "docs" / "adr" / "ADR_TEMPLATE.md", _read_template("docs/adr/ADR_TEMPLATE.md"), force=args.force),
-            "docs/adr/ADR_TEMPLATE.md",
-        )
-    )
-    results.append(
-        (
-            _write_if_missing(project_root / "docs" / "PROJECT_CONTEXT.md", _read_template("docs/PROJECT_CONTEXT.md"), force=args.force),
+            _write_if_missing(project_root / "docs" / "PROJECT_CONTEXT.md", _read_template("docs/_templates/PROJECT_CONTEXT.md.tpl"), force=args.force),
             "docs/PROJECT_CONTEXT.md",
         )
     )
+    results.append(
+        (
+            _write_if_missing(project_root / "docs" / "ARCHITECTURE.md", _read_template("docs/_templates/ARCHITECTURE.md.tpl"), force=args.force),
+            "docs/ARCHITECTURE.md",
+        )
+    )
+
+    # Taxonomy dirs + indexes
+    results.append((_write_if_missing(project_root / "docs" / "adr" / "README.md", _read_template("docs/adr/README.md"), force=args.force), "docs/adr/README.md"))
+    results.append((_write_if_missing(project_root / "docs" / "architecture" / "README.md", _read_template("docs/architecture/README.md"), force=args.force), "docs/architecture/README.md"))
+    results.append((_write_if_missing(project_root / "docs" / "patterns" / "README.md", _read_template("docs/patterns/README.md"), force=args.force), "docs/patterns/README.md"))
+    results.append((_write_if_missing(project_root / "docs" / "runbooks" / "README.md", _read_template("docs/runbooks/README.md"), force=args.force), "docs/runbooks/README.md"))
+
+    # Project-local docs keeper components (optional; meets corporate docs system structure)
+    results.append((_write_if_missing(project_root / ".claude" / "agents" / "docs-keeper.md", _read_template("claude/agents/docs-keeper.md"), force=args.force), ".claude/agents/docs-keeper.md"))
+    results.append((_write_if_missing(project_root / ".claude" / "skills" / "docs-keeper" / "SKILL.md", _read_template("claude/skills/docs-keeper/SKILL.md"), force=args.force), ".claude/skills/docs-keeper/SKILL.md"))
+    # Wrapper skills for the requested /docs:* commands (thin delegators; no duplicated logic).
+    for rel in (
+        "skills/docs:sync/SKILL.md",
+        "skills/docs:plan/SKILL.md",
+        "skills/docs:lint/SKILL.md",
+        "skills/docs:new/SKILL.md",
+    ):
+        tpl = "claude/" + rel
+        dst = ".claude/" + rel
+        results.append((_write_if_missing(project_root / dst, _read_template(tpl), force=args.force), dst))
+    results.append((_write_if_missing(project_root / ".claude" / "hooks" / "README.md", _read_template("claude/hooks/README.md"), force=args.force), ".claude/hooks/README.md"))
 
     # Generate docs/DOCUMENTATION_REGISTRY.md (derived view for humans).
     # Best-effort and non-blocking; the docs gate can enforce drift later.

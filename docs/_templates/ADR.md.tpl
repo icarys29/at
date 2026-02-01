@@ -1,6 +1,5 @@
 # ADR: <title>
 
-- Date: <YYYY-MM-DD>
 - Status: Proposed | Accepted | Deprecated
 
 ## Context

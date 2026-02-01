@@ -22,98 +22,30 @@ sys.path.insert(0, str(SCRIPT_ROOT))
 
 from lib.docs_registry import get_docs_registry_path, get_docs_require_registry, load_docs_registry  # noqa: E402
 from lib.io import utc_now, write_json, write_text  # noqa: E402
-from lib.path_policy import normalize_repo_relative_posix_path, resolve_path_under_project_root  # noqa: E402
 from lib.project import detect_project_dir, get_sessions_dir, load_project_config  # noqa: E402
 from lib.session import resolve_session_dir  # noqa: E402
+from lib.docs_validation import find_broken_links, find_orphan_docs, run_registry_md_check, validate_registry_v2  # noqa: E402
 
 
 def _validate_registry(project_root: Path, registry_path: str, registry: dict[str, Any] | None) -> tuple[list[dict[str, Any]], dict[str, Any]]:
-    issues: list[dict[str, Any]] = []
-    summary: dict[str, Any] = {"registry_path": registry_path, "docs_total": 0, "docs_missing_files": 0, "tiers": {}}
+    issues, summary, type_map = validate_registry_v2(project_root, registry_path=registry_path, registry=registry)
+    if registry and type_map:
+        # Orphan docs under managed dirs.
+        orphans = find_orphan_docs(project_root, registry, type_map)
+        if orphans:
+            issues.append({"severity": "error", "message": f"orphan docs detected under managed dirs: {len(orphans)} (register or delete)"})
 
-    if registry is None:
-        issues.append({"severity": "error", "message": "docs registry missing or invalid JSON"})
-        return (issues, summary)
+        # Broken link detection (best-effort; avoid deep analysis).
+        doc_paths: list[str] = []
+        docs = registry.get("docs") if isinstance(registry.get("docs"), list) else []
+        for it in docs:
+            if isinstance(it, dict) and isinstance(it.get("path"), str) and it.get("path").strip():
+                doc_paths.append(it.get("path").strip())
+        broken = find_broken_links(project_root, doc_paths=[p for p in doc_paths if isinstance(p, str)])
+        if broken:
+            issues.append({"severity": "error", "message": f"broken markdown links detected: {len(broken)} (fix links or remove)"})
 
-    if registry.get("version") != 1:
-        issues.append({"severity": "error", "message": f"registry.version must be 1 (got {registry.get('version')!r})"})
-
-    docs = registry.get("docs")
-    if not isinstance(docs, list) or not docs:
-        issues.append({"severity": "error", "message": "registry.docs must be a non-empty array"})
-        return (issues, summary)
-
-    seen_ids: set[str] = set()
-    tiers: dict[str, int] = {}
-    missing_files = 0
-    missing_when = 0
-    for item in docs[:2000]:
-        if not isinstance(item, dict):
-            continue
-        doc_id = item.get("id")
-        path = item.get("path")
-        tier = item.get("tier")
-        when = item.get("when")
-        if not isinstance(doc_id, str) or not doc_id.strip():
-            issues.append({"severity": "error", "message": "doc entry missing id"})
-            continue
-        did = doc_id.strip()
-        if did in seen_ids:
-            issues.append({"severity": "error", "message": f"duplicate doc id: {did!r}"})
-        seen_ids.add(did)
-        if not isinstance(path, str) or not path.strip():
-            issues.append({"severity": "error", "doc_id": did, "message": "doc entry missing path"})
-            continue
-        norm = normalize_repo_relative_posix_path(path.strip())
-        if not norm:
-            issues.append({"severity": "error", "doc_id": did, "message": f"invalid doc path: {path!r}"})
-            continue
-        resolved = resolve_path_under_project_root(project_root, norm)
-        if resolved is None or not resolved.exists():
-            missing_files += 1
-            issues.append({"severity": "error", "doc_id": did, "path": norm, "message": "doc file missing"})
-        if isinstance(tier, int):
-            tiers[str(tier)] = tiers.get(str(tier), 0) + 1
-        if not isinstance(when, str) or not when.strip():
-            missing_when += 1
-            issues.append({"severity": "error", "doc_id": did, "message": "doc entry missing required 'when' (used for planner context selection)"})
-
-    summary["docs_total"] = len(seen_ids)
-    summary["docs_missing_files"] = missing_files
-    summary["docs_missing_when"] = missing_when
-    summary["tiers"] = tiers
     return (issues, summary)
-
-
-def _run_registry_md_check(project_root: Path, registry_path: str) -> dict[str, Any]:
-    """
-    Deterministic check: docs/DOCUMENTATION_REGISTRY.md must be in sync with the JSON registry.
-    We do not auto-fix in the gate; the docs-keeper should run the generator.
-    """
-    import subprocess
-
-    script = (project_root / "scripts" / "docs" / "generate_registry_md.py").resolve()
-    # When running inside a project that uses the plugin, the generator script will typically
-    # be in the plugin root, not the project root. Try plugin root via env; fallback to no-check.
-    plugin_root = Path((__import__("os").environ.get("CLAUDE_PLUGIN_ROOT") or "")).expanduser()
-    if plugin_root and plugin_root.is_dir():
-        cand = (plugin_root / "scripts" / "docs" / "generate_registry_md.py").resolve()
-        if cand.exists():
-            script = cand
-
-    if not script.exists():
-        return {"status": "skipped", "reason": "missing scripts/docs/generate_registry_md.py"}
-
-    proc = subprocess.run(
-        [sys.executable, str(script), "--project-dir", str(project_root), "--registry-path", registry_path, "--check"],
-        cwd=str(project_root),
-        stdin=subprocess.DEVNULL,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
-    )
-    out = (proc.stdout or "")[-4000:]
-    return {"status": "passed" if proc.returncode == 0 else "failed", "exit_code": proc.returncode, "output_tail": out}
 
 
 def main() -> int:
@@ -136,17 +68,17 @@ def main() -> int:
         drift_issue = {"severity": "error", "message": "docs/REGISTRY.json exists; standardize on docs/DOCUMENTATION_REGISTRY.json"}
         issues = [drift_issue]
         ok = False
-        summary = {"registry_path": reg_path, "docs_total": 0, "docs_missing_files": 0, "tiers": {}}
+        summary = {"registry_path": reg_path, "docs_total": 0, "docs_missing_files": 0, "docs_missing_when": 0, "docs_missing_required_fields": 0, "tiers": {}, "types": {}}
     else:
         registry = load_docs_registry(project_root, reg_path)
         if registry is None and not require:
             issues = [{"severity": "warning", "message": f"docs.require_registry=false and registry missing: {reg_path!r}"}]
             ok = True
-            summary = {"registry_path": reg_path, "docs_total": 0, "docs_missing_files": 0, "docs_missing_when": 0, "tiers": {}}
+            summary = {"registry_path": reg_path, "docs_total": 0, "docs_missing_files": 0, "docs_missing_when": 0, "docs_missing_required_fields": 0, "tiers": {}, "types": {}}
         else:
             issues, summary = _validate_registry(project_root, reg_path, registry)
             # Additional strictness: require the human-readable markdown view to match the JSON registry.
-            md_check = _run_registry_md_check(project_root, reg_path)
+            md_check = run_registry_md_check(project_root, registry_path=reg_path)
             if md_check.get("status") == "failed":
                 issues.append({"severity": "error", "message": "docs/DOCUMENTATION_REGISTRY.md is out of sync (run scripts/docs/generate_registry_md.py)"})
             elif md_check.get("status") == "skipped":
@@ -172,6 +104,7 @@ def main() -> int:
         f"- docs_total: `{docs_summary.get('docs_total','')}`",
         f"- docs_missing_files: `{docs_summary.get('docs_missing_files','')}`",
         f"- docs_missing_when: `{docs_summary.get('docs_missing_when','')}`",
+        f"- docs_missing_required_fields: `{docs_summary.get('docs_missing_required_fields','')}`",
         "",
     ]
     write_text(out_dir / "docs_summary.md", "\n".join(sum_md))

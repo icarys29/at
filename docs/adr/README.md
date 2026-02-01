@@ -6,6 +6,4 @@ Keep ADRs concise. Each ADR should answer:
 - Decision: what did we choose?
 - Consequences: what tradeoffs does this create?
 
-Naming:
-- `docs/adr/ADR_<YYYYMMDD>_<short-title>.md`
-
+Use the `adr` template in `docs/_templates/` and keep the file name short and stable.

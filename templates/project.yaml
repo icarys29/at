@@ -13,8 +13,8 @@ workflow:
 docs:
   registry_path: "docs/DOCUMENTATION_REGISTRY.json"
   min_review_tier: 2
-  # Recommended default for onboarding: allow deliver to run before the registry is curated.
-  require_registry: false
+  # Corporate-grade default: enforce registry usage and prevent drift.
+  require_registry: true
   sections_enabled: false
 
 learning:

@@ -37,16 +37,22 @@ def _load_json(path: Path) -> dict[str, Any] | None:
 
 
 def _render(registry: dict[str, Any], *, registry_path: str) -> str:
+    version = registry.get("version")
+    if version != 2:
+        raise RuntimeError(f"Expected registry.version=2 (got {version!r})")
+
     docs = registry.get("docs") if isinstance(registry.get("docs"), list) else []
+    generated = registry.get("generated_artifacts") if isinstance(registry.get("generated_artifacts"), list) else []
+
     # Sort by tier (asc), then id.
-    def _key(it: dict[str, Any]) -> tuple[int, str]:
+    def _key_doc(it: dict[str, Any]) -> tuple[int, str]:
         tier = it.get("tier")
         t = int(tier) if isinstance(tier, int) else 999
         did = it.get("id") if isinstance(it.get("id"), str) else ""
         return (t, did)
 
     items: list[dict[str, Any]] = [it for it in docs if isinstance(it, dict)]
-    items.sort(key=_key)
+    items.sort(key=_key_doc)
 
     lines: list[str] = []
     lines.append("# Documentation Registry (at)")
@@ -57,14 +63,17 @@ def _render(registry: dict[str, Any], *, registry_path: str) -> str:
     lines.append("")
     lines.append("## Index")
     lines.append("")
-    lines.append("| Tier | ID | Title | Path | When | Tags |")
-    lines.append("|---:|---|---|---|---|---|")
+    lines.append("| Tier | Type | ID | Status | Owners | Title | Path | When | Tags |")
+    lines.append("|---:|---|---|---|---|---|---|---|---|")
     for it in items[:4000]:
         doc_id = it.get("id") if isinstance(it.get("id"), str) else ""
+        doc_type = it.get("type") if isinstance(it.get("type"), str) else ""
         title = it.get("title") if isinstance(it.get("title"), str) else ""
         path = it.get("path") if isinstance(it.get("path"), str) else ""
         when = it.get("when") if isinstance(it.get("when"), str) else ""
         tags = it.get("tags") if isinstance(it.get("tags"), list) else []
+        owners = it.get("owners") if isinstance(it.get("owners"), list) else []
+        status = it.get("status") if isinstance(it.get("status"), str) else ""
         tier = it.get("tier") if isinstance(it.get("tier"), int) else ""
         norm = normalize_repo_relative_posix_path(path) if isinstance(path, str) and path else None
         path_s = norm or path
@@ -72,7 +81,28 @@ def _render(registry: dict[str, Any], *, registry_path: str) -> str:
             continue
         when_s = (when.strip().replace("\n", " "))[:180]
         tags_s = ", ".join([str(t).strip() for t in tags[:12] if isinstance(t, str) and str(t).strip()])
-        lines.append(f"| {tier} | `{doc_id}` | {title} | `{path_s}` | {when_s} | {tags_s} |")
+        owners_s = ", ".join([str(o).strip() for o in owners[:8] if isinstance(o, str) and str(o).strip()])
+        lines.append(f"| {tier} | {doc_type} | `{doc_id}` | {status} | {owners_s} | {title} | `{path_s}` | {when_s} | {tags_s} |")
+
+    if generated:
+        lines.append("")
+        lines.append("## Generated Artifacts")
+        lines.append("")
+        lines.append("| ID | Path | Source | Generator | Mode |")
+        lines.append("|---|---|---|---|---|")
+        for it in generated[:200]:
+            if not isinstance(it, dict):
+                continue
+            gid = it.get("id") if isinstance(it.get("id"), str) else ""
+            gpath = it.get("path") if isinstance(it.get("path"), str) else ""
+            src = it.get("source") if isinstance(it.get("source"), str) else ""
+            generator = it.get("generator") if isinstance(it.get("generator"), str) else ""
+            mode = it.get("mode") if isinstance(it.get("mode"), str) else ""
+            if not gid or not gpath:
+                continue
+            gpath_norm = normalize_repo_relative_posix_path(gpath) or gpath
+            src_norm = normalize_repo_relative_posix_path(src) or src
+            lines.append(f"| `{gid}` | `{gpath_norm}` | `{src_norm}` | {generator} | {mode} |")
     lines.append("")
     lines.append("## Notes")
     lines.append("")
@@ -103,7 +133,11 @@ def main() -> int:
         print(f"ERROR: invalid registry JSON: {registry_path}", file=sys.stderr)
         return 2
 
-    rendered = _render(registry, registry_path=registry_path).rstrip() + "\n"
+    try:
+        rendered = _render(registry, registry_path=registry_path).rstrip() + "\n"
+    except Exception as exc:
+        print(f"ERROR: failed to render registry markdown: {exc}", file=sys.stderr)
+        return 2
     out_path = (project_root / args.out).resolve()
 
     current = ""

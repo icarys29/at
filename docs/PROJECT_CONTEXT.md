@@ -36,14 +36,15 @@ Authoritative contract: `CLAUDE.md`.
 
 ## Documentation Registry
 
-This repo uses a portable docs registry at `docs/DOCUMENTATION_REGISTRY.json`:
+This repo uses a deterministic docs registry at `docs/DOCUMENTATION_REGISTRY.json` (v2):
 
-- `docs[]`: canonical documents with tiers (1=core contract, 2=architecture/conventions, 3+=optional/reference)
-- Each doc entry includes a `when` field to help the action planner choose what to embed for a given task/topic.
-- `docs/DOCUMENTATION_REGISTRY.md` is a generated, human-readable view and must remain in sync.
+- Registry is the single source of truth for managed docs (`docs[]`) and generated artifacts (`generated_artifacts[]`).
+- Document taxonomy is explicit (`doc_types[]`) and templates live under `docs/_templates/`.
+- Coverage rules (`coverage_rules[]`) drive deterministic “what docs must change / be created” decisions.
+- Each doc entry includes `when` to support planner-driven context selection.
+- `docs/DOCUMENTATION_REGISTRY.md` is generated from JSON and must remain in sync (drift is gate-enforced).
 
 ## Constraints
 
 - Prefer agentic work for creation/analysis; use scripts as deterministic gates and reproducible evidence.
 - Keep documentation corporate-grade but concise; ADRs only for decisions likely to matter in 3+ months.
-

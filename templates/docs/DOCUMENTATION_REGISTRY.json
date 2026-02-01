@@ -1,38 +1,162 @@
 {
-  "version": 1,
-  "docs": [
-    {
-      "id": "DOC-PROJECT-CONTEXT",
-      "path": "docs/PROJECT_CONTEXT.md",
-      "title": "Project Context",
-      "tier": 1,
-      "when": "Use for project-wide conventions, workflow expectations, and baseline constraints (planning + execution).",
-      "tags": ["context", "conventions", "workflow"]
-    },
-    {
-      "id": "DOC-ARCHITECTURE",
-      "path": "docs/ARCHITECTURE.md",
-      "title": "Architecture Overview",
-      "tier": 2,
-      "when": "Use for architectural boundaries, dependency direction rules, and patterns in use (recorded concisely).",
-      "tags": ["architecture", "patterns", "boundaries"]
-    },
-    {
-      "id": "DOC-ADR-INDEX",
-      "path": "docs/adr/README.md",
-      "title": "ADRs Index",
-      "tier": 2,
-      "when": "Use when a task introduces or changes a material architecture decision (create/update an ADR).",
-      "tags": ["architecture", "decisions"]
-    },
+  "version": 2,
+  "registry_id": "main",
+  "generated_artifacts": [
     {
       "id": "DOC-REGISTRY-MD",
       "path": "docs/DOCUMENTATION_REGISTRY.md",
-      "title": "Documentation Registry (Markdown view)",
-      "tier": 3,
-      "when": "Use when updating documentation; this file is generated from the JSON registry and should remain in sync.",
-      "tags": ["registry"]
+      "source": "docs/DOCUMENTATION_REGISTRY.json",
+      "generator": "docs-keeper",
+      "mode": "overwrite"
     }
   ],
-  "coverage_rules": []
+  "doc_types": [
+    {
+      "type": "context",
+      "prefix": "DOC-",
+      "default_tier": 1,
+      "dir": "docs",
+      "template": "docs/_templates/PROJECT_CONTEXT.md.tpl"
+    },
+    {
+      "type": "architecture",
+      "prefix": "DOC-",
+      "default_tier": 2,
+      "dir": "docs",
+      "template": "docs/_templates/ARCHITECTURE.md.tpl"
+    },
+    {
+      "type": "adr",
+      "prefix": "ADR-",
+      "default_tier": 2,
+      "dir": "docs/adr",
+      "template": "docs/_templates/ADR.md.tpl"
+    },
+    {
+      "type": "ard",
+      "prefix": "ARD-",
+      "default_tier": 2,
+      "dir": "docs/architecture",
+      "template": "docs/_templates/ARD.md.tpl"
+    },
+    {
+      "type": "pattern",
+      "prefix": "PAT-",
+      "default_tier": 2,
+      "dir": "docs/patterns",
+      "template": "docs/_templates/PATTERN.md.tpl"
+    },
+    {
+      "type": "runbook",
+      "prefix": "RB-",
+      "default_tier": 3,
+      "dir": "docs/runbooks",
+      "template": "docs/_templates/RUNBOOK.md.tpl"
+    }
+  ],
+  "docs": [
+    {
+      "id": "DOC-PROJECT-CONTEXT",
+      "type": "context",
+      "path": "docs/PROJECT_CONTEXT.md",
+      "title": "Project Context",
+      "tier": 1,
+      "when": "Use for project-wide conventions, workflows, and baseline constraints (planning + execution).",
+      "tags": ["context", "conventions", "workflow"],
+      "owners": ["team-core"],
+      "status": "active"
+    },
+    {
+      "id": "DOC-ARCHITECTURE",
+      "type": "architecture",
+      "path": "docs/ARCHITECTURE.md",
+      "title": "Architecture Overview",
+      "tier": 2,
+      "when": "Use for architectural boundaries, dependency direction rules, and major patterns in use (keep concise).",
+      "tags": ["architecture", "patterns", "boundaries"],
+      "owners": ["team-core"],
+      "status": "active"
+    },
+    {
+      "id": "DOC-ADR-INDEX",
+      "type": "architecture",
+      "path": "docs/adr/README.md",
+      "title": "ADRs Index",
+      "tier": 2,
+      "when": "Use when a deliver introduces or changes a material architecture decision; create/update ADRs under docs/adr/.",
+      "tags": ["architecture", "decisions"],
+      "owners": ["team-core"],
+      "status": "active"
+    },
+    {
+      "id": "ARD-INDEX",
+      "type": "ard",
+      "path": "docs/architecture/README.md",
+      "title": "Architecture Records (ARDs) Index",
+      "tier": 2,
+      "when": "Use when a new core component/framework requires an internal design record (responsibilities/flow/boundaries).",
+      "tags": ["architecture", "components"],
+      "owners": ["team-core"],
+      "status": "active"
+    },
+    {
+      "id": "PAT-INDEX",
+      "type": "pattern",
+      "path": "docs/patterns/README.md",
+      "title": "Pattern Docs Index",
+      "tier": 2,
+      "when": "Use when a reusable implementation pattern emerges (avoid repeated ADRs by documenting the pattern once).",
+      "tags": ["patterns"],
+      "owners": ["team-core"],
+      "status": "active"
+    },
+    {
+      "id": "RB-INDEX",
+      "type": "runbook",
+      "path": "docs/runbooks/README.md",
+      "title": "Runbooks Index",
+      "tier": 3,
+      "when": "Use when operational procedures are needed (recovery, migrations, incident response).",
+      "tags": ["runbooks", "ops"],
+      "owners": ["team-core"],
+      "status": "active"
+    }
+  ],
+  "coverage_rules": [
+    {
+      "id": "ARCH-CHANGE-RULE",
+      "description": "If core modules/infra/boundaries change, update architecture overview and create ADR when a material decision occurs.",
+      "match": {
+        "paths_any": ["src/**", "core/**", "infra/**", "platform/**", "scripts/**"]
+      },
+      "actions": {
+        "require_doc_ids": ["DOC-ARCHITECTURE", "DOC-ADR-INDEX"],
+        "note": "Create an ADR only if the decision will matter in 3+ months (avoid ADR spam)."
+      }
+    },
+    {
+      "id": "INFRA-RULE",
+      "description": "If infra-as-code changes, an ADR is mandatory and a runbook may be required.",
+      "match": {
+        "paths_any": ["terraform/**", "infra/**", "k8s/**", "helm/**"]
+      },
+      "actions": {
+        "require_doc_ids": ["DOC-ADR-INDEX"],
+        "require_create_types": ["adr"],
+        "note": "Infra changes require an ADR (framework/infra topology/data strategy)."
+      }
+    },
+    {
+      "id": "NEW-CORE-COMPONENT-RULE",
+      "description": "If a new engine/framework/shared service is introduced, create an ARD.",
+      "match": {
+        "created_paths_any": ["**/*engine*.*", "**/*framework*.*", "**/*service*.*"]
+      },
+      "actions": {
+        "require_create_types": ["ard"],
+        "note": "Create an ARD only when the component needs an internal flow/responsibilities record."
+      }
+    }
+  ]
 }
+

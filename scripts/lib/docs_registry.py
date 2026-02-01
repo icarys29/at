@@ -45,10 +45,18 @@ def build_doc_id_to_path_map(registry: dict[str, Any] | None) -> dict[str, str] 
     if not registry or not isinstance(registry, dict):
         return None
     docs = registry.get("docs")
-    if not isinstance(docs, list):
+    gen = registry.get("generated_artifacts")
+    if not isinstance(docs, list) and not isinstance(gen, list):
         return None
     out: dict[str, str] = {}
-    for item in docs:
+    for item in (docs or []):
+        if not isinstance(item, dict):
+            continue
+        doc_id = item.get("id")
+        path = item.get("path")
+        if isinstance(doc_id, str) and doc_id.strip() and isinstance(path, str) and path.strip():
+            out[doc_id.strip()] = path.strip()
+    for item in (gen or []):
         if not isinstance(item, dict):
             continue
         doc_id = item.get("id")

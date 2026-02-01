@@ -52,12 +52,22 @@ def _format_docs_registry_summary(registry: dict[str, Any] | None, *, limit: int
         tier = item.get("tier")
         when = item.get("when")
         tags = item.get("tags")
+        doc_type = item.get("type")
+        owners = item.get("owners")
+        status = item.get("status")
         if not isinstance(doc_id, str) or not doc_id.strip():
             continue
         if not isinstance(path, str) or not path.strip():
             continue
         tail = f" — {title}" if isinstance(title, str) and title.strip() else ""
         tier_s = f" (tier {tier})" if isinstance(tier, int) else ""
+        type_s = f" [{doc_type.strip()}]" if isinstance(doc_type, str) and doc_type.strip() else ""
+        status_s = f" | status: {status.strip()}" if isinstance(status, str) and status.strip() else ""
+        owners_s = ""
+        if isinstance(owners, list):
+            owners_list = [str(o).strip() for o in owners[:8] if isinstance(o, str) and str(o).strip()]
+            if owners_list:
+                owners_s = " | owners: " + ", ".join(owners_list)
         when_s = ""
         if isinstance(when, str) and when.strip():
             when_s = f" | when: {_truncate(when, 140)}"
@@ -66,7 +76,7 @@ def _format_docs_registry_summary(registry: dict[str, Any] | None, *, limit: int
             tags_list = [str(t).strip() for t in tags[:12] if isinstance(t, str) and str(t).strip()]
             if tags_list:
                 tags_s = " | tags: " + ", ".join(tags_list)
-        out.append(f"- `{doc_id.strip()}`{tier_s}: `{path.strip()}`{tail}{when_s}{tags_s}")
+        out.append(f"- `{doc_id.strip()}`{tier_s}{type_s}: `{path.strip()}`{tail}{status_s}{owners_s}{when_s}{tags_s}")
     if len(docs) > limit:
         out.append(f"- … ({len(docs) - limit} more)")
     return out or ["- (no valid docs entries)"]
