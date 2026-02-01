@@ -57,14 +57,24 @@ def main() -> int:
     parser.add_argument("--workflow", default="deliver", choices=["deliver", "triage", "review", "ideate"])
     parser.add_argument("--sessions-dir", default=None, help="Override sessions dir (else read from .claude/project.yaml)")
     parser.add_argument("--resume", default=None, help="Resume by session id or session directory")
+    # Alias for consistency with skills that use --session. Semantics match --resume.
+    parser.add_argument("--session", default=None, help="Alias for --resume (session id or session directory)")
     args = parser.parse_args()
 
     project_dir = detect_project_dir(args.project_dir)
     sessions_dir = args.sessions_dir or get_sessions_dir(project_dir)
     sessions_root = (project_dir / sessions_dir).resolve()
 
+    resume_arg = None
+    if args.resume and args.session:
+        raise RuntimeError("Provide only one of --resume or --session")
     if args.resume:
-        session_dir = _resolve_resume_arg(project_dir, sessions_root, args.resume)
+        resume_arg = args.resume
+    elif args.session:
+        resume_arg = args.session
+
+    if resume_arg:
+        session_dir = _resolve_resume_arg(project_dir, sessions_root, str(resume_arg))
     else:
         session_dir = (sessions_root / _new_session_id()).resolve()
         session_dir.mkdir(parents=True, exist_ok=True)

@@ -12,7 +12,7 @@ allowed-tools: Read, Write, Edit, Grep, Glob, Bash, Task
 ## Procedure
 1) Create or resume a session:
    - If user provided `--session`, resume; otherwise create a new session.
-   - Run: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/session/create_session.py" --workflow deliver [--resume <id|dir>]`
+   - Run: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/session/create_session.py" --workflow deliver [--session <id|dir>]`
    - Capture the printed `SESSION_DIR`.
 2) Write the request to `SESSION_DIR/inputs/request.md`.
 3) Build the context pack:
@@ -22,4 +22,3 @@ allowed-tools: Read, Write, Edit, Grep, Glob, Bash, Task
    - Inputs: `SESSION_DIR/inputs/request.md`, `SESSION_DIR/inputs/context_pack.md`
    - Output files: `SESSION_DIR/planning/ARCHITECTURE_BRIEF.{md,json}`
 5) Print the session directory and the brief paths.
-

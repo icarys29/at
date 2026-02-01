@@ -29,6 +29,7 @@ This is inspired by “brainstorm” style skills (structured ideation with incr
 - `SESSION_DIR/inputs/request.md`
 - `SESSION_DIR/inputs/context_pack.md`
 - Optional: `SESSION_DIR/planning/ARCHITECTURE_BRIEF.md` (pattern anchors + constraints)
+- Optional: `SESSION_DIR/inputs/ideate_notes.md` (extra context/answers for iteration)
 
 ## Outputs (required)
 - `SESSION_DIR/planning/IDEATION.md`
@@ -105,4 +106,3 @@ N/A (brainstormer writes only session artifacts)
 SESSION_ARTIFACTS:
 planning/IDEATION.md
 planning/IDEATION.json
-
