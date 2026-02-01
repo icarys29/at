@@ -111,6 +111,17 @@
       "status": "active"
     },
     {
+      "id": "PAT-PUBLIC-API",
+      "type": "pattern",
+      "path": "docs/patterns/PAT_PUBLIC_API.md",
+      "title": "Public API Standards",
+      "tier": 2,
+      "when": "Use when adding/changing a public API surface (endpoints, CLI commands, SDK public APIs): versioning, naming, error shapes, deprecation, and compatibility expectations.",
+      "tags": ["patterns", "public-api"],
+      "owners": ["core"],
+      "status": "active"
+    },
+    {
       "id": "RB-INDEX",
       "type": "runbook",
       "path": "docs/runbooks/README.md",
@@ -133,7 +144,17 @@
         "require_doc_ids": ["DOC-ARCHITECTURE"],
         "note": "Update only the relevant section(s); avoid rewriting the file."
       }
+    },
+    {
+      "id": "PUBLIC-API-RULE",
+      "description": "If the public API surface changes (endpoints, CLI, SDK), update the public API standards and relevant context/architecture docs.",
+      "match": {
+        "paths_any": ["api/**", "routes/**", "sdk/**", "cli/**", "public/**", "openapi/**", "swagger/**", "schemas/**"]
+      },
+      "actions": {
+        "require_doc_ids": ["DOC-PROJECT-CONTEXT", "PAT-PUBLIC-API"],
+        "note": "Prefer updating standards and compatibility/deprecation expectations. Avoid creating new docs unless truly needed."
+      }
     }
   ]
 }
-

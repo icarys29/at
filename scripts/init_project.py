@@ -118,6 +118,7 @@ def main() -> int:
     results.append((_write_if_missing(project_root / "docs" / "adr" / "README.md", _read_template("docs/adr/README.md"), force=args.force), "docs/adr/README.md"))
     results.append((_write_if_missing(project_root / "docs" / "architecture" / "README.md", _read_template("docs/architecture/README.md"), force=args.force), "docs/architecture/README.md"))
     results.append((_write_if_missing(project_root / "docs" / "patterns" / "README.md", _read_template("docs/patterns/README.md"), force=args.force), "docs/patterns/README.md"))
+    results.append((_write_if_missing(project_root / "docs" / "patterns" / "PAT_PUBLIC_API.md", _read_template("docs/patterns/PAT_PUBLIC_API.md"), force=args.force), "docs/patterns/PAT_PUBLIC_API.md"))
     results.append((_write_if_missing(project_root / "docs" / "runbooks" / "README.md", _read_template("docs/runbooks/README.md"), force=args.force), "docs/runbooks/README.md"))
 
     # Project-local docs keeper components (optional; meets corporate docs system structure)

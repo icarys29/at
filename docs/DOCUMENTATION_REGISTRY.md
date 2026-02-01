@@ -13,6 +13,7 @@ This file is generated from the JSON registry and is intended for fast human sca
 | 2 | architecture | `DOC-ADR-INDEX` | active | core | ADRs Index | `docs/adr/README.md` | Use when a deliver introduces or changes a material architecture decision; create/update ADRs under docs/adr/. | architecture, decisions |
 | 2 | architecture | `DOC-ARCHITECTURE` | active | core | Architecture Overview | `docs/ARCHITECTURE.md` | Use for architectural boundaries, dependency direction rules, and major patterns in use (keep concise). | architecture, patterns, boundaries |
 | 2 | pattern | `PAT-INDEX` | active | core | Pattern Docs Index | `docs/patterns/README.md` | Use when a reusable implementation pattern emerges (avoid repeated ADRs by documenting the pattern once). | patterns |
+| 2 | pattern | `PAT-PUBLIC-API` | active | core | Public API Standards | `docs/patterns/PAT_PUBLIC_API.md` | Use when adding/changing a public API surface (endpoints, CLI commands, SDK public APIs): versioning, naming, error shapes, deprecation, and compatibility expectations. | patterns, public-api |
 | 3 | runbook | `RB-INDEX` | active | core | Runbooks Index | `docs/runbooks/README.md` | Use when operational procedures are needed (recovery, migrations, incident response). | runbooks, ops |
 
 ## Generated Artifacts
