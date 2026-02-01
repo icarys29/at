@@ -9,6 +9,8 @@ workflow:
   max_parallel_agents: 5
   autofix_allowed: true
   max_remediation_loops: 2
+  # When true, code tasks must specify acceptance_criteria.verifications[] (so gates can run evidence deterministically).
+  require_verifications_for_code_tasks: true
 
 docs:
   registry_path: "docs/DOCUMENTATION_REGISTRY.json"

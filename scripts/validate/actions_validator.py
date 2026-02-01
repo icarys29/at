@@ -114,6 +114,8 @@ def validate_actions_data(data: dict[str, Any], *, project_root: Path | None = N
         project_root = detect_project_dir()
     config = load_project_config(project_root) or {}
     forbid_globs = forbid_globs_from_project_config(config)
+    workflow_cfg = config.get("workflow") if isinstance(config.get("workflow"), dict) else {}
+    require_verifications_for_code = bool(workflow_cfg.get("require_verifications_for_code_tasks") is True)
 
     # Top-level structure.
     if data.get("version") != 1:
@@ -212,6 +214,7 @@ def validate_actions_data(data: dict[str, Any], *, project_root: Path | None = N
         if not isinstance(acceptance, list) or not acceptance:
             errors.append(ValidationError(f"{tp}.acceptance_criteria", "Required non-empty array"))
         else:
+            any_verifications = False
             for j, ac in enumerate(acceptance):
                 ap = f"{tp}.acceptance_criteria[{j}]"
                 if not isinstance(ac, dict):
@@ -221,6 +224,19 @@ def validate_actions_data(data: dict[str, Any], *, project_root: Path | None = N
                     errors.append(ValidationError(f"{ap}.id", "Required non-empty string"))
                 if not isinstance(ac.get("statement"), str) or not str(ac.get("statement")).strip():
                     errors.append(ValidationError(f"{ap}.statement", "Required non-empty string"))
+                verifs = ac.get("verifications")
+                if isinstance(verifs, list) and any(isinstance(v, dict) for v in verifs):
+                    any_verifications = True
+
+            # Optional strictness: require at least one verification for code tasks.
+            # This makes "done" evidence deterministic and improves self-healing (gates can prove failures).
+            if owner in CODE_OWNERS and require_verifications_for_code and not any_verifications:
+                errors.append(
+                    ValidationError(
+                        f"{tp}.acceptance_criteria",
+                        "workflow.require_verifications_for_code_tasks=true but no acceptance_criteria.verifications[] were provided",
+                    )
+                )
 
         # Docs registry constraints (code tasks only).
         if owner in CODE_OWNERS and require_registry:

@@ -74,6 +74,7 @@ allowed-tools: Read, Write, Edit, Grep, Glob, Bash, Task
    - Changed files scope: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/validate/validate_changed_files.py" --session "${SESSION_DIR}"`
    - Compliance report (deterministic): `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/compliance/generate_compliance_report.py" --session "${SESSION_DIR}" --rerun-supporting-checks`
    - Optional narrative: Task `compliance-checker` (should not change decision rules)
+   - Summarize gates (for remediation efficiency): `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/validate/gates_summary.py" --session "${SESSION_DIR}"`
    - If any gate fails: prefer controlled remediation:
      - Task: `remediator` (updates `planning/actions.json`, writes `planning/REMEDIATION_PLAN.md`)
      - Re-run: validate actions → build task contexts → dispatch remediation tasks → rerun deterministic gates.

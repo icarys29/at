@@ -58,6 +58,8 @@ Produce a **valid, parallel-safe** `planning/actions.json` for the current sessi
   - `id` and `statement` (required)
   - optional `verifications[]` (`file|grep|command|lsp`)
 
+- If the project config sets `workflow.require_verifications_for_code_tasks=true`, then every **code task** must include at least one `verifications[]` entry (prefer `command`).
+
 ### Language-aware verifications (recommended)
 - Use the “Language Verifications (suggested)” section from `SESSION_DIR/inputs/context_pack.md` to pick stable `acceptance_criteria[].verifications[]` commands for tasks in that language.
 - Prefer project-specific commands from `.claude/project.yaml` when present; use language pack suggestions as deterministic defaults (not improv).

@@ -65,6 +65,7 @@ This repo uses a deterministic docs registry at `docs/DOCUMENTATION_REGISTRY.jso
 
 - Prefer agentic work for creation/analysis; use scripts as deterministic gates and reproducible evidence.
 - Keep documentation corporate-grade but concise; ADRs only for decisions likely to matter in 3+ months.
+- Prefer explicit, command-based verifications for code tasks so gates can validate “done” deterministically (see `workflow.require_verifications_for_code_tasks`).
 
 ## Project Rules + Architecture Enforcement (recommended)
 

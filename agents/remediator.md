@@ -28,6 +28,7 @@ When a deterministic gate fails, produce a **corrected plan** (updates to `plann
   - `SESSION_DIR/quality/*`
   - `SESSION_DIR/documentation/*`
   - `SESSION_DIR/compliance/*` (if present)
+- Optional: `SESSION_DIR/status/gates_summary.{json,md}` (single-file overview of failing gates)
 
 ## Outputs (required)
 - Updated `SESSION_DIR/planning/actions.json` (must validate)
@@ -56,4 +57,3 @@ N/A (remediator writes only session artifacts)
 SESSION_ARTIFACTS:
 planning/actions.json
 planning/REMEDIATION_PLAN.md
-

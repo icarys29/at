@@ -131,6 +131,8 @@ def main() -> int:
     config = load_project_config(project_root) or {}
     sessions_dir = args.sessions_dir or get_sessions_dir(project_root, config)
     session_dir = resolve_session_dir(project_root, sessions_dir, args.session)
+    workflow_cfg = config.get("workflow") if isinstance(config.get("workflow"), dict) else {}
+    require_verifications_for_code = bool(workflow_cfg.get("require_verifications_for_code_tasks") is True)
 
     actions = _load_actions(session_dir)
     tasks = actions.get("tasks", []) if isinstance(actions.get("tasks"), list) else []
@@ -179,9 +181,16 @@ def main() -> int:
                 v_results.append({"status": r.status, "details": r.details, "evidence": r.evidence})
                 if r.status == "failed":
                     ac_ok = False
-            # No verifications: treat as warning, not a hard failure.
+            # No verifications: warn by default, error when strict verifications are enabled.
             if not v_list:
-                issues.append({"task_id": task_id, "criterion_id": ac_id, "severity": "warning", "message": "acceptance criterion has no verifications"})
+                issues.append(
+                    {
+                        "task_id": task_id,
+                        "criterion_id": ac_id,
+                        "severity": "error" if require_verifications_for_code else "warning",
+                        "message": "acceptance criterion has no verifications",
+                    }
+                )
             ac_results.append({"id": ac_id, "ok": ac_ok, "verifications": v_results})
             if v_list and not ac_ok:
                 issues.append({"task_id": task_id, "criterion_id": ac_id, "severity": "error", "message": "acceptance verifications failed"})
@@ -229,4 +238,3 @@ if __name__ == "__main__":
     except Exception as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         raise SystemExit(1)
-
