@@ -75,6 +75,7 @@ When you rebuild this repo’s implementation, keep the same discipline and add 
 1) Update `plugin.json` (`version`).
 2) Update `VERSION` to match `plugin.json`.
 3) Run `uv run scripts/dev/add_version_headers.py` to stamp `Version:`/`Updated:` across scripts and frontmatter (agents/skills).
+   - Recommended (also keeps installable templates aligned): `uv run scripts/dev/add_version_headers.py --include-templates`
 4) Run a quick sanity check: `uv run python -m compileall -q scripts`.
 
 ## Determinism rules (how to write scripts)

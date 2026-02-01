@@ -39,27 +39,78 @@ def _load_plugin_version() -> str:
     return "unknown"
 
 
-def _iter_python_files() -> list[Path]:
+def _iter_python_files(*, include_templates: bool) -> list[Path]:
     out: list[Path] = []
     for p in (PLUGIN_ROOT / "scripts").rglob("*.py"):
         if p.name == "__init__.py":
             continue
         out.append(p)
-    return sorted(out)
+    if include_templates:
+        templates = PLUGIN_ROOT / "templates"
+        if templates.exists():
+            for p in templates.rglob("*.py"):
+                out.append(p)
+    return sorted({p.resolve() for p in out})
 
 
-def _iter_agent_md_files() -> list[Path]:
-    agents_dir = PLUGIN_ROOT / "agents"
-    if not agents_dir.exists():
-        return []
-    return sorted([p for p in agents_dir.glob("*.md") if p.is_file()])
+def _iter_frontmatter_md_files(*, include_templates: bool) -> list[Path]:
+    candidates: list[Path] = []
+
+    # Plugin agents/skills
+    for p in (PLUGIN_ROOT / "agents").glob("*.md"):
+        if p.is_file():
+            candidates.append(p)
+    for p in (PLUGIN_ROOT / "skills").rglob("SKILL.md"):
+        if p.is_file():
+            candidates.append(p)
+
+    # Repo-local project overlay (this repo uses it for the docs keeper system).
+    for p in (PLUGIN_ROOT / ".claude" / "agents").glob("*.md"):
+        if p.is_file():
+            candidates.append(p)
+    for p in (PLUGIN_ROOT / ".claude" / "skills").rglob("SKILL.md"):
+        if p.is_file():
+            candidates.append(p)
+
+    if include_templates:
+        # Templates that get installed into projects should stay version-aligned too.
+        for p in (PLUGIN_ROOT / "templates" / "claude" / "agents").glob("*.md"):
+            if p.is_file():
+                candidates.append(p)
+        for p in (PLUGIN_ROOT / "templates" / "claude" / "skills").rglob("SKILL.md"):
+            if p.is_file():
+                candidates.append(p)
+
+    # Keep only files that actually have frontmatter.
+    out: list[Path] = []
+    for p in candidates:
+        try:
+            if p.read_text(encoding="utf-8").startswith("---\n"):
+                out.append(p)
+        except Exception:
+            continue
+    return sorted({p.resolve() for p in out})
 
 
-def _iter_skill_md_files() -> list[Path]:
-    skills_dir = PLUGIN_ROOT / "skills"
-    if not skills_dir.exists():
-        return []
-    return sorted([p for p in skills_dir.rglob("SKILL.md") if p.is_file()])
+def _find_header_docstring_span(lines: list[str]) -> tuple[int, int] | None:
+    """
+    Return (start_idx, end_idx) inclusive indices for the first top-of-file docstring block.
+    Only considers a docstring that begins within the first ~30 lines.
+    """
+    start = None
+    for i, line in enumerate(lines[:30]):
+        if line.strip().startswith('"""'):
+            start = i
+            break
+    if start is None:
+        return None
+    # Same-line docstring """..."""
+    if lines[start].strip().count('"""') >= 2 and lines[start].strip().endswith('"""'):
+        return (start, start)
+    for j in range(start + 1, min(len(lines), start + 80)):
+        if '"""' in lines[j]:
+            return (start, j)
+    return None
 
 
 def _get_python_description(path: Path) -> str:
@@ -86,49 +137,37 @@ def _update_python_header(path: Path, *, version: str, updated: str, dry_run: bo
             return True
         return False
 
+    # If the file has a top-level docstring but doesn't match our header format, do not rewrite it.
+    # (This keeps behavior predictable and avoids clobbering custom metadata.)
+    if _find_header_docstring_span(lines) is not None:
+        return False
+
     description = _get_python_description(path)
-    new_header = f'''#!/usr/bin/env python3
-# /// script
-# requires-python = ">=3.10"
-# dependencies = []
-# ///
-\"\"\"
-at: {description}
+    header_lines = [
+        '"""',
+        f"at: {description}",
+        "",
+        f"Version: {version}",
+        f"Updated: {updated}",
+        '"""',
+        "",
+    ]
 
-Version: {version}
-Updated: {updated}
-\"\"\"'''
-
-    # Remove existing shebang if present.
+    # Insert right after the `# /// script` block if present, else after shebang, else at start.
+    insert_at = 0
     if lines and lines[0].startswith("#!"):
-        lines = lines[1:]
+        insert_at = 1
+    # Keep a contiguous `# /// ... # ///` block together.
+    if any(l.strip() == "# /// script" for l in lines[:15]):
+        end = None
+        for i in range(min(len(lines), 60)):
+            if lines[i].strip() == "# ///":
+                end = i
+        if end is not None:
+            insert_at = end + 1
 
-    # Remove top-of-file docstring only if it looks like an auto header.
-    if lines and lines[0].strip().startswith('"""'):
-        joined = "\n".join(lines[:40])
-        if "Version:" in joined and "Updated:" in joined:
-            # Find end of docstring.
-            end_idx = None
-            for i, line in enumerate(lines):
-                if i == 0:
-                    if line.strip().endswith('"""') and line.count('"""') >= 2:
-                        end_idx = i
-                        break
-                    continue
-                if '"""' in line:
-                    end_idx = i
-                    break
-            if end_idx is not None:
-                lines = lines[end_idx + 1 :]
-
-    # Skip leading empty lines.
-    while lines and not lines[0].strip():
-        lines = lines[1:]
-
-    new_content = new_header + "\n" + "\n".join(lines)
-    if not new_content.endswith("\n"):
-        new_content += "\n"
-
+    new_lines = lines[:insert_at] + header_lines + lines[insert_at:]
+    new_content = "\n".join(new_lines).rstrip() + "\n"
     if not dry_run:
         path.write_text(new_content, encoding="utf-8")
     return True
@@ -186,23 +225,24 @@ def _update_md_frontmatter(path: Path, *, version: str, updated: str, dry_run: b
 def main() -> int:
     parser = argparse.ArgumentParser(description="Stamp version/updated metadata into plugin files.")
     parser.add_argument("--dry-run", action="store_true", help="Report changes without writing files.")
+    parser.add_argument("--python-only", action="store_true", help="Only process Python files.")
+    parser.add_argument("--md-only", action="store_true", help="Only process Markdown frontmatter files.")
+    parser.add_argument("--include-templates", action="store_true", help="Also update templates/** (recommended).")
     args = parser.parse_args()
 
     version = _load_plugin_version()
     updated = _utc_date()
 
     changed: list[Path] = []
-    for p in _iter_python_files():
-        if _update_python_header(p, version=version, updated=updated, dry_run=args.dry_run):
-            changed.append(p)
+    if not args.md_only:
+        for p in _iter_python_files(include_templates=bool(args.include_templates)):
+            if _update_python_header(p, version=version, updated=updated, dry_run=args.dry_run):
+                changed.append(p)
 
-    for p in _iter_agent_md_files():
-        if _update_md_frontmatter(p, version=version, updated=updated, dry_run=args.dry_run):
-            changed.append(p)
-
-    for p in _iter_skill_md_files():
-        if _update_md_frontmatter(p, version=version, updated=updated, dry_run=args.dry_run):
-            changed.append(p)
+    if not args.python_only:
+        for p in _iter_frontmatter_md_files(include_templates=bool(args.include_templates)):
+            if _update_md_frontmatter(p, version=version, updated=updated, dry_run=args.dry_run):
+                changed.append(p)
 
     if args.dry_run:
         print(f"[DRY RUN] Would update {len(changed)} files:")
