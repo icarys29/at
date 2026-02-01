@@ -108,3 +108,14 @@ def evaluate_coverage_rules(rules: Any, *, changed_files: list[dict[str, Any]]) 
         triggered=triggered,
     )
 
+
+def evaluate_coverage_rules_for_write_scopes(rules: Any, *, write_scopes: list[str]) -> CoveragePlan:
+    """
+    Deterministic evaluation for planning-time enforcement:
+    treat each planned write scope as a "modified path" (best-effort).
+    """
+    changed_files: list[dict[str, Any]] = []
+    for w in write_scopes[:5000]:
+        if isinstance(w, str) and w.strip():
+            changed_files.append({"path": w.strip().replace("\\", "/"), "action": "modified"})
+    return evaluate_coverage_rules(rules, changed_files=changed_files)

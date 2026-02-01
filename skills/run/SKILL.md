@@ -46,6 +46,9 @@ allowed-tools: Read, Write, Edit, Grep, Glob, Bash, Task
 5) Validate the plan deterministically:
    - Run: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/validate/validate_actions.py" --session "${SESSION_DIR}"`
    - If it fails: re-run `action-planner` with the error list and require a corrected `planning/actions.json`.
+5.5) Compute deterministic docs requirements for the plan (for transparency):
+   - Run: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/docs/docs_requirements_for_plan.py" --session "${SESSION_DIR}"`
+   - Output: `SESSION_DIR/documentation/docs_requirements_for_plan.{json,md}`
 6) Build per-task context slices:
    - Run: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/context/build_task_contexts.py" --session "${SESSION_DIR}"`
 7) Create a rollback checkpoint (git best-effort):

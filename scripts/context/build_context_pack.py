@@ -82,6 +82,57 @@ def _format_docs_registry_summary(registry: dict[str, Any] | None, *, limit: int
     return out or ["- (no valid docs entries)"]
 
 
+def _format_docs_coverage_rules_summary(registry: dict[str, Any] | None, *, limit: int = 80) -> list[str]:
+    if not registry:
+        return ["- (missing registry)"]
+    rules = registry.get("coverage_rules")
+    if not isinstance(rules, list) or not rules:
+        return ["- (no coverage_rules[])"]
+
+    out: list[str] = []
+    for it in rules[:limit]:
+        if not isinstance(it, dict):
+            continue
+        rid = it.get("id")
+        desc = it.get("description")
+        match = it.get("match") if isinstance(it.get("match"), dict) else {}
+        actions = it.get("actions") if isinstance(it.get("actions"), dict) else {}
+
+        if not isinstance(rid, str) or not rid.strip():
+            continue
+        rid_s = rid.strip()
+        desc_s = desc.strip() if isinstance(desc, str) and desc.strip() else ""
+        out.append(f"- `{rid_s}`: {desc_s}" if desc_s else f"- `{rid_s}`")
+
+        # Match globs (deterministic; no inference).
+        for key in ("paths_any", "created_paths_any", "modified_paths_any", "deleted_paths_any"):
+            globs = match.get(key)
+            if isinstance(globs, list):
+                gs = [str(g).strip() for g in globs[:20] if isinstance(g, str) and str(g).strip()]
+                if gs:
+                    out.append(f"  - match `{key}`: " + ", ".join([f"`{g}`" for g in gs]))
+
+        req_docs = actions.get("require_doc_ids")
+        if isinstance(req_docs, list):
+            ds = [str(d).strip() for d in req_docs[:20] if isinstance(d, str) and str(d).strip()]
+            if ds:
+                out.append("  - require doc ids: " + ", ".join([f"`{d}`" for d in ds]))
+
+        req_types = actions.get("require_create_types")
+        if isinstance(req_types, list):
+            ts = [str(t).strip() for t in req_types[:20] if isinstance(t, str) and str(t).strip()]
+            if ts:
+                out.append("  - require create types: " + ", ".join([f"`{t}`" for t in ts]))
+
+        note = actions.get("note")
+        if isinstance(note, str) and note.strip():
+            out.append("  - note: " + _truncate(note, 180))
+
+    if len(rules) > limit:
+        out.append(f"- … ({len(rules) - limit} more)")
+    return out or ["- (no valid coverage rules entries)"]
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Build the at context pack for the current session.")
     parser.add_argument("--project-dir", default=None)
@@ -160,6 +211,14 @@ def main() -> int:
     lines.append("")
     lines.append(f"- Registry path: `{registry_path}`")
     lines.extend(_format_docs_registry_summary(registry))
+    lines.append("")
+
+    lines.append("## Docs Coverage Rules (summary)")
+    lines.append("")
+    lines.append("These rules are deterministic triggers for when docs must be reviewed/created.")
+    lines.append("The action planner should use these rules + each doc’s `when` to select `context.doc_ids[]` per code task.")
+    lines.append("")
+    lines.extend(_format_docs_coverage_rules_summary(registry))
     lines.append("")
 
     out = "\n".join(lines).rstrip() + "\n"

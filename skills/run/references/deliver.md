@@ -8,6 +8,7 @@ This file is a short reference for `/at:run`. Scripts are the source of truth.
 - `inputs/request.md`
 - `inputs/context_pack.md`
 - `planning/actions.json`
+- `documentation/docs_requirements_for_plan.{json,md}` (deterministic per-task required docs from coverage rules)
 - `inputs/task_context_manifest.json`
 - `inputs/task_context/<task_id>.md`
 - `implementation/tasks/<task_id>.yaml`

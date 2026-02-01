@@ -19,6 +19,7 @@ from typing import Any
 from lib.docs_registry import build_doc_id_to_path_map, get_docs_registry_path, get_docs_require_registry, load_docs_registry
 from lib.path_policy import forbid_globs_from_project_config, is_forbidden_path, normalize_repo_relative_posix_path
 from lib.project import detect_project_dir, load_project_config
+from docs.coverage_rules import evaluate_coverage_rules_for_write_scopes
 
 
 @dataclass(frozen=True)
@@ -193,12 +194,13 @@ def validate_actions_data(data: dict[str, Any], *, project_root: Path | None = N
             errors.append(ValidationError(f"{tp}.file_scope.allow", "Required non-empty array"))
 
         # Code tasks need writes if parallel enabled.
+        parsed_writes: list[WriteScope] = []
         if owner in CODE_OWNERS and parallel_enabled:
             writes = file_scope.get("writes")
             if not isinstance(writes, list) or not writes:
                 errors.append(ValidationError(f"{tp}.file_scope.writes", "Required non-empty array for code tasks when parallel_execution.enabled=true"))
             else:
-                _parse_write_scopes(errors, writes, f"{tp}.file_scope.writes")
+                parsed_writes = _parse_write_scopes(errors, writes, f"{tp}.file_scope.writes")
 
         acceptance = t.get("acceptance_criteria")
         if not isinstance(acceptance, list) or not acceptance:
@@ -230,6 +232,25 @@ def validate_actions_data(data: dict[str, Any], *, project_root: Path | None = N
                             continue
                         if docs_map and doc_id.strip() not in docs_map:
                             errors.append(ValidationError(f"{tp}.context.doc_ids[{k}]", f"Unknown doc id: {doc_id!r}"))
+
+                # Coverage rules enforcement (planning-time, deterministic):
+                # Ensure required_doc_ids for this task's planned write scopes are included in context.doc_ids[].
+                rules = registry.get("coverage_rules") if isinstance(registry, dict) else None
+                if isinstance(rules, list) and parsed_writes:
+                    required = evaluate_coverage_rules_for_write_scopes(
+                        rules,
+                        write_scopes=[w.raw for w in parsed_writes],
+                    ).required_doc_ids
+                    if required:
+                        doc_set = set([d.strip() for d in doc_ids if isinstance(d, str)]) if isinstance(doc_ids, list) else set()
+                        missing = [d for d in required if d not in doc_set]
+                        if missing:
+                            errors.append(
+                                ValidationError(
+                                    f"{tp}.context.doc_ids",
+                                    "Missing required docs for this task per docs.coverage_rules: " + ", ".join([repr(d) for d in missing]),
+                                )
+                            )
 
         # Optional: code pointers (best-effort safety validation).
         ctx = t.get("context")
