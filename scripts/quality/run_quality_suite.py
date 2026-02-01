@@ -35,6 +35,7 @@ class CommandSpec:
     command: str
     requires_env: list[str]
     requires_files: list[str]
+    env_file: str | None
 
 
 def _has_glob_chars(s: str) -> bool:
@@ -75,6 +76,44 @@ def _load_language_packs(project_root: Path) -> dict[str, dict[str, Any]]:
     return out
 
 
+def _load_e2e_config(project_root: Path) -> dict[str, Any] | None:
+    """
+    Load `.claude/at/e2e.json` if present.
+    This is a project overlay file (not `project.yaml`) to keep setup deterministic.
+    """
+    p = (project_root / ".claude" / "at" / "e2e.json").resolve()
+    if not p.exists():
+        return None
+    try:
+        data = json.loads(p.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+    return data if isinstance(data, dict) and data.get("version") == 1 else None
+
+
+def _suite_from_e2e_config(project_root: Path, *, cfg: dict[str, Any] | None) -> list[CommandSpec]:
+    if not cfg:
+        return []
+    if cfg.get("enabled") is not True:
+        return []
+    cid = cfg.get("id") if isinstance(cfg.get("id"), str) and cfg.get("id").strip() else "e2e"
+    cmd = cfg.get("command") if isinstance(cfg.get("command"), str) else ""
+    if not cmd.strip():
+        return []
+    req_env = cfg.get("requires_env") if isinstance(cfg.get("requires_env"), list) else []
+    req_files = cfg.get("requires_files") if isinstance(cfg.get("requires_files"), list) else []
+    env_file = cfg.get("env_file") if isinstance(cfg.get("env_file"), str) and cfg.get("env_file").strip() else None
+    return [
+        CommandSpec(
+            id=str(cid).strip(),
+            command=str(cmd).strip(),
+            requires_env=[str(x).strip() for x in req_env if isinstance(x, str) and x.strip()],
+            requires_files=[str(x).strip() for x in req_files if isinstance(x, str) and x.strip()],
+            env_file=env_file.strip() if isinstance(env_file, str) else None,
+        )
+    ]
+
+
 def _suite_from_language_packs(
     project_root: Path,
     *,
@@ -104,6 +143,7 @@ def _suite_from_language_packs(
                     command=cmd.strip(),
                     requires_env=[str(x).strip() for x in req_env if isinstance(x, str) and x.strip()],
                     requires_files=[str(x).strip() for x in req_files if isinstance(x, str) and x.strip()],
+                    env_file=None,
                 )
             )
     return suite
@@ -134,6 +174,7 @@ def _build_suite_from_config(project_root: Path, config: dict[str, Any] | None) 
                     command=str(cmd).strip(),
                     requires_env=[str(x).strip() for x in req_env if isinstance(x, str) and x.strip()],
                     requires_files=[str(x).strip() for x in req_files if isinstance(x, str) and x.strip()],
+                    env_file=str(item.get("env_file")).strip() if isinstance(item.get("env_file"), str) and item.get("env_file").strip() else None,
                 )
             )
         return suite
@@ -154,7 +195,7 @@ def _build_suite_from_config(project_root: Path, config: dict[str, Any] | None) 
         for step in ("format", "lint", "typecheck", "test", "build"):
             cmd = block.get(step)
             if isinstance(cmd, str) and cmd.strip():
-                suite.append(CommandSpec(id=f"{lang}:{step}", command=cmd.strip(), requires_env=[], requires_files=[]))
+                suite.append(CommandSpec(id=f"{lang}:{step}", command=cmd.strip(), requires_env=[], requires_files=[], env_file=None))
 
     # Optional defaults from installed language packs (opt-in only).
     allow_defaults = commands.get("allow_language_pack_defaults") is True
@@ -163,6 +204,10 @@ def _build_suite_from_config(project_root: Path, config: dict[str, Any] | None) 
         # Fill missing language blocks only (avoid surprising duplicates).
         missing_langs = [l for l in (lang_ids or sorted(packs.keys())) if l not in selected]
         suite.extend(_suite_from_language_packs(project_root, packs=packs, languages=missing_langs))
+
+    # Optional: append E2E command configured via `.claude/at/e2e.json`.
+    # This stays deterministic and avoids YAML mutation.
+    suite.extend(_suite_from_e2e_config(project_root, cfg=_load_e2e_config(project_root)))
 
     return suite
 
@@ -173,7 +218,29 @@ def _write_log(path: Path, content: str) -> None:
 
 
 def _run_command(project_root: Path, spec: CommandSpec, log_path: Path) -> dict[str, Any]:
-    missing_env = [k for k in spec.requires_env if not os.environ.get(k)]
+    env = dict(os.environ)
+
+    # Optional: load env_file (dotenv-style) for this command (commonly used for E2E).
+    if isinstance(spec.env_file, str) and spec.env_file.strip():
+        p = (project_root / spec.env_file.strip()).resolve()
+        # Do not fail here; treat missing file as a "missing file" skip if declared in requires_files.
+        if p.exists():
+            try:
+                for line in p.read_text(encoding="utf-8", errors="ignore").splitlines():
+                    raw = line.strip()
+                    if not raw or raw.startswith("#"):
+                        continue
+                    if "=" not in raw:
+                        continue
+                    k, v = raw.split("=", 1)
+                    k = k.strip()
+                    if not k:
+                        continue
+                    env.setdefault(k, v.strip())
+            except Exception:
+                pass
+
+    missing_env = [k for k in spec.requires_env if not env.get(k)]
     if missing_env:
         return {"id": spec.id, "status": "skipped", "reason": f"missing env: {', '.join(missing_env)}"}
 
@@ -190,6 +257,7 @@ def _run_command(project_root: Path, spec: CommandSpec, log_path: Path) -> dict[
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
+        env=env,
     )
     dur_ms = int((time.time() - start) * 1000)
 

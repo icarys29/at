@@ -29,6 +29,7 @@ AT_AGENT_IDS = {
     "action-planner",
     "solution-architect",
     "brainstormer",
+    "story-writer",
     "implementor",
     "tests-builder",
     "quality-gate",

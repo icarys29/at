@@ -29,10 +29,6 @@ ALLOW_SECRET_TEMPLATES = {
     ".env.template",
 }
 
-# Allowlist for e2e test environment files (credentials for e2e tests).
-ALLOW_E2E_ENV_FILES = {
-    "e2e/.env",
-}
 
 
 def normalize_repo_relative_posix_path(value: str) -> str | None:
@@ -84,9 +80,6 @@ def is_allowed_secret_template(rel_path: str) -> bool:
         return True
     # Allow nested templates too (e.g. app/server/.env.sample)
     if rel_path.endswith("/.env.sample") or rel_path.endswith("/.env.example") or rel_path.endswith("/.env.template"):
-        return True
-    # Allow e2e test environment files
-    if rel_path in ALLOW_E2E_ENV_FILES:
         return True
     return False
 

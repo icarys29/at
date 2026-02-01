@@ -43,13 +43,19 @@ allowed-tools: Read, Write, Edit, Grep, Glob, Bash, Task
    - Task: `solution-architect`
    - Inputs: `SESSION_DIR/inputs/request.md`, `SESSION_DIR/inputs/context_pack.md`
    - Output files: `SESSION_DIR/planning/ARCHITECTURE_BRIEF.{md,json}`
+3.6) User stories (agentic, to enforce end-to-end “done”):
+   - Task: `story-writer`
+   - Inputs: `SESSION_DIR/inputs/request.md`, `SESSION_DIR/inputs/context_pack.md`, plus any existing planning artifacts
+   - Output files: `SESSION_DIR/planning/USER_STORIES.{md,json}`
 4) Plan (agentic) using `action-planner`:
    - Task: `action-planner`
-   - Inputs: `SESSION_DIR/inputs/request.md`, `SESSION_DIR/inputs/context_pack.md`, `SESSION_DIR/planning/ARCHITECTURE_BRIEF.md`, `SESSION_DIR/planning/IDEATION.md` (if present)
+   - Inputs: `SESSION_DIR/inputs/request.md`, `SESSION_DIR/inputs/context_pack.md`, `SESSION_DIR/planning/ARCHITECTURE_BRIEF.md`, `SESSION_DIR/planning/USER_STORIES.md`, `SESSION_DIR/planning/IDEATION.md` (if present)
    - Output files: `SESSION_DIR/planning/actions.json` + checklists.
 5) Validate the plan deterministically:
    - Run: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/validate/validate_actions.py" --session "${SESSION_DIR}"`
    - If it fails: re-run `action-planner` with the error list and require a corrected `planning/actions.json`.
+5.25) User stories gate (when configured):
+   - Run: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/validate/user_stories_gate.py" --session "${SESSION_DIR}"`
 5.5) Compute deterministic docs requirements for the plan (for transparency):
    - Run: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/docs/docs_requirements_for_plan.py" --session "${SESSION_DIR}"`
    - Output: `SESSION_DIR/documentation/docs_requirements_for_plan.{json,md}`
@@ -69,6 +75,7 @@ allowed-tools: Read, Write, Edit, Grep, Glob, Bash, Task
    - Plan adherence: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/validate/plan_adherence.py" --session "${SESSION_DIR}"`
    - Parallel conformance: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/validate/parallel_conformance.py" --session "${SESSION_DIR}"`
    - Quality suite: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/quality/run_quality_suite.py" --session "${SESSION_DIR}"`
+   - E2E gate: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/validate/e2e_gate.py" --session "${SESSION_DIR}"`
    - Docs update (always-on, agentic): Task `docs-keeper` with `SESSION_DIR/inputs/task_context/docs-keeper.md`
    - Docs gate: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/validate/docs_gate.py" --session "${SESSION_DIR}"`
    - Changed files scope: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/validate/validate_changed_files.py" --session "${SESSION_DIR}"`

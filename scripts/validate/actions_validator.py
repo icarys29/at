@@ -116,6 +116,7 @@ def validate_actions_data(data: dict[str, Any], *, project_root: Path | None = N
     forbid_globs = forbid_globs_from_project_config(config)
     workflow_cfg = config.get("workflow") if isinstance(config.get("workflow"), dict) else {}
     require_verifications_for_code = bool(workflow_cfg.get("require_verifications_for_code_tasks") is True)
+    require_user_stories = bool(workflow_cfg.get("require_user_stories") is True)
 
     # Top-level structure.
     if data.get("version") != 1:
@@ -237,6 +238,13 @@ def validate_actions_data(data: dict[str, Any], *, project_root: Path | None = N
                         "workflow.require_verifications_for_code_tasks=true but no acceptance_criteria.verifications[] were provided",
                     )
                 )
+
+        # Optional strictness: require user-story linkage for code tasks.
+        if owner in CODE_OWNERS and require_user_stories:
+            us = t.get("user_story_ids")
+            ids = [str(x).strip() for x in us if isinstance(x, str) and str(x).strip()] if isinstance(us, list) else []
+            if not ids:
+                errors.append(ValidationError(f"{tp}.user_story_ids", "workflow.require_user_stories=true but task is missing user_story_ids[] (non-empty)"))
 
         # Docs registry constraints (code tasks only).
         if owner in CODE_OWNERS and require_registry:

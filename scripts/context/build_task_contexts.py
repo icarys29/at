@@ -312,6 +312,65 @@ def _render_task_context(
         lines.append("```")
         lines.append("")
 
+    # Session user stories (if present). Embed only stories referenced by the task (user_story_ids[]).
+    stories_path = session_dir / "planning" / "USER_STORIES.json"
+    if stories_path.exists():
+        try:
+            stories_obj = json.loads(stories_path.read_text(encoding="utf-8"))
+        except Exception:
+            stories_obj = None
+        if isinstance(stories_obj, dict) and stories_obj.get("version") == 1:
+            story_ids = task.get("user_story_ids") if isinstance(task.get("user_story_ids"), list) else []
+            wanted = [str(x).strip() for x in story_ids if isinstance(x, str) and str(x).strip()]
+            if wanted:
+                stories = stories_obj.get("stories") if isinstance(stories_obj.get("stories"), list) else []
+                e2e = stories_obj.get("e2e_scenarios") if isinstance(stories_obj.get("e2e_scenarios"), list) else []
+                story_by_id: dict[str, dict[str, Any]] = {}
+                for it in stories:
+                    if isinstance(it, dict) and isinstance(it.get("id"), str) and it.get("id").strip():
+                        story_by_id[it.get("id").strip()] = it
+                scen_by_story: dict[str, list[dict[str, Any]]] = {}
+                for sc in e2e:
+                    if not isinstance(sc, dict):
+                        continue
+                    sid = sc.get("user_story_id")
+                    if isinstance(sid, str) and sid.strip():
+                        scen_by_story.setdefault(sid.strip(), []).append(sc)
+
+                lines.append("## User Stories (embedded)")
+                lines.append("")
+                lines.append(f"- Source: `{stories_path.relative_to(session_dir).as_posix()}`")
+                lines.append("")
+                for usid in wanted[:12]:
+                    s = story_by_id.get(usid)
+                    if not isinstance(s, dict):
+                        continue
+                    title = s.get("title") if isinstance(s.get("title"), str) else ""
+                    persona = s.get("persona") if isinstance(s.get("persona"), str) else ""
+                    goal = s.get("goal") if isinstance(s.get("goal"), str) else ""
+                    lines.append(f"### `{usid}`{f' — {title.strip()}' if title.strip() else ''}")
+                    lines.append("")
+                    if persona.strip():
+                        lines.append(f"- Persona: {persona.strip()}")
+                    if goal.strip():
+                        lines.append(f"- Goal: {goal.strip()}")
+                    acs = s.get("acceptance_criteria") if isinstance(s.get("acceptance_criteria"), list) else []
+                    if acs:
+                        lines.append("- Acceptance criteria:")
+                        for ac in acs[:12]:
+                            if isinstance(ac, dict) and isinstance(ac.get("statement"), str) and ac.get("statement").strip():
+                                lines.append(f"  - {ac.get('statement').strip()}")
+                    scenarios = scen_by_story.get(usid, [])
+                    if scenarios:
+                        lines.append("- E2E scenarios:")
+                        for sc in scenarios[:6]:
+                            sid = sc.get("id") if isinstance(sc.get("id"), str) else ""
+                            stitle = sc.get("title") if isinstance(sc.get("title"), str) else ""
+                            label = sid.strip() if sid.strip() else "E2E"
+                            tail = f": {stitle.strip()}" if stitle.strip() else ""
+                            lines.append(f"  - {label}{tail}")
+                    lines.append("")
+
     # Always-on rules: keep small, but make them visible to implementors/tests.
     # Include global + project architecture + language rules for configured primary languages.
     cfg = load_project_config(project_root) or {}

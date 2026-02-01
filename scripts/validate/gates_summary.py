@@ -90,8 +90,10 @@ def main() -> int:
     gates = [
         ("task_artifacts", "quality/task_artifacts_report.json", "Validate task YAML artifacts"),
         ("plan_adherence", "quality/plan_adherence_report.json", "Run acceptance verifications"),
+        ("user_stories_gate", "quality/user_stories_gate_report.json", "Enforce user stories coverage"),
         ("parallel_conformance", "quality/parallel_conformance_report.json", "Validate task scopes and overlaps"),
         ("quality_suite", "quality/quality_report.json", "Run configured quality suite"),
+        ("e2e_gate", "quality/e2e_gate_report.json", "Enforce end-to-end test policy"),
         ("docs_gate", "documentation/docs_gate_report.json", "Validate docs registry and doc drift"),
         ("changed_files", "quality/changed_files_report.json", "Validate git changed files vs planned scope"),
         ("compliance", "compliance/compliance_report.json", "Generate compliance report"),
@@ -143,4 +145,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

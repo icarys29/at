@@ -27,6 +27,7 @@ Produce a **valid, parallel-safe** `planning/actions.json` for the current sessi
 - `SESSION_DIR/inputs/context_pack.md`
 - `SESSION_DIR/planning/ARCHITECTURE_BRIEF.md` (if present; produced by `solution-architect`)
 - `SESSION_DIR/planning/IDEATION.md` (if present; produced by `/at:ideate` / `brainstormer`)
+- `SESSION_DIR/planning/USER_STORIES.md` (if present; produced by `story-writer`)
 - Any project docs referenced by the context pack (already embedded there)
 
 ## Outputs (required)
@@ -60,6 +61,10 @@ Produce a **valid, parallel-safe** `planning/actions.json` for the current sessi
   - optional `verifications[]` (`file|grep|command|lsp`)
 
 - If the project config sets `workflow.require_verifications_for_code_tasks=true`, then every **code task** must include at least one `verifications[]` entry (prefer `command`).
+
+### User story linking (recommended; required when enforced)
+- If `planning/USER_STORIES.json` exists, add `user_story_ids[]` to each code task so coverage is deterministic.
+- If the project config sets `workflow.require_user_stories=true`, then every code task must include non-empty `user_story_ids[]`, and all user stories must be covered by at least one task.
 
 ### Language-aware verifications (recommended)
 - Use the “Language Verifications (suggested)” section from `SESSION_DIR/inputs/context_pack.md` to pick stable `acceptance_criteria[].verifications[]` commands for tasks in that language.

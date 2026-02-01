@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "enabled": false,
+  "id": "e2e",
+  "command": "",
+  "env_file": "e2e/.env",
+  "requires_env": ["E2E_BASE_URL"],
+  "requires_files": ["e2e/.env"],
+  "mode": "optional",
+  "notes": [
+    "enabled=false by default; set true after configuring a working E2E command.",
+    "mode: optional|required. If required and prerequisites are missing, the E2E gate fails."
+  ]
+}
+

@@ -11,6 +11,10 @@ workflow:
   max_remediation_loops: 2
   # When true, code tasks must specify acceptance_criteria.verifications[] (so gates can run evidence deterministically).
   require_verifications_for_code_tasks: true
+  # When true, the workflow generates USER_STORIES and requires tasks to reference them.
+  require_user_stories: true
+  # E2E mode: off|optional|required. E2E is configured via `.claude/at/e2e.json`.
+  e2e_mode: "optional"
 
 docs:
   registry_path: "docs/DOCUMENTATION_REGISTRY.json"

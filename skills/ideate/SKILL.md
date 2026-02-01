@@ -27,6 +27,9 @@ allowed-tools: Read, Write, Edit, Grep, Glob, Bash, Task
 4) Produce the architecture brief (agentic):
    - Task: `solution-architect`
    - Output: `SESSION_DIR/planning/ARCHITECTURE_BRIEF.{md,json}`
+4.5) Generate user stories (agentic):
+   - Task: `story-writer`
+   - Output: `SESSION_DIR/planning/USER_STORIES.{md,json}`
 5) Brainstorm options and recommendation (agentic):
    - Task: `brainstormer`
    - Inputs: request + context pack + (optional) architecture brief
