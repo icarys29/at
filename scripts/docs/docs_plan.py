@@ -68,6 +68,46 @@ def _collect_changed_files(session_dir: Path) -> list[dict[str, Any]]:
     return uniq
 
 
+def _collect_summary_text(session_dir: Path) -> str:
+    """
+    Deterministic keyword source:
+    - task YAML summaries (implementation/testing)
+    - planning/actions.json task summaries (if present)
+    """
+    chunks: list[str] = []
+
+    for p in sorted((session_dir / "implementation" / "tasks").glob("*.yaml")) + sorted((session_dir / "testing" / "tasks").glob("*.yaml")):
+        data = _load_yaml(p)
+        if not data:
+            continue
+        s = data.get("summary")
+        if isinstance(s, str) and s.strip():
+            chunks.append(s.strip())
+
+    actions = session_dir / "planning" / "actions.json"
+    if actions.exists():
+        try:
+            obj = json.loads(actions.read_text(encoding="utf-8"))
+        except Exception:
+            obj = {}
+        if isinstance(obj, dict):
+            tasks = obj.get("tasks")
+            if isinstance(tasks, list):
+                for t in tasks[:5000]:
+                    if not isinstance(t, dict):
+                        continue
+                    s = t.get("summary")
+                    if isinstance(s, str) and s.strip():
+                        chunks.append(s.strip())
+                    ac = t.get("acceptance_criteria")
+                    if isinstance(ac, list):
+                        for it in ac[:200]:
+                            if isinstance(it, dict) and isinstance(it.get("statement"), str) and it.get("statement").strip():
+                                chunks.append(it.get("statement").strip())
+
+    return "\n".join(chunks)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Compute a deterministic docs plan for a session (no edits).")
     parser.add_argument("--project-dir", default=None)
@@ -87,8 +127,9 @@ def main() -> int:
         return 2
 
     changed_files = _collect_changed_files(session_dir)
+    summary_text = _collect_summary_text(session_dir)
     rules = registry.get("coverage_rules")
-    plan = evaluate_coverage_rules(rules, changed_files=changed_files)
+    plan = evaluate_coverage_rules(rules, changed_files=changed_files, keywords_text=summary_text)
 
     out_dir = session_dir / "documentation"
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -102,7 +143,8 @@ def main() -> int:
         "required_doc_ids": plan.required_doc_ids,
         "required_create_types": plan.required_create_types,
         "triggered_rules": [
-            {"id": t.rule_id, "matched_paths": t.matched_paths, "note": t.note or ""} for t in plan.triggered
+            {"id": t.rule_id, "matched_paths": t.matched_paths, "matched_keywords": t.matched_keywords, "note": t.note or ""}
+            for t in plan.triggered
         ],
     }
     write_json(out_dir / "docs_plan.json", payload)
@@ -138,6 +180,9 @@ def main() -> int:
             md.append(f"- `{r['id']}`")
             if r.get("note"):
                 md.append(f"  - note: {r['note']}")
+            kws = r.get("matched_keywords") if isinstance(r.get("matched_keywords"), list) else []
+            if kws:
+                md.append("  - matched_keywords: " + ", ".join([f"`{k}`" for k in kws[:10]]))
             paths = r.get("matched_paths") if isinstance(r.get("matched_paths"), list) else []
             for p in paths[:10]:
                 md.append(f"  - `{p}`")
@@ -152,4 +197,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

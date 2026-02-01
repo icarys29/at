@@ -95,38 +95,77 @@ def _format_docs_coverage_rules_summary(registry: dict[str, Any] | None, *, limi
             continue
         rid = it.get("id")
         desc = it.get("description")
+        when = it.get("when")
         match = it.get("match") if isinstance(it.get("match"), dict) else {}
         actions = it.get("actions") if isinstance(it.get("actions"), dict) else {}
+        match_any = it.get("match_any") if isinstance(it.get("match_any"), list) else []
+        requires = it.get("requires") if isinstance(it.get("requires"), list) else []
 
         if not isinstance(rid, str) or not rid.strip():
             continue
         rid_s = rid.strip()
-        desc_s = desc.strip() if isinstance(desc, str) and desc.strip() else ""
+        desc_s = when.strip() if isinstance(when, str) and when.strip() else (desc.strip() if isinstance(desc, str) and desc.strip() else "")
         out.append(f"- `{rid_s}`: {desc_s}" if desc_s else f"- `{rid_s}`")
 
-        # Match globs (deterministic; no inference).
-        for key in ("paths_any", "created_paths_any", "modified_paths_any", "deleted_paths_any"):
-            globs = match.get(key)
-            if isinstance(globs, list):
-                gs = [str(g).strip() for g in globs[:20] if isinstance(g, str) and str(g).strip()]
-                if gs:
-                    out.append(f"  - match `{key}`: " + ", ".join([f"`{g}`" for g in gs]))
+        # Legacy rule shape summary
+        if match:
+            for key in ("paths_any", "created_paths_any", "modified_paths_any", "deleted_paths_any"):
+                globs = match.get(key)
+                if isinstance(globs, list):
+                    gs = [str(g).strip() for g in globs[:20] if isinstance(g, str) and str(g).strip()]
+                    if gs:
+                        out.append(f"  - match `{key}`: " + ", ".join([f"`{g}`" for g in gs]))
 
-        req_docs = actions.get("require_doc_ids")
-        if isinstance(req_docs, list):
-            ds = [str(d).strip() for d in req_docs[:20] if isinstance(d, str) and str(d).strip()]
-            if ds:
-                out.append("  - require doc ids: " + ", ".join([f"`{d}`" for d in ds]))
+            req_docs = actions.get("require_doc_ids")
+            if isinstance(req_docs, list):
+                ds = [str(d).strip() for d in req_docs[:20] if isinstance(d, str) and str(d).strip()]
+                if ds:
+                    out.append("  - require doc ids: " + ", ".join([f"`{d}`" for d in ds]))
 
-        req_types = actions.get("require_create_types")
-        if isinstance(req_types, list):
-            ts = [str(t).strip() for t in req_types[:20] if isinstance(t, str) and str(t).strip()]
-            if ts:
-                out.append("  - require create types: " + ", ".join([f"`{t}`" for t in ts]))
+            req_types = actions.get("require_create_types")
+            if isinstance(req_types, list):
+                ts = [str(t).strip() for t in req_types[:20] if isinstance(t, str) and str(t).strip()]
+                if ts:
+                    out.append("  - require create types: " + ", ".join([f"`{t}`" for t in ts]))
 
-        note = actions.get("note")
-        if isinstance(note, str) and note.strip():
-            out.append("  - note: " + _truncate(note, 180))
+            note = actions.get("note")
+            if isinstance(note, str) and note.strip():
+                out.append("  - note: " + _truncate(note, 180))
+
+        # Advanced rule shape summary
+        if match_any:
+            out.append("  - match_any:")
+            for g in match_any[:3]:
+                if not isinstance(g, dict):
+                    continue
+                parts: list[str] = []
+                for key in ("paths_any", "changed_paths_any", "created_paths_any", "modified_paths_any", "deleted_paths_any", "keywords_any", "keywords_all"):
+                    vv = g.get(key)
+                    if isinstance(vv, list):
+                        vs = [str(x).strip() for x in vv[:8] if isinstance(x, str) and str(x).strip()]
+                        if vs:
+                            parts.append(f"{key}=" + ",".join(vs))
+                if g.get("always") is True:
+                    parts.append("always=true")
+                if parts:
+                    out.append("    - " + " | ".join([_truncate(p, 120) for p in parts]))
+
+        if requires:
+            ids: list[str] = []
+            types: list[str] = []
+            for r in requires[:30]:
+                if not isinstance(r, dict):
+                    continue
+                did = r.get("id")
+                if isinstance(did, str) and did.strip():
+                    ids.append(did.strip())
+                typ = r.get("type")
+                if isinstance(typ, str) and typ.strip():
+                    types.append(typ.strip())
+            if ids:
+                out.append("  - requires ids: " + ", ".join([f"`{d}`" for d in ids[:12]]))
+            if types:
+                out.append("  - requires types: " + ", ".join([f"`{t}`" for t in types[:12]]))
 
     if len(rules) > limit:
         out.append(f"- … ({len(rules) - limit} more)")

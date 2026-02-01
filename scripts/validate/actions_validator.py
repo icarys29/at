@@ -183,6 +183,12 @@ def validate_actions_data(data: dict[str, Any], *, project_root: Path | None = N
             if isinstance(t.get("title"), str) and t.get("title"):
                 errors.append(ValidationError(tp, "Uses 'title' but schema requires 'summary'"))
             errors.append(ValidationError(f"{tp}.summary", "Required non-empty string"))
+        summary_text_for_keywords = summary.strip() if isinstance(summary, str) else ""
+        acs = t.get("acceptance_criteria")
+        if isinstance(acs, list):
+            for ac in acs[:50]:
+                if isinstance(ac, dict) and isinstance(ac.get("statement"), str) and ac.get("statement").strip():
+                    summary_text_for_keywords += "\n" + ac.get("statement").strip()
 
         file_scope = t.get("file_scope")
         if not _expect_type(errors, file_scope, dict, f"{tp}.file_scope"):
@@ -240,6 +246,7 @@ def validate_actions_data(data: dict[str, Any], *, project_root: Path | None = N
                     required = evaluate_coverage_rules_for_write_scopes(
                         rules,
                         write_scopes=[w.raw for w in parsed_writes],
+                        keywords_text=summary_text_for_keywords,
                     ).required_doc_ids
                     if required:
                         doc_set = set([d.strip() for d in doc_ids if isinstance(d, str)]) if isinstance(doc_ids, list) else set()
