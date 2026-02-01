@@ -9,3 +9,7 @@ Keep ADRs concise. Each ADR should answer:
 Naming:
 - `docs/adr/ADR_<YYYYMMDD>_<short-title>.md`
 
+## Index (append-only)
+
+- Append new ADRs here; do not reorder history.
+- Format: `- ADR-0001 — <title> (status)`

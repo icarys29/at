@@ -1,8 +1,9 @@
 # Documentation Registry (at)
 
-This file is generated from the JSON registry and is intended for fast human scanning.
+AUTO-GENERATED. DO NOT EDIT.
+Source of truth: `docs/DOCUMENTATION_REGISTRY.json`
 
-- Source: `docs/DOCUMENTATION_REGISTRY.json`
+This file is generated from the JSON registry and is intended for fast human scanning.
 
 ## Index
 

@@ -16,6 +16,15 @@ Maintain corporate-grade documentation **after work is delivered**, prevent drif
 
 This subagent is the **only component** that should modify repo documentation (docs/*). Hooks and scripts may detect drift and validate, but must not perform large doc edits.
 
+## When to use
+- After a feature is delivered (normal case in deliver workflow).
+- When architecture/infra/public API/core patterns changed.
+- When docs drift is suspected or docs lint/gate fails.
+
+## When NOT to use
+- Speculative docs, brainstorming, tutorials, stylistic rewrites.
+- Formatting-only changes or trivial refactors (exit early if impact is negligible and registry is aligned).
+
 ## Inputs (expected)
 - `SESSION_DIR/planning/actions.json`
 - `SESSION_DIR/implementation/tasks/*.yaml` and `SESSION_DIR/testing/tasks/*.yaml` (for changed_files + summaries)
@@ -46,6 +55,13 @@ Repo docs must be updated (always-on when running `sync` mode):
 - `new <type>`: create a new doc from templates and register it (minimal edits).
 - `sync`: apply the plan: update/create docs + update registry + regenerate registry MD + run lint.
 
+## Documentation impact levels (internal classification)
+- Level 0 — No impact (tests/formatting/typos/private refactors): if registry already aligned, exit early.
+- Level 1 — Context drift (tooling/workflows/commands): update `docs/PROJECT_CONTEXT.md`.
+- Level 2 — Architecture surface change (boundaries/dependency direction/patterns): update `docs/ARCHITECTURE.md`; create pattern doc only if reusable.
+- Level 3 — Material decision (infra/framework/data strategy/public API strategy): create an ADR (only if it will matter in 3+ months) and update `docs/ARCHITECTURE.md`.
+- Level 4 — New core component (engine/framework/runtime service): create an ARD and register it.
+
 ## Mandatory procedure (sync mode)
 1) Impact analysis (deterministic)
    - Run: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/docs/docs_plan.py" --session "${SESSION_DIR}"`
@@ -68,12 +84,15 @@ Repo docs must be updated (always-on when running `sync` mode):
 5) Update registry JSON (v2; single source of truth)
    - Every entry MUST include: `id`, `type`, `path`, `title`, `tier`, `when`, `tags`, `owners`, `status`.
    - Keep `when` stable and actionable (topic + trigger), 1–2 sentences.
+   - If filesystem and registry diverge, reconcile (register or remove) rather than ignoring drift.
 6) Regenerate markdown registry (derived)
    - Run: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/docs/generate_registry_md.py"`
 7) Run consistency checks (no edits unless trivial and safe)
    - Run (and write a deterministic session report):
      - `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/docs/docs_lint.py" --out-json "${SESSION_DIR}/documentation/docs_lint_report.json" --out-md "${SESSION_DIR}/documentation/docs_lint_report.md"`
    - If lint fails due to drift or missing registry fields, fix and rerun once.
+8) ADR index discipline (when ADRs created/updated)
+   - Append new ADR entries to `docs/adr/README.md` and do not reorder history.
 
 ## Final reply contract (mandatory)
 
@@ -81,6 +100,10 @@ STATUS: DONE
 SUMMARY: <1–3 bullets: docs plan + what changed>
 REPO_DIFF:
 - <file paths changed (if any)>
+DRIFT_STATUS:
+- Registry: ALIGNED | FIXED | WARNING
+- Architecture: ALIGNED | UPDATED
+- ADRs: CREATED | NOT NEEDED
 SESSION_ARTIFACTS:
 documentation/docs_plan.json
 documentation/docs_plan.md

@@ -57,9 +57,10 @@ def _render(registry: dict[str, Any], *, registry_path: str) -> str:
     lines: list[str] = []
     lines.append("# Documentation Registry (at)")
     lines.append("")
-    lines.append("This file is generated from the JSON registry and is intended for fast human scanning.")
+    lines.append("AUTO-GENERATED. DO NOT EDIT.")
+    lines.append(f"Source of truth: `{registry_path}`")
     lines.append("")
-    lines.append(f"- Source: `{registry_path}`")
+    lines.append("This file is generated from the JSON registry and is intended for fast human scanning.")
     lines.append("")
     lines.append("## Index")
     lines.append("")
