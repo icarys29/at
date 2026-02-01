@@ -43,6 +43,7 @@ High-level flow (inputs → scripts/agents → outputs):
 8) Gates → quality/compliance/changed-files → session reports
 9) Docs update (agentic, always-on) → `docs-keeper` → repo `docs/*` + regenerated registry MD
 10) Docs gate (deterministic) → `scripts/validate/docs_gate.py` → `SESSION_DIR/documentation/docs_gate_report.{json,md}`
+11) Task board (deterministic) → `scripts/session/task_board.py` → `SESSION_DIR/status/task_board.{json,md}`
 
 ## Local Development
 

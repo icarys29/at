@@ -77,6 +77,8 @@ def _steps_for_gate(session_dir: Path, gate: str) -> list[Step]:
         return [Step("changed_files", "validate git changed files scope", SCRIPT_ROOT / "validate" / "validate_changed_files.py", ["--session", s])]
     if gate == "compliance":
         return [Step("compliance", "generate compliance report", SCRIPT_ROOT / "compliance" / "generate_compliance_report.py", ["--session", s, "--rerun-supporting-checks"])]
+    if gate == "task_board":
+        return [Step("task_board", "generate session task board", SCRIPT_ROOT / "session" / "task_board.py", ["--session", s])]
     if gate == "progress":
         return [Step("progress", "update session progress", SCRIPT_ROOT / "session" / "session_progress.py", ["--session", s])]
     raise ValueError(f"Unknown gate: {gate}")
@@ -104,6 +106,7 @@ def _steps_for_from_phase(session_dir: Path, from_phase: str) -> list[Step]:
                 *_steps_for_gate(session_dir, "compliance"),
             ]
         )
+    steps.extend(_steps_for_gate(session_dir, "task_board"))
     steps.extend(_steps_for_gate(session_dir, "progress"))
     return steps
 
@@ -114,7 +117,11 @@ def main() -> int:
     parser.add_argument("--sessions-dir", default=None)
     parser.add_argument("--session", default=None, help="Session id or directory (default: most recent)")
     parser.add_argument("--from-phase", default=None, choices=PHASE_ORDER, help="Run deterministic steps starting at this phase.")
-    parser.add_argument("--gate", default=None, help="Run a single deterministic gate (validate_actions|build_task_contexts|checkpoint|validate_task_artifacts|plan_adherence|parallel_conformance|quality|docs_gate|changed_files|compliance|progress)")
+    parser.add_argument(
+        "--gate",
+        default=None,
+        help="Run a single deterministic gate (validate_actions|build_task_contexts|checkpoint|validate_task_artifacts|plan_adherence|parallel_conformance|quality|docs_gate|changed_files|compliance|task_board|progress)",
+    )
     parser.add_argument("--continue-on-fail", action="store_true", help="Run all steps even if one fails.")
     args = parser.parse_args()
 

@@ -75,6 +75,7 @@ allowed-tools: Read, Write, Edit, Grep, Glob, Bash, Task
      - Re-run: validate actions → build task contexts → dispatch remediation tasks → rerun deterministic gates.
      - If remediation loops are exhausted, stop and optionally use `--rollback`.
 10) Update progress:
+   - Run: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/session/task_board.py" --session "${SESSION_DIR}"`
    - Run: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/session/session_progress.py" --session "${SESSION_DIR}"`
 11) Report:
    - Print the session directory and the key artifacts to review next.

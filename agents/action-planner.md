@@ -46,6 +46,7 @@ Produce a **valid, parallel-safe** `planning/actions.json` for the current sessi
   - Every `implementor` and `tests-builder` task **must** declare `file_scope.writes[]` (no globs).
   - Tasks within the same parallel group must have **non-overlapping** `file_scope.writes[]`.
   - Every code task must appear in exactly one `parallel_execution.groups[*].tasks[]`.
+  - Choose stable `group_id` values and set `depends_on_groups[]` when ordering matters (used by deterministic task boards and reruns).
 
 ### File scope rules
 - `file_scope.allow[]` may use globs (reads).
