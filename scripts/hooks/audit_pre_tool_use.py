@@ -20,7 +20,7 @@ SCRIPT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SCRIPT_ROOT))
 
 from audit.audit_log import append_jsonl, ensure_audit_paths, traces_enabled  # noqa: E402
-from lib.io import utc_now  # noqa: E402
+from lib.io import utc_now_full  # noqa: E402
 from lib.project import detect_project_dir  # noqa: E402
 
 
@@ -41,15 +41,18 @@ def main() -> int:
 
     tool_name = payload.get("tool_name")
     tool_input = payload.get("tool_input")
+    tool_call_id = payload.get("tool_call_id") or payload.get("tool_use_id") or payload.get("tool_request_id")
 
     record: dict[str, Any] = {
         "version": 1,
-        "ts": utc_now(),
+        "ts": utc_now_full(),
         "event": "PreToolUse",
         "tool_name": tool_name,
         "cwd": payload.get("cwd"),
         "session_id": payload.get("session_id"),
     }
+    if isinstance(tool_call_id, str) and tool_call_id.strip():
+        record["tool_call_id"] = tool_call_id.strip()
     if traces_enabled():
         record["tool_input"] = tool_input
     append_jsonl(paths.tools_jsonl, record)
@@ -58,4 +61,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

@@ -71,6 +71,14 @@ Produce a **valid, parallel-safe** `planning/actions.json` for the current sessi
 - Prefer project-specific commands from `.claude/project.yaml` when present; use language pack suggestions as deterministic defaults (not improv).
 - For code tasks, include at least one meaningful verification (usually `command`) unless the request is explicitly non-code.
 
+### Workflow strategy (default vs TDD)
+- Read `.claude/project.yaml` → `workflow.strategy` (default is `default`).
+- If `workflow.strategy=tdd`:
+  - Create `tests-builder` tasks that produce failing/expected tests **before** implementation tasks.
+  - Every `implementor` task must include `depends_on[]` referencing at least one `tests-builder` task id.
+  - Set `parallel_execution.groups` so tests run first (tests-builder groups have lower `execution_order` than implementor groups).
+  - Prefer at least one `command` verification that runs the relevant tests for both tests-builder and implementor tasks.
+
 ### Optional: code pointers (recommended for precision)
 - For implementor/tests-builder tasks you may add `context.code_pointers[]` to improve per-task context without expanding it:
   - Each pointer is `{path, pattern, context_lines?, max_matches?}`

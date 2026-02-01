@@ -31,7 +31,8 @@
         "always_on_compliance": { "type": "boolean", "default": true },
         "max_parallel_agents": { "type": "integer", "minimum": 1, "default": 3 },
         "autofix_allowed": { "type": "boolean", "default": true },
-        "max_remediation_loops": { "type": "integer", "minimum": 0, "default": 2 }
+        "max_remediation_loops": { "type": "integer", "minimum": 0, "default": 2 },
+        "strategy": { "type": "string", "enum": ["default", "tdd"], "default": "default" }
       }
     },
     "docs": {
@@ -54,6 +55,14 @@
         "emit_adr_stubs": { "type": "boolean", "default": true },
         "emit_sessionstart_context": { "type": "boolean", "default": true },
         "sessionstart_context_max_chars": { "type": "integer", "minimum": 0, "default": 1200 }
+      }
+    },
+    "lsp": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "enabled": { "type": "boolean", "default": false },
+        "mode": { "type": "string", "enum": ["fail", "warn", "skip"], "default": "skip" }
       }
     },
     "commands": {
@@ -88,4 +97,3 @@
     }
   }
 }
-

@@ -9,6 +9,8 @@ workflow:
   max_parallel_agents: 5
   autofix_allowed: true
   max_remediation_loops: 2
+  # default|tdd — influences action-planner output (task ordering/dependencies).
+  strategy: "default"
   # When true, code tasks must specify acceptance_criteria.verifications[] (so gates can run evidence deterministically).
   require_verifications_for_code_tasks: true
   # When true, the workflow generates USER_STORIES and requires tasks to reference them.
@@ -30,6 +32,11 @@ learning:
   emit_adr_stubs: true
   emit_sessionstart_context: true
   sessionstart_context_max_chars: 1200
+
+lsp:
+  enabled: true
+  # fail|warn|skip — applies when actions.json includes lsp verifications.
+  mode: "skip"
 
 audit:
   enabled: false

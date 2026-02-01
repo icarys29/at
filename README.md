@@ -9,3 +9,5 @@ This repo rebuilds the **Agent Team (`at`)** Claude Code plugin from scratch.
 Run Claude Code with this plugin locally:
 
 `claude --plugin-dir .`
+
+Plugin manifest (Claude Code canonical location): `.claude-plugin/plugin.json`

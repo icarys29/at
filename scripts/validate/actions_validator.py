@@ -12,6 +12,7 @@ Updated: 2026-02-01
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -117,6 +118,11 @@ def validate_actions_data(data: dict[str, Any], *, project_root: Path | None = N
     workflow_cfg = config.get("workflow") if isinstance(config.get("workflow"), dict) else {}
     require_verifications_for_code = bool(workflow_cfg.get("require_verifications_for_code_tasks") is True)
     require_user_stories = bool(workflow_cfg.get("require_user_stories") is True)
+    strategy = workflow_cfg.get("strategy") if isinstance(workflow_cfg.get("strategy"), str) else "default"
+    if strategy not in {"default", "tdd"}:
+        strategy = "default"
+    lsp_cfg = config.get("lsp") if isinstance(config.get("lsp"), dict) else {}
+    lsp_enabled = bool(lsp_cfg.get("enabled") is True)
 
     # Top-level structure.
     if data.get("version") != 1:
@@ -228,6 +234,77 @@ def validate_actions_data(data: dict[str, Any], *, project_root: Path | None = N
                 verifs = ac.get("verifications")
                 if isinstance(verifs, list) and any(isinstance(v, dict) for v in verifs):
                     any_verifications = True
+                if verifs is None:
+                    continue
+                if not isinstance(verifs, list):
+                    errors.append(ValidationError(f"{ap}.verifications", "Must be an array of verification objects"))
+                    continue
+                for vk, v in enumerate(verifs[:200]):
+                    vp = f"{ap}.verifications[{vk}]"
+                    if not isinstance(v, dict):
+                        errors.append(ValidationError(vp, "Must be an object"))
+                        continue
+                    vtype = v.get("type")
+                    if not isinstance(vtype, str) or not vtype.strip():
+                        errors.append(ValidationError(f"{vp}.type", "Required non-empty string"))
+                        continue
+                    vtype = vtype.strip()
+                    if vtype not in {"file", "grep", "command", "lsp"}:
+                        errors.append(ValidationError(f"{vp}.type", f"Unknown verification type: {vtype!r}"))
+                        continue
+
+                    if vtype in {"file", "grep"}:
+                        p = v.get("path")
+                        if not isinstance(p, str) or not p.strip():
+                            errors.append(ValidationError(f"{vp}.path", f"Required non-empty string for type={vtype!r}"))
+
+                    if vtype == "grep":
+                        pat = v.get("pattern")
+                        if not isinstance(pat, str) or not pat.strip():
+                            errors.append(ValidationError(f"{vp}.pattern", "Required non-empty string for type='grep'"))
+                        else:
+                            try:
+                                re.compile(pat)
+                            except re.error as exc:
+                                errors.append(ValidationError(f"{vp}.pattern", f"Invalid regex: {exc}"))
+
+                    if vtype == "command":
+                        cmd = v.get("command")
+                        if not isinstance(cmd, str) or not cmd.strip():
+                            errors.append(ValidationError(f"{vp}.command", "Required non-empty string for type='command'"))
+                        ms = v.get("must_succeed")
+                        if ms is not None and not isinstance(ms, bool):
+                            errors.append(ValidationError(f"{vp}.must_succeed", "Must be a boolean"))
+
+                    if vtype == "lsp":
+                        if not lsp_enabled:
+                            errors.append(
+                                ValidationError(
+                                    vp,
+                                    "lsp verifications require lsp.enabled=true in .claude/project.yaml (or remove type='lsp' verifications)",
+                                )
+                            )
+                        spec = v.get("lsp")
+                        if not isinstance(spec, dict):
+                            errors.append(ValidationError(f"{vp}.lsp", "Required object for type='lsp'"))
+                            continue
+                        kind = spec.get("kind")
+                        if kind not in {"definition_exists", "hover_contains", "references_min"}:
+                            errors.append(ValidationError(f"{vp}.lsp.kind", "Must be one of 'definition_exists'|'hover_contains'|'references_min'"))
+                        lp = spec.get("path")
+                        sym = spec.get("symbol")
+                        if not isinstance(lp, str) or not lp.strip():
+                            errors.append(ValidationError(f"{vp}.lsp.path", "Required non-empty string"))
+                        if not isinstance(sym, str) or not sym.strip():
+                            errors.append(ValidationError(f"{vp}.lsp.symbol", "Required non-empty string"))
+                        if kind == "hover_contains":
+                            mc = spec.get("must_contain")
+                            if not isinstance(mc, str) or not mc.strip():
+                                errors.append(ValidationError(f"{vp}.lsp.must_contain", "Required non-empty string for kind='hover_contains'"))
+                        if kind == "references_min":
+                            mr = spec.get("min_results")
+                            if not isinstance(mr, int) or mr < 0:
+                                errors.append(ValidationError(f"{vp}.lsp.min_results", "Required integer >= 0 for kind='references_min'"))
 
             # Optional strictness: require at least one verification for code tasks.
             # This makes "done" evidence deterministic and improves self-healing (gates can prove failures).
@@ -350,9 +427,34 @@ def validate_actions_data(data: dict[str, Any], *, project_root: Path | None = N
             if dep.strip() not in task_by_id:
                 errors.append(ValidationError(f"tasks[{i}].depends_on[{j}]", f"Unknown task id: {dep!r}"))
 
+    # Optional: TDD strategy enforcement (tests-first planning contract).
+    if strategy == "tdd":
+        tests_task_ids = [tid for tid, t in task_by_id.items() if isinstance(t, dict) and t.get("owner") == "tests-builder"]
+        implementor_idxs: list[int] = []
+        for i, t in enumerate(tasks):
+            if not isinstance(t, dict):
+                continue
+            if t.get("owner") != "implementor":
+                continue
+            tid = t.get("id")
+            if isinstance(tid, str) and tid.strip():
+                implementor_idxs.append(i)
+        if implementor_idxs and not tests_task_ids:
+            errors.append(ValidationError("workflow.strategy", "workflow.strategy=tdd requires at least one tests-builder task when implementor tasks are present"))
+        for i in implementor_idxs:
+            t = tasks[i]
+            if not isinstance(t, dict):
+                continue
+            depends = t.get("depends_on")
+            deps = [str(x).strip() for x in depends if isinstance(x, str) and str(x).strip()] if isinstance(depends, list) else []
+            if tests_task_ids and not any(d in tests_task_ids for d in deps):
+                errors.append(ValidationError(f"tasks[{i}].depends_on", "workflow.strategy=tdd requires implementor tasks to depend on at least one tests-builder task id"))
+
     # Parallel groups invariants + write-scope overlap detection.
     if parallel_enabled and isinstance(groups, list):
         all_group_tasks: list[str] = []
+        max_tests_order: int | None = None
+        min_impl_order: int | None = None
         for gi, g in enumerate(groups):
             gp = f"parallel_execution.groups[{gi}]"
             if not isinstance(g, dict):
@@ -366,6 +468,9 @@ def validate_actions_data(data: dict[str, Any], *, project_root: Path | None = N
             if not isinstance(gt, list) or not gt:
                 errors.append(ValidationError(f"{gp}.tasks", "Required non-empty array of task ids"))
                 continue
+            order = g.get("execution_order") if isinstance(g.get("execution_order"), int) else None
+            has_tests = False
+            has_impl = False
             for tj, task_id in enumerate(gt):
                 if not isinstance(task_id, str) or not task_id.strip():
                     errors.append(ValidationError(f"{gp}.tasks[{tj}]", "Must be a non-empty string"))
@@ -379,6 +484,17 @@ def validate_actions_data(data: dict[str, Any], *, project_root: Path | None = N
                 owner = task.get("owner")
                 if owner not in CODE_OWNERS:
                     errors.append(ValidationError(f"{gp}.tasks[{tj}]", f"Task owner must be implementor/tests-builder, got {owner!r}"))
+                if owner == "tests-builder":
+                    has_tests = True
+                    if isinstance(order, int):
+                        max_tests_order = order if max_tests_order is None else max(max_tests_order, order)
+                if owner == "implementor":
+                    has_impl = True
+                    if isinstance(order, int):
+                        min_impl_order = order if min_impl_order is None else min(min_impl_order, order)
+
+            if strategy == "tdd" and has_tests and has_impl:
+                errors.append(ValidationError(gp, "workflow.strategy=tdd forbids mixing tests-builder and implementor tasks in the same parallel group"))
 
             # Overlaps within this group.
             scopes_by_task: dict[str, list[WriteScope]] = {}
@@ -416,6 +532,14 @@ def validate_actions_data(data: dict[str, Any], *, project_root: Path | None = N
         dupes = sorted({t for t in all_group_tasks if all_group_tasks.count(t) > 1})
         if dupes:
             errors.append(ValidationError("parallel_execution.groups", f"Duplicate task ids across groups: {dupes!r}"))
+
+        if strategy == "tdd" and max_tests_order is not None and min_impl_order is not None and max_tests_order >= min_impl_order:
+            errors.append(
+                ValidationError(
+                    "parallel_execution.groups",
+                    "workflow.strategy=tdd requires tests-builder groups to have lower execution_order than implementor groups",
+                )
+            )
 
     return errors
 
