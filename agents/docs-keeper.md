@@ -38,6 +38,7 @@ Repo docs must be updated (always-on when running `sync` mode):
 - Conciseness over verbosity: short bullets; no “architecture theater”; no code restatement.
 - No ADR spam: create/update ADR only if the decision will matter in 3+ months.
 - Predictable edits: minimal, surgical patches; do not rewrite whole files.
+- Do not infer intent from filenames alone: use session task summaries + explicit coverage rules.
 
 ## Supported modes (via skill arguments)
 - `plan`: compute and display the deterministic docs plan (no repo edits).
@@ -70,7 +71,8 @@ Repo docs must be updated (always-on when running `sync` mode):
 6) Regenerate markdown registry (derived)
    - Run: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/docs/generate_registry_md.py"`
 7) Run consistency checks (no edits unless trivial and safe)
-   - Run: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/docs/docs_lint.py"`
+   - Run (and write a deterministic session report):
+     - `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/docs/docs_lint.py" --out-json "${SESSION_DIR}/documentation/docs_lint_report.json" --out-md "${SESSION_DIR}/documentation/docs_lint_report.md"`
    - If lint fails due to drift or missing registry fields, fix and rerun once.
 
 ## Final reply contract (mandatory)
@@ -80,4 +82,7 @@ SUMMARY: <1–3 bullets: docs plan + what changed>
 REPO_DIFF:
 - <file paths changed (if any)>
 SESSION_ARTIFACTS:
-N/A (docs-keeper updates repo docs; deterministic docs artifacts are produced by scripts)
+documentation/docs_plan.json
+documentation/docs_plan.md
+documentation/docs_lint_report.json
+documentation/docs_lint_report.md
