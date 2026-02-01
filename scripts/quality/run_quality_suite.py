@@ -91,18 +91,31 @@ def _load_e2e_config(project_root: Path) -> dict[str, Any] | None:
     return data if isinstance(data, dict) and data.get("version") == 1 else None
 
 
-def _suite_from_e2e_config(project_root: Path, *, cfg: dict[str, Any] | None) -> list[CommandSpec]:
+def _suite_from_e2e_config(project_root: Path, *, cfg: dict[str, Any] | None, profile: str | None) -> list[CommandSpec]:
     if not cfg:
         return []
     if cfg.get("enabled") is not True:
         return []
     cid = cfg.get("id") if isinstance(cfg.get("id"), str) and cfg.get("id").strip() else "e2e"
-    cmd = cfg.get("command") if isinstance(cfg.get("command"), str) else ""
+
+    # Back-compat: support either top-level fields or profiles.<name>.
+    prof = profile.strip() if isinstance(profile, str) and profile.strip() else None
+    default_prof = cfg.get("default_profile") if isinstance(cfg.get("default_profile"), str) and cfg.get("default_profile").strip() else None
+    profiles = cfg.get("profiles") if isinstance(cfg.get("profiles"), dict) else {}
+    selected = None
+    if prof and isinstance(profiles.get(prof), dict):
+        selected = profiles.get(prof)
+    elif default_prof and isinstance(profiles.get(default_prof), dict):
+        selected = profiles.get(default_prof)
+
+    src = selected if isinstance(selected, dict) else cfg
+
+    cmd = src.get("command") if isinstance(src.get("command"), str) else ""
     if not cmd.strip():
         return []
-    req_env = cfg.get("requires_env") if isinstance(cfg.get("requires_env"), list) else []
-    req_files = cfg.get("requires_files") if isinstance(cfg.get("requires_files"), list) else []
-    env_file = cfg.get("env_file") if isinstance(cfg.get("env_file"), str) and cfg.get("env_file").strip() else None
+    req_env = src.get("requires_env") if isinstance(src.get("requires_env"), list) else []
+    req_files = src.get("requires_files") if isinstance(src.get("requires_files"), list) else []
+    env_file = src.get("env_file") if isinstance(src.get("env_file"), str) and src.get("env_file").strip() else None
     return [
         CommandSpec(
             id=str(cid).strip(),
@@ -149,7 +162,7 @@ def _suite_from_language_packs(
     return suite
 
 
-def _build_suite_from_config(project_root: Path, config: dict[str, Any] | None) -> list[CommandSpec]:
+def _build_suite_from_config(project_root: Path, config: dict[str, Any] | None, *, e2e_profile: str | None = None) -> list[CommandSpec]:
     cfg = config if isinstance(config, dict) else {}
     commands = cfg.get("commands") if isinstance(cfg.get("commands"), dict) else {}
 
@@ -177,7 +190,16 @@ def _build_suite_from_config(project_root: Path, config: dict[str, Any] | None) 
                     env_file=str(item.get("env_file")).strip() if isinstance(item.get("env_file"), str) and item.get("env_file").strip() else None,
                 )
             )
-        return suite
+        # Still append optional E2E config after explicit suite (dedupe by id below).
+        suite.extend(_suite_from_e2e_config(project_root, cfg=_load_e2e_config(project_root), profile=e2e_profile))
+        deduped: list[CommandSpec] = []
+        seen: set[str] = set()
+        for s in suite:
+            if s.id in seen:
+                continue
+            seen.add(s.id)
+            deduped.append(s)
+        return deduped
 
     # Legacy: derive from commands.<language>.{format,lint,typecheck,test,build}
     project = cfg.get("project") if isinstance(cfg.get("project"), dict) else {}
@@ -207,7 +229,7 @@ def _build_suite_from_config(project_root: Path, config: dict[str, Any] | None) 
 
     # Optional: append E2E command configured via `.claude/at/e2e.json`.
     # This stays deterministic and avoids YAML mutation.
-    suite.extend(_suite_from_e2e_config(project_root, cfg=_load_e2e_config(project_root)))
+    suite.extend(_suite_from_e2e_config(project_root, cfg=_load_e2e_config(project_root), profile=e2e_profile))
 
     return suite
 
@@ -283,6 +305,8 @@ def main() -> int:
     parser.add_argument("--project-dir", default=None)
     parser.add_argument("--sessions-dir", default=None)
     parser.add_argument("--session", default=None, help="Session id or directory (default: most recent)")
+    parser.add_argument("--only", default=None, help="Comma-separated command ids to run (e.g. 'e2e').")
+    parser.add_argument("--e2e-profile", default=None, help="E2E profile name from .claude/at/e2e.json (e.g. 'local' or 'ci').")
     args = parser.parse_args()
 
     project_root = detect_project_dir(args.project_dir)
@@ -290,7 +314,14 @@ def main() -> int:
     sessions_dir = args.sessions_dir or get_sessions_dir(project_root, config)
     session_dir = resolve_session_dir(project_root, sessions_dir, args.session)
 
-    suite = _build_suite_from_config(project_root, config)
+    suite = _build_suite_from_config(project_root, config, e2e_profile=args.e2e_profile)
+    only_ids: set[str] = set()
+    if isinstance(args.only, str) and args.only.strip():
+        for part in args.only.split(","):
+            if part.strip():
+                only_ids.add(part.strip())
+    if only_ids:
+        suite = [s for s in suite if s.id in only_ids]
     out_dir = session_dir / "quality"
     logs_dir = out_dir / "command_logs"
     out_dir.mkdir(parents=True, exist_ok=True)

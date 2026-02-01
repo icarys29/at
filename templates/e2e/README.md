@@ -21,11 +21,11 @@ This directory holds **local-only** configuration for end-to-end tests.
 
 - `at` never reads `e2e/.env` via model tools (secrets stay local).
 - The deterministic E2E runner may load `e2e/.env` (if configured) to run your configured E2E command.
+- Configure E2E command + profiles in `.claude/at/e2e.json` (recommended profiles: `local`, `ci`).
 
 ## Manual execution
 
 ```bash
-set -a && source e2e/.env && set +a
-<your e2e command>
+# Prefer the deterministic runner (so the model never has to read secrets):
+uv run scripts/quality/run_quality_suite.py --only e2e --e2e-profile local
 ```
-

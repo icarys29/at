@@ -32,6 +32,7 @@ All top-level commands are implemented as skills under `skills/*/SKILL.md` and e
 - `/at:ideate` generates an architecture brief + brainstormed options (session-only; no repo edits)
 - `/at:brainstorm` alias for `/at:ideate`
 - `/at:setup-e2e` scaffolds a safe E2E setup (README + env example + config; no secrets)
+- `/at:e2e` runs E2E only (session-backed evidence; supports `.claude/at/e2e.json` profiles)
 - `/at:init-project` bootstraps a repo overlay (config, rules, docs scaffolding)
 - `/at:doctor` validates preconditions and can propose auto-remediation
 - Session tools: `/at:sessions`, `/at:session-progress`, resume by session id/dir

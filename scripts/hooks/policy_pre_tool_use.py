@@ -66,6 +66,10 @@ def _is_destructive_shell(command: str) -> str | None:
     for pat, label in patterns:
         if re.search(pat, compact):
             return label
+    # Prevent accidental exfiltration of local E2E env secrets via terminal output.
+    # Users should run E2E via deterministic runners that load env internally.
+    if re.search(r"(?i)\be2e/\.env\b", compact) and re.search(r"(?i)\b(cat|less|more|head|tail|sed|awk|grep|rg|python|node|ruby|perl)\b", compact):
+        return "direct read of e2e/.env (use runner; do not print secrets)"
     return None
 
 
@@ -120,4 +124,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

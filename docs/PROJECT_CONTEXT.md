@@ -29,6 +29,7 @@ Authoritative contract: `CLAUDE.md`.
 - Primary entrypoint: `/at:run` (deliver workflow)
 - Ideation entrypoint: `/at:ideate` (architecture brief + brainstorming; session-only)
 - E2E setup: `/at:setup-e2e` (guided scaffolding; no secrets)
+- E2E execution: `/at:e2e` (run E2E only; session-backed evidence)
 - Primary outputs: session-backed artifacts under `.session/<session_id>/`
 
 ## Deliver Workflow (always-on docs maintenance)
