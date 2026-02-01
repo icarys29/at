@@ -12,6 +12,7 @@ Updated: 2026-02-01
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from pathlib import Path
 
@@ -20,6 +21,7 @@ sys.path.insert(0, str(SCRIPT_ROOT))
 
 from lib.io import utc_now, write_text  # noqa: E402
 from lib.project import detect_project_dir  # noqa: E402
+from lib.simple_yaml import load_minimal_yaml  # noqa: E402
 
 
 def _plugin_root() -> Path:
@@ -41,6 +43,45 @@ def _write_if_missing(path: Path, content: str, *, force: bool) -> str:
     return "OVERWRITE" if path.exists() and force else "CREATE"
 
 
+def _read_yaml(path: Path) -> dict:
+    try:
+        data = load_minimal_yaml(path.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def _install_language_pack(project_root: Path, *, lang: str, force: bool) -> list[tuple[str, str]]:
+    plugin_root = _plugin_root()
+    pack_path = plugin_root / "templates" / "languages" / lang / "pack.json"
+    if not pack_path.exists():
+        return []
+    pack = json.loads(pack_path.read_text(encoding="utf-8"))
+    if not isinstance(pack, dict) or pack.get("version") != 1 or pack.get("language") != lang:
+        return []
+    rules_md_template = pack.get("rules_md_template")
+    if not isinstance(rules_md_template, str) or not rules_md_template.strip():
+        return []
+    rules_src = plugin_root / rules_md_template.strip()
+    if not rules_src.exists():
+        return []
+
+    results: list[tuple[str, str]] = []
+    results.append(
+        (
+            _write_if_missing(project_root / ".claude" / "rules" / "at" / "lang" / f"{lang}.md", rules_src.read_text(encoding="utf-8"), force=force),
+            f".claude/rules/at/lang/{lang}.md",
+        )
+    )
+    results.append(
+        (
+            _write_if_missing(project_root / ".claude" / "at" / "languages" / f"{lang}.json", json.dumps(pack, indent=2, sort_keys=True) + "\n", force=force),
+            f".claude/at/languages/{lang}.json",
+        )
+    )
+    return results
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Bootstrap `.claude/` overlay for the at plugin.")
     parser.add_argument("--project-dir", default=None)
@@ -57,6 +98,20 @@ def main() -> int:
     results.append(
         (_write_if_missing(project_root / ".claude" / "project.yaml", project_yaml, force=args.force), ".claude/project.yaml")
     )
+
+    # Language packs + language rules (based on project.primary_languages when present).
+    cfg = _read_yaml(project_root / ".claude" / "project.yaml")
+    langs: list[str] = []
+    proj = cfg.get("project") if isinstance(cfg.get("project"), dict) else {}
+    primary = proj.get("primary_languages") if isinstance(proj.get("primary_languages"), list) else []
+    for it in primary[:12]:
+        if isinstance(it, str) and it.strip():
+            langs.append(it.strip())
+    # If missing/empty, install python pack by default (safe bootstrap).
+    if not langs:
+        langs = ["python"]
+    for lang in langs:
+        results.extend(_install_language_pack(project_root, lang=lang, force=False))
 
     # Rules
     results.append(

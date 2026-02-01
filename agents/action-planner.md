@@ -57,6 +57,11 @@ Produce a **valid, parallel-safe** `planning/actions.json` for the current sessi
   - `id` and `statement` (required)
   - optional `verifications[]` (`file|grep|command|lsp`)
 
+### Language-aware verifications (recommended)
+- Use the “Language Verifications (suggested)” section from `SESSION_DIR/inputs/context_pack.md` to pick stable `acceptance_criteria[].verifications[]` commands for tasks in that language.
+- Prefer project-specific commands from `.claude/project.yaml` when present; use language pack suggestions as deterministic defaults (not improv).
+- For code tasks, include at least one meaningful verification (usually `command`) unless the request is explicitly non-code.
+
 ### Optional: code pointers (recommended for precision)
 - For implementor/tests-builder tasks you may add `context.code_pointers[]` to improve per-task context without expanding it:
   - Each pointer is `{path, pattern, context_lines?, max_matches?}`

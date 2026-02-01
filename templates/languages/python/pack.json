@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "language": "python",
+  "naming": {
+    "module": "snake_case",
+    "function": "snake_case",
+    "class": "PascalCase",
+    "constant": "SCREAMING_SNAKE_CASE"
+  },
+  "rules_md_template": "templates/rules/at/lang/python.md",
+  "suggested_quality_suite": [
+    {
+      "id": "python:format",
+      "command": "python3 -m ruff format .",
+      "requires_files": ["pyproject.toml"]
+    },
+    {
+      "id": "python:lint",
+      "command": "python3 -m ruff check .",
+      "requires_files": ["pyproject.toml"]
+    },
+    {
+      "id": "python:typecheck",
+      "command": "python3 -m mypy .",
+      "requires_files": ["pyproject.toml"]
+    },
+    {
+      "id": "python:test",
+      "command": "python3 -m pytest -q",
+      "requires_files": ["pyproject.toml"]
+    }
+  ],
+  "suggested_verifications": [
+    {
+      "type": "command",
+      "command": "python3 -m compileall -q .",
+      "must_succeed": true
+    }
+  ]
+}
+

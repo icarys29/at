@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "language": "typescript",
+  "naming": {
+    "function": "camelCase",
+    "class": "PascalCase",
+    "type": "PascalCase",
+    "constant": "SCREAMING_SNAKE_CASE"
+  },
+  "rules_md_template": "templates/rules/at/lang/typescript.md",
+  "suggested_quality_suite": [
+    {
+      "id": "ts:lint",
+      "command": "npm run lint",
+      "requires_files": ["package.json"]
+    },
+    {
+      "id": "ts:typecheck",
+      "command": "npm run typecheck",
+      "requires_files": ["package.json"]
+    },
+    {
+      "id": "ts:test",
+      "command": "npm test",
+      "requires_files": ["package.json"]
+    },
+    {
+      "id": "ts:build",
+      "command": "npm run build",
+      "requires_files": ["package.json"]
+    }
+  ],
+  "suggested_verifications": []
+}
+

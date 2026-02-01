@@ -57,7 +57,59 @@ def _files_exist(project_root: Path, patterns: list[str]) -> tuple[bool, list[st
     return (len(missing) == 0, missing)
 
 
-def _build_suite_from_config(config: dict[str, Any] | None) -> list[CommandSpec]:
+def _load_language_packs(project_root: Path) -> dict[str, dict[str, Any]]:
+    root = (project_root / ".claude" / "at" / "languages").resolve()
+    if not root.exists() or not root.is_dir():
+        return {}
+    out: dict[str, dict[str, Any]] = {}
+    for p in sorted(root.glob("*.json"))[:50]:
+        try:
+            data = json.loads(p.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        if not isinstance(data, dict) or data.get("version") != 1:
+            continue
+        lang = data.get("language")
+        if isinstance(lang, str) and lang.strip():
+            out[lang.strip()] = data
+    return out
+
+
+def _suite_from_language_packs(
+    project_root: Path,
+    *,
+    packs: dict[str, dict[str, Any]],
+    languages: list[str],
+) -> list[CommandSpec]:
+    suite: list[CommandSpec] = []
+    for lang in languages[:12]:
+        pack = packs.get(lang)
+        if not isinstance(pack, dict):
+            continue
+        items = pack.get("suggested_quality_suite")
+        if not isinstance(items, list) or not items:
+            continue
+        for it in items[:50]:
+            if not isinstance(it, dict):
+                continue
+            cid = it.get("id")
+            cmd = it.get("command")
+            if not isinstance(cid, str) or not cid.strip() or not isinstance(cmd, str) or not cmd.strip():
+                continue
+            req_env = it.get("requires_env") if isinstance(it.get("requires_env"), list) else []
+            req_files = it.get("requires_files") if isinstance(it.get("requires_files"), list) else []
+            suite.append(
+                CommandSpec(
+                    id=cid.strip(),
+                    command=cmd.strip(),
+                    requires_env=[str(x).strip() for x in req_env if isinstance(x, str) and x.strip()],
+                    requires_files=[str(x).strip() for x in req_files if isinstance(x, str) and x.strip()],
+                )
+            )
+    return suite
+
+
+def _build_suite_from_config(project_root: Path, config: dict[str, Any] | None) -> list[CommandSpec]:
     cfg = config if isinstance(config, dict) else {}
     commands = cfg.get("commands") if isinstance(cfg.get("commands"), dict) else {}
 
@@ -103,6 +155,15 @@ def _build_suite_from_config(config: dict[str, Any] | None) -> list[CommandSpec]
             cmd = block.get(step)
             if isinstance(cmd, str) and cmd.strip():
                 suite.append(CommandSpec(id=f"{lang}:{step}", command=cmd.strip(), requires_env=[], requires_files=[]))
+
+    # Optional defaults from installed language packs (opt-in only).
+    allow_defaults = commands.get("allow_language_pack_defaults") is True
+    if allow_defaults:
+        packs = _load_language_packs(project_root)
+        # Fill missing language blocks only (avoid surprising duplicates).
+        missing_langs = [l for l in (lang_ids or sorted(packs.keys())) if l not in selected]
+        suite.extend(_suite_from_language_packs(project_root, packs=packs, languages=missing_langs))
+
     return suite
 
 
@@ -161,7 +222,7 @@ def main() -> int:
     sessions_dir = args.sessions_dir or get_sessions_dir(project_root, config)
     session_dir = resolve_session_dir(project_root, sessions_dir, args.session)
 
-    suite = _build_suite_from_config(config)
+    suite = _build_suite_from_config(project_root, config)
     out_dir = session_dir / "quality"
     logs_dir = out_dir / "command_logs"
     out_dir.mkdir(parents=True, exist_ok=True)

@@ -296,9 +296,19 @@ def _render_task_context(
         lines.append("")
 
     # Always-on rules: keep small, but make them visible to implementors/tests.
+    # Include global + project architecture + language rules for configured primary languages.
+    cfg = load_project_config(project_root) or {}
+    primary_langs: list[str] = []
+    proj = cfg.get("project") if isinstance(cfg.get("project"), dict) else {}
+    langs = proj.get("primary_languages") if isinstance(proj.get("primary_languages"), list) else []
+    for it in langs[:6]:
+        if isinstance(it, str) and it.strip():
+            primary_langs.append(it.strip())
+
     rule_paths: list[tuple[str, str]] = [
         (".claude/rules/at/global.md", "Global rules (always-on)"),
         (".claude/rules/project/architecture.md", "Project architecture rules (repo-specific)"),
+        *[(f".claude/rules/at/lang/{lang}.md", f"Language rules ({lang})") for lang in primary_langs[:2]],
     ]
     embedded_any = False
     for rp, label in rule_paths:

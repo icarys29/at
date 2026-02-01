@@ -35,6 +35,9 @@ telemetry:
 # Commands are intentionally project-editable.
 # Prefer stable, CI-friendly commands and keep them fast.
 commands:
+  # When true, `scripts/quality/run_quality_suite.py` may use `.claude/at/languages/*.json` suggested suites
+  # as defaults for missing language commands. Keep false by default to avoid surprise toolchain assumptions.
+  allow_language_pack_defaults: false
   python:
     format: "python -m ruff format ."
     lint: "python -m ruff check ."

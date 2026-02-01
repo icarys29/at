@@ -72,3 +72,17 @@ This repo uses a deterministic docs registry at `docs/DOCUMENTATION_REGISTRY.jso
   - `.claude/at/enforcement.json` (checks + mode)
   - `.claude/at/scripts/run_enforcements.py` (CI-friendly runner)
   - Optional: `.claude/at/scripts/check_architecture_boundaries.py` + `.claude/at/architecture_boundaries.json` (dependency direction enforcement)
+
+## Language Packs (language-specific guidance; low-bloat)
+
+This plugin supports **language packs**: small, deterministic bundles that help planning and enforcement without hardcoding language behavior into agents.
+
+- Installed per-project under:
+  - `.claude/rules/at/lang/<lang>.md` (always-on language rules embedded into per-task contexts)
+  - `.claude/at/languages/<lang>.json` (structured metadata used by planner + (optional) quality defaults)
+- Install via: `/at:install-language-pack --lang <python|go|typescript|rust>`
+- Planner behavior:
+  - The context pack summarizes installed packs and includes “Language Verifications (suggested)” to make `acceptance_criteria[].verifications[]` predictable.
+- Quality gate behavior:
+  - `scripts/quality/run_quality_suite.py` uses only `commands.quality_suite` / `commands.<lang>.*` by default.
+  - Optional (off by default): set `commands.allow_language_pack_defaults=true` to use language pack suggested commands when project commands are missing.

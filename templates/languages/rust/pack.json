@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "language": "rust",
+  "naming": {
+    "module": "snake_case",
+    "function": "snake_case",
+    "type": "PascalCase",
+    "constant": "SCREAMING_SNAKE_CASE"
+  },
+  "rules_md_template": "templates/rules/at/lang/rust.md",
+  "suggested_quality_suite": [
+    {
+      "id": "rust:fmt",
+      "command": "cargo fmt",
+      "requires_files": ["Cargo.toml"]
+    },
+    {
+      "id": "rust:clippy",
+      "command": "cargo clippy --all-targets --all-features -- -D warnings",
+      "requires_files": ["Cargo.toml"]
+    },
+    {
+      "id": "rust:test",
+      "command": "cargo test",
+      "requires_files": ["Cargo.toml"]
+    }
+  ],
+  "suggested_verifications": []
+}
+

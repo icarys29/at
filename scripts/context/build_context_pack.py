@@ -188,6 +188,18 @@ def _iter_rule_files(project_root: Path) -> list[tuple[str, str]]:
     if core.exists():
         out.append((".claude/rules/at/global.md", "Global rules (always-on)"))
 
+    # Include language rule files for configured languages when present.
+    cfg = load_project_config(project_root) or {}
+    proj = cfg.get("project") if isinstance(cfg.get("project"), dict) else {}
+    langs = proj.get("primary_languages") if isinstance(proj.get("primary_languages"), list) else []
+    for it in langs[:12]:
+        if not isinstance(it, str) or not it.strip():
+            continue
+        lang = it.strip()
+        p = rules_root / "at" / "lang" / f"{lang}.md"
+        if p.exists():
+            out.append((p.resolve().relative_to(project_root.resolve()).as_posix(), f"Language rules ({lang})"))
+
     project_dir = rules_root / "project"
     if project_dir.exists():
         for p in sorted(project_dir.rglob("*.md"))[:200]:
@@ -198,6 +210,79 @@ def _iter_rule_files(project_root: Path) -> list[tuple[str, str]]:
             out.append((rel, "Project rules (repo-specific)"))
 
     return out
+
+
+def _load_language_packs(project_root: Path) -> dict[str, dict[str, Any]]:
+    """
+    Load project-local language packs under `.claude/at/languages/*.json`.
+    These are deterministic hints for planner and (optionally) quality defaults.
+    """
+    root = (project_root / ".claude" / "at" / "languages").resolve()
+    if not root.exists() or not root.is_dir():
+        return {}
+    out: dict[str, dict[str, Any]] = {}
+    for p in sorted(root.glob("*.json"))[:50]:
+        try:
+            data = json.loads(p.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        if not isinstance(data, dict) or data.get("version") != 1:
+            continue
+        lang = data.get("language")
+        if isinstance(lang, str) and lang.strip():
+            out[lang.strip()] = data
+    return out
+
+
+def _render_language_packs_summary(packs: dict[str, dict[str, Any]]) -> list[str]:
+    if not packs:
+        return ["- (none installed)"]
+    lines: list[str] = []
+    for lang in sorted(packs.keys()):
+        p = packs.get(lang) or {}
+        naming = p.get("naming") if isinstance(p.get("naming"), dict) else {}
+        lines.append(f"- `{lang}`: `.claude/at/languages/{lang}.json`")
+        if naming:
+            items = [f"{k}={v}" for k, v in list(naming.items())[:12] if isinstance(k, str) and isinstance(v, str)]
+            if items:
+                lines.append("  - naming: " + ", ".join(items))
+        qs = p.get("suggested_quality_suite") if isinstance(p.get("suggested_quality_suite"), list) else []
+        if qs:
+            ids = [str(it.get("id")).strip() for it in qs[:8] if isinstance(it, dict) and isinstance(it.get("id"), str) and it.get("id").strip()]
+            if ids:
+                lines.append("  - suggested_quality_suite: " + ", ".join([f"`{x}`" for x in ids]))
+        v = p.get("suggested_verifications") if isinstance(p.get("suggested_verifications"), list) else []
+        if v:
+            lines.append("  - suggested_verifications: " + ", ".join([f"`{it.get('type','')}`" for it in v[:6] if isinstance(it, dict)]))
+    return lines
+
+
+def _render_language_verifications(packs: dict[str, dict[str, Any]]) -> list[str]:
+    lines: list[str] = []
+    any_rows = False
+    for lang in sorted(packs.keys()):
+        p = packs.get(lang) or {}
+        qs = p.get("suggested_quality_suite") if isinstance(p.get("suggested_quality_suite"), list) else []
+        if not qs:
+            continue
+        if not any_rows:
+            any_rows = True
+            lines.append("## Language Verifications (suggested)")
+            lines.append("")
+            lines.append("Use these as deterministic defaults when writing `acceptance_criteria[].verifications[]` for tasks in this language.")
+            lines.append("Prefer project-specific commands if `.claude/project.yaml` defines them.")
+            lines.append("")
+        lines.append(f"### `{lang}`")
+        lines.append("")
+        for it in qs[:12]:
+            if not isinstance(it, dict):
+                continue
+            cid = it.get("id")
+            cmd = it.get("command")
+            if isinstance(cid, str) and cid.strip() and isinstance(cmd, str) and cmd.strip():
+                lines.append(f"- `{cid.strip()}`: `{cmd.strip()}`")
+        lines.append("")
+    return lines
 
 
 def main() -> int:
@@ -302,6 +387,16 @@ def main() -> int:
             lines.append(content.rstrip())
             lines.append("```")
             lines.append("")
+
+    # Language packs (if installed)
+    packs = _load_language_packs(project_root)
+    lines.append("## Language Packs (summary)")
+    lines.append("")
+    lines.append("Language packs provide deterministic, low-bloat guidance for naming and suggested verifications.")
+    lines.append("")
+    lines.extend(_render_language_packs_summary(packs))
+    lines.append("")
+    lines.extend(_render_language_verifications(packs))
 
     # Docs registry summary
     registry_path = get_docs_registry_path(config)

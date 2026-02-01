@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "language": "go",
+  "naming": {
+    "package": "lowercase",
+    "function_exported": "PascalCase",
+    "function_unexported": "camelCase",
+    "type": "PascalCase",
+    "constant": "PascalCase"
+  },
+  "rules_md_template": "templates/rules/at/lang/go.md",
+  "suggested_quality_suite": [
+    {
+      "id": "go:format",
+      "command": "gofmt -w .",
+      "requires_files": ["go.mod"]
+    },
+    {
+      "id": "go:test",
+      "command": "go test ./...",
+      "requires_files": ["go.mod"]
+    }
+  ],
+  "suggested_verifications": []
+}
+
