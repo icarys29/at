@@ -90,10 +90,45 @@ def main() -> int:
     )
     results.append(
         (
+            _write_if_missing(project_root / "docs" / "ARCHITECTURE.md", _read_template("docs/ARCHITECTURE.md"), force=args.force),
+            "docs/ARCHITECTURE.md",
+        )
+    )
+    results.append(
+        (
+            _write_if_missing(project_root / "docs" / "adr" / "README.md", _read_template("docs/adr/README.md"), force=args.force),
+            "docs/adr/README.md",
+        )
+    )
+    results.append(
+        (
+            _write_if_missing(project_root / "docs" / "adr" / "ADR_TEMPLATE.md", _read_template("docs/adr/ADR_TEMPLATE.md"), force=args.force),
+            "docs/adr/ADR_TEMPLATE.md",
+        )
+    )
+    results.append(
+        (
             _write_if_missing(project_root / "docs" / "PROJECT_CONTEXT.md", _read_template("docs/PROJECT_CONTEXT.md"), force=args.force),
             "docs/PROJECT_CONTEXT.md",
         )
     )
+
+    # Generate docs/DOCUMENTATION_REGISTRY.md (derived view for humans).
+    # Best-effort and non-blocking; the docs gate can enforce drift later.
+    try:
+        import subprocess
+
+        subprocess.run(
+            [sys.executable, str(_plugin_root() / "scripts" / "docs" / "generate_registry_md.py")],
+            cwd=str(project_root),
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=False,
+        )
+        results.append(("CREATE", "docs/DOCUMENTATION_REGISTRY.md"))
+    except Exception:
+        pass
 
     # Contributor pointer (optional; do not overwrite).
     pointer = (

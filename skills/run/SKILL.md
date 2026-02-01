@@ -62,6 +62,7 @@ allowed-tools: Read, Write, Edit, Grep, Glob, Bash, Task
    - Plan adherence: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/validate/plan_adherence.py" --session "${SESSION_DIR}"`
    - Parallel conformance: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/validate/parallel_conformance.py" --session "${SESSION_DIR}"`
    - Quality suite: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/quality/run_quality_suite.py" --session "${SESSION_DIR}"`
+   - Docs update (always-on, agentic): Task `docs-keeper`
    - Docs gate: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/validate/docs_gate.py" --session "${SESSION_DIR}"`
    - Changed files scope: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/validate/validate_changed_files.py" --session "${SESSION_DIR}"`
    - Compliance report (deterministic): `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/compliance/generate_compliance_report.py" --session "${SESSION_DIR}" --rerun-supporting-checks`

@@ -118,7 +118,27 @@
         "Keep optional subsystems opt-in (current state is good).",
         "Document a clear 'core vs optional packs' boundary and stabilize core workflows before expanding optional subsystems."
       ]
+    },
+    {
+      "id": "F-08",
+      "severity": "high",
+      "area": "documentation",
+      "title": "Documentation updates were not explicitly part of deliver; registry lacked planner-actionable selection metadata",
+      "evidence": [
+        "skills/run/SKILL.md",
+        "agents/docs-keeper.md",
+        "scripts/validate/docs_gate.py",
+        "scripts/docs/generate_registry_md.py",
+        "docs/DOCUMENTATION_REGISTRY.json",
+        "docs/DOCUMENTATION_REGISTRY.md"
+      ],
+      "risk": "Docs drift from delivered changes and planners cannot reliably decide which docs to embed in task contexts, leading to inconsistent behavior and low trust in documentation.",
+      "recommendations": [
+        "Run docs updates as an always-on deliver step (docs-keeper) before the docs gate.",
+        "Require each registry entry to include a short 'when' field (1–2 sentences) to guide planner context selection; optionally include tags.",
+        "Generate the registry Markdown view from JSON and enforce drift deterministically in the docs gate.",
+        "Include registry 'when' and tags in the context pack summary so planners can select doc_ids without opening every document."
+      ]
     }
   ]
 }
-

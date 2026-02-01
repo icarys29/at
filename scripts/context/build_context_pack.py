@@ -27,6 +27,15 @@ from lib.project import detect_project_dir, get_sessions_dir, load_project_confi
 from lib.session import resolve_session_dir  # noqa: E402
 
 
+def _truncate(s: str, n: int) -> str:
+    s = s.strip().replace("\n", " ")
+    if len(s) <= n:
+        return s
+    if n <= 1:
+        return "…"
+    return s[: max(0, n - 1)].rstrip() + "…"
+
+
 def _format_docs_registry_summary(registry: dict[str, Any] | None, *, limit: int = 200) -> list[str]:
     if not registry:
         return ["- (missing)"]
@@ -41,13 +50,23 @@ def _format_docs_registry_summary(registry: dict[str, Any] | None, *, limit: int
         path = item.get("path")
         title = item.get("title")
         tier = item.get("tier")
+        when = item.get("when")
+        tags = item.get("tags")
         if not isinstance(doc_id, str) or not doc_id.strip():
             continue
         if not isinstance(path, str) or not path.strip():
             continue
         tail = f" — {title}" if isinstance(title, str) and title.strip() else ""
         tier_s = f" (tier {tier})" if isinstance(tier, int) else ""
-        out.append(f"- `{doc_id.strip()}`{tier_s}: `{path.strip()}`{tail}")
+        when_s = ""
+        if isinstance(when, str) and when.strip():
+            when_s = f" | when: {_truncate(when, 140)}"
+        tags_s = ""
+        if isinstance(tags, list):
+            tags_list = [str(t).strip() for t in tags[:12] if isinstance(t, str) and str(t).strip()]
+            if tags_list:
+                tags_s = " | tags: " + ", ".join(tags_list)
+        out.append(f"- `{doc_id.strip()}`{tier_s}: `{path.strip()}`{tail}{when_s}{tags_s}")
     if len(docs) > limit:
         out.append(f"- … ({len(docs) - limit} more)")
     return out or ["- (no valid docs entries)"]

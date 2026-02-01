@@ -62,6 +62,19 @@ Produce a **valid, parallel-safe** `planning/actions.json` for the current sessi
   - `path` must be repo-relative and must not match `policies.forbid_secrets_globs`.
   - Use specific patterns (function/class names, error strings) to extract relevant snippets.
 
+### Documentation selection (registry-driven; recommended)
+- If the docs registry exists (see “Docs Registry (summary)” in `inputs/context_pack.md`), choose `task.context.doc_ids[]` for every **code task** to embed the minimum relevant documentation into that task’s context.
+- Use the registry `when` field (and `tags[]` when present) to decide which docs belong in context for the task topic.
+- Prefer tiered selection:
+  - Tier 1 docs: usually include for all code tasks (project-wide contract).
+  - Tier 2 docs: include when the task touches architecture, boundaries, or conventions.
+  - Tier 3+ docs: include only when the task explicitly needs a how-to/reference.
+- Keep `doc_ids[]` small (typically 1–3). If more are needed, justify it in the task’s summary/acceptance criteria.
+- Optional (when you need only part of a doc): use `task.context.doc_sections` to request specific headings by prefix (e.g., `["## Local Development"]`) to keep embedded context concise.
+
+### Documentation selection (required when enforced)
+- If `.claude/project.yaml` sets `docs.require_registry=true`, then every code task **must** include a non-empty `task.context.doc_ids[]` and IDs must exist in the registry.
+
 ## Procedure
 1) Read request + context pack.
 2) Draft tasks (SRP, minimal).

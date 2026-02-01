@@ -10,6 +10,7 @@ This is an actionable follow-up backlog derived from `CURRENT_PLUGIN_AUDIT_REPOR
 
 - Target: `scripts/hooks/enforce_file_scope.py`
 - Outcome: scope enforcement is reliable even when transcripts vary.
+- Status: Done (commit `dbd8241`)
 - Acceptance:
   - Hook uses `session_id` from hook input when present.
   - When task id cannot be resolved, the hook either:
@@ -20,6 +21,7 @@ This is an actionable follow-up backlog derived from `CURRENT_PLUGIN_AUDIT_REPOR
 
 - Target: `scripts/hooks/on_subagent_stop.py`
 - Outcome: final reply contracts + required artifacts are always enforced for `at` subagents.
+- Status: Done (commit `dbd8241`)
 - Acceptance:
   - Hook resolves `SESSION_DIR` via `session_id` when possible.
   - Enforcement is scoped to known `at` agent names to avoid false positives.
@@ -28,6 +30,7 @@ This is an actionable follow-up backlog derived from `CURRENT_PLUGIN_AUDIT_REPOR
 
 - Target: new script (e.g., `scripts/maintenance/self_audit.py`) + a skill wrapper.
 - Outcome: “deterministic gate” validates that the agentic workflow will behave as expected.
+- Status: Done (commit `dbd8241`)
 - Suggested checks:
   - `plugin.json` version matches `VERSION`
   - all `uv run` referenced scripts exist
@@ -39,6 +42,7 @@ This is an actionable follow-up backlog derived from `CURRENT_PLUGIN_AUDIT_REPOR
 
 - Target: `/at:run` + `scripts/validate/validate_task_artifacts.py`
 - Outcome: earlier, clearer failures when implementor/tests outputs are missing or malformed.
+- Status: Done (commit `dbd8241`)
 - Acceptance:
   - `validate_task_artifacts.py` runs after execution and before plan adherence/parallel conformance.
 
@@ -48,6 +52,7 @@ This is an actionable follow-up backlog derived from `CURRENT_PLUGIN_AUDIT_REPOR
 
 - Target: new script to write `compliance/COMPLIANCE_VERIFICATION_REPORT.md` (and optionally JSON).
 - Outcome: compliance decision is reproducible and testable.
+- Status: Done (commit `dbd8241`)
 - Acceptance:
   - Report includes `DECISION: APPROVE|REJECT` and links to the evidence artifacts.
 
@@ -55,9 +60,21 @@ This is an actionable follow-up backlog derived from `CURRENT_PLUGIN_AUDIT_REPOR
 
 - Target: `/at:run` + a small state/progress engine script.
 - Outcome: users can rerun only the failing phase/gate deterministically.
+- Status: Done (commit `dbd8241`)
 - Acceptance:
   - `--from-phase <phase>` reruns only the requested subset.
   - Session progress reflects rerun outcomes without redoing completed phases.
+
+### IMP-009 — Always-on docs updates + planner-actionable docs registry (`when`)
+
+- Target: deliver gate sequence + `agents/docs-keeper.md` + `scripts/validate/docs_gate.py` + docs registry generator
+- Outcome: documentation is always kept in sync with delivered work, and planners can select docs by topic/trigger.
+- Status: Done (this working tree; to be committed)
+- Acceptance:
+  - `docs-keeper` runs during deliver and updates `docs/PROJECT_CONTEXT.md` and `docs/ARCHITECTURE.md` (and ADRs when needed).
+  - `docs/DOCUMENTATION_REGISTRY.json` requires `when` for every entry (gate-enforced).
+  - `docs/DOCUMENTATION_REGISTRY.md` is generated from JSON and drift is gate-enforced.
+  - Context pack includes a registry summary that includes `when` (and `tags[]`) so action-planner can choose `context.doc_ids[]` without opening all docs.
 
 ## P2 (Agentic leverage, gated)
 
@@ -74,4 +91,3 @@ This is an actionable follow-up backlog derived from `CURRENT_PLUGIN_AUDIT_REPOR
 - Outcome: better context relevance while preserving least-context and secrecy policies.
 - Acceptance:
   - planner can specify explicit “code pointers” (paths + grep patterns) that a deterministic script embeds safely into per-task context.
-
