@@ -172,6 +172,34 @@ def _format_docs_coverage_rules_summary(registry: dict[str, Any] | None, *, limi
     return out or ["- (no valid coverage rules entries)"]
 
 
+def _iter_rule_files(project_root: Path) -> list[tuple[str, str]]:
+    """
+    Returns a list of (repo_rel_path, hint) for rule files.
+
+    Rules are intended to be "always-on" invariants for planning and execution.
+    """
+    rules_root = project_root / ".claude" / "rules"
+    if not rules_root.exists():
+        return []
+
+    out: list[tuple[str, str]] = []
+
+    core = rules_root / "at" / "global.md"
+    if core.exists():
+        out.append((".claude/rules/at/global.md", "Global rules (always-on)"))
+
+    project_dir = rules_root / "project"
+    if project_dir.exists():
+        for p in sorted(project_dir.rglob("*.md"))[:200]:
+            try:
+                rel = p.resolve().relative_to(project_root.resolve()).as_posix()
+            except Exception:
+                continue
+            out.append((rel, "Project rules (repo-specific)"))
+
+    return out
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Build the at context pack for the current session.")
     parser.add_argument("--project-dir", default=None)
@@ -242,6 +270,38 @@ def main() -> int:
         lines.append(content.rstrip())
         lines.append("```")
         lines.append("")
+
+    # Always-on rules (if present)
+    rules = _iter_rule_files(project_root)
+    if rules:
+        lines.append("## Rules (always-on)")
+        lines.append("")
+        lines.append("These are repo-specific invariants. The action planner must reflect them in task breakdown, file scopes, and acceptance criteria.")
+        lines.append("")
+        total_chars = 0
+        for rel, hint in rules[:60]:
+            norm = normalize_repo_relative_posix_path(rel) or rel
+            if is_forbidden_path(norm, forbid):
+                continue
+            path = project_root / norm
+            if not path.exists():
+                continue
+            content, truncated = safe_read_text(path, max_chars=min(args.max_chars, 12_000))
+            total_chars += len(content)
+            if total_chars > 60_000:
+                lines.append("- (truncated rules: too many rule files / content)")
+                lines.append("")
+                break
+            lines.append(f"### `{norm}`")
+            lines.append("")
+            lines.append(f"- Hint: {hint}")
+            if truncated:
+                lines.append("- Note: truncated")
+            lines.append("")
+            lines.append("```md")
+            lines.append(content.rstrip())
+            lines.append("```")
+            lines.append("")
 
     # Docs registry summary
     registry_path = get_docs_registry_path(config)

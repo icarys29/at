@@ -80,6 +80,16 @@ def main() -> int:
             ".claude/rules/project/README.md",
         )
     )
+    results.append(
+        (
+            _write_if_missing(
+                project_root / ".claude" / "rules" / "project" / "architecture.md",
+                _read_template("rules/project/architecture.md"),
+                force=False,
+            ),
+            ".claude/rules/project/architecture.md",
+        )
+    )
 
     # Docs scaffolding
     results.append(

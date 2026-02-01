@@ -178,20 +178,37 @@ def main() -> int:
     runner = project_root / ".claude" / "at" / "scripts" / "run_enforcements.py"
     if runner.exists():
         start = time.time()
+        # Prefer writing enforcement evidence under the session for deterministic auditing.
+        enforcement_out = out_dir / "enforcement_report.json"
+
         proc = subprocess.run(
-            f"python3 \"{runner}\"",
+            [sys.executable, str(runner), "--project-root", str(project_root), "--config", str(project_root / ".claude" / "at" / "enforcement.json"), "--json", str(enforcement_out)],
             cwd=str(project_root),
-            shell=True,
             stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
         )
+        if proc.returncode != 0:
+            # Back-compat: older runners may not support args; retry with no args.
+            proc2 = subprocess.run(
+                f"python3 \"{runner}\"",
+                cwd=str(project_root),
+                shell=True,
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+            )
+            if proc2.returncode == 0 or proc2.stdout:
+                proc = proc2
+
         dur_ms = int((time.time() - start) * 1000)
-        _write_log(logs_dir / "enforcements.log", f"$ python3 \"{runner}\"\n\n[exit_code={proc.returncode} duration_ms={dur_ms}]\n\n{proc.stdout}")
-        # Best-effort read of generated report (runner always writes under .claude/at/)
+        _write_log(logs_dir / "enforcements.log", f"$ {sys.executable} \"{runner}\" …\n\n[exit_code={proc.returncode} duration_ms={dur_ms}]\n\n{proc.stdout}")
+        # Best-effort read of generated report (prefer session-scoped file; fallback to repo-local).
         try:
-            enforcement_report = json.loads((project_root / ".claude" / "at" / "enforcement_report.json").read_text(encoding="utf-8"))
+            src = enforcement_out if enforcement_out.exists() else (project_root / ".claude" / "at" / "enforcement_report.json")
+            enforcement_report = json.loads(src.read_text(encoding="utf-8"))
         except Exception:
             enforcement_report = {"version": 1, "ok": proc.returncode == 0, "note": "missing/invalid enforcement_report.json"}
         results.append(
@@ -201,7 +218,7 @@ def main() -> int:
                 "exit_code": proc.returncode,
                 "duration_ms": dur_ms,
                 "log_path": str((logs_dir / "enforcements.log")).replace("\\", "/"),
-                "command": f"python3 \"{runner}\"",
+                "command": f"{sys.executable} \"{runner}\"",
             }
         )
 

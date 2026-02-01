@@ -191,6 +191,28 @@ def _load_doc_text(
     return (text, truncated, None)
 
 
+def _load_rule_text(
+    project_root: Path,
+    rel_path: str,
+    forbid_globs: list[str],
+    *,
+    max_chars: int,
+) -> tuple[str, bool, str | None]:
+    """
+    Like _load_doc_text but for `.claude/rules/**`.
+    """
+    norm = normalize_repo_relative_posix_path(rel_path)
+    if not norm:
+        return ("[INVALID RULE PATH]\n", False, "invalid path")
+    if is_forbidden_path(norm, forbid_globs):
+        return ("[OMITTED: forbidden by policies.forbid_secrets_globs]\n", False, "forbidden")
+    resolved = resolve_path_under_project_root(project_root, norm)
+    if not resolved or not resolved.exists():
+        return ("[MISSING RULE FILE]\n", False, "missing")
+    text, truncated = safe_read_text(resolved, max_chars=max_chars)
+    return (text, truncated, None)
+
+
 def _render_task_context(
     *,
     project_root: Path,
@@ -270,6 +292,36 @@ def _render_task_context(
         lines.append("")
         lines.append("```yaml")
         lines.append(config_text.rstrip())
+        lines.append("```")
+        lines.append("")
+
+    # Always-on rules: keep small, but make them visible to implementors/tests.
+    rule_paths: list[tuple[str, str]] = [
+        (".claude/rules/at/global.md", "Global rules (always-on)"),
+        (".claude/rules/project/architecture.md", "Project architecture rules (repo-specific)"),
+    ]
+    embedded_any = False
+    for rp, label in rule_paths:
+        content, truncated, err = _load_rule_text(project_root, rp, forbid_globs, max_chars=8_000)
+        if err == "missing":
+            continue
+        if not embedded_any:
+            lines.append("## Rules (always-on, embedded)")
+            lines.append("")
+            embedded_any = True
+        lines.append(f"### `{rp}`")
+        lines.append("")
+        lines.append(f"- Hint: {label}")
+        notes: list[str] = []
+        if err and err != "missing":
+            notes.append(err)
+        if truncated:
+            notes.append("truncated")
+        if notes:
+            lines.append(f"- Note: {', '.join(notes)}")
+            lines.append("")
+        lines.append("```md")
+        lines.append(content.rstrip())
         lines.append("```")
         lines.append("")
 

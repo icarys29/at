@@ -64,3 +64,11 @@ This repo uses a deterministic docs registry at `docs/DOCUMENTATION_REGISTRY.jso
 
 - Prefer agentic work for creation/analysis; use scripts as deterministic gates and reproducible evidence.
 - Keep documentation corporate-grade but concise; ADRs only for decisions likely to matter in 3+ months.
+
+## Project Rules + Architecture Enforcement (recommended)
+
+- Always-on rules live under `.claude/rules/**` (global + project-specific). They are embedded into the planner context pack and (in a small excerpt) into per-task contexts.
+- Optional deterministic enforcement lives under `.claude/at/`:
+  - `.claude/at/enforcement.json` (checks + mode)
+  - `.claude/at/scripts/run_enforcements.py` (CI-friendly runner)
+  - Optional: `.claude/at/scripts/check_architecture_boundaries.py` + `.claude/at/architecture_boundaries.json` (dependency direction enforcement)

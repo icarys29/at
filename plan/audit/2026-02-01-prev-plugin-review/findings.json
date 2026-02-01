@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "generated_at": "2026-02-01",
+  "scope": {
+    "previous_repo": "/home/dav/claude/claude-agent-team-plugin",
+    "current_repo": "at"
+  },
+  "findings": [
+    {
+      "id": "PREV-01",
+      "severity": "high",
+      "area": "rules_context",
+      "title": "Previous plugin includes `.claude/rules/**` in the planner context pack (stronger default principles enforcement)",
+      "value": "Ensures action-planner sees repo-specific invariants (architecture rules, security, conventions) and can reflect them in tasks/acceptance criteria.",
+      "current_gap": "Current `scripts/context/build_context_pack.py` does not include `.claude/rules/**`, so rules are easy to drift and not consistently applied during planning.",
+      "recommendation": "Port deterministic rules inclusion (at/global + project/*.md) into context pack (and optionally lightweight excerpt into per-task contexts)."
+    },
+    {
+      "id": "PREV-02",
+      "severity": "high",
+      "area": "architecture_enforcement",
+      "title": "Previous plugin has a project-local enforcement runner + architecture boundary checker (hexagonal boundaries) that can fail the quality/compliance gates",
+      "value": "Enforces dependency-direction rules deterministically (python/go/ts import scanning), providing real architecture enforcement beyond docs.",
+      "current_gap": "Current `install-project-pack` only installs a command-runner enforcement stub (no boundaries checker/config). Enforcement is not easy to configure for architecture.",
+      "recommendation": "Upgrade project pack to install a structured enforcement runner (mode fail/warn, script checks) plus a portable boundary checker with config file."
+    },
+    {
+      "id": "PREV-03",
+      "severity": "medium",
+      "area": "versioning",
+      "title": "Previous plugin ships a version bump script that stamps version/updated metadata across scripts/agents/skills/templates",
+      "value": "Makes upgrades auditable and reduces drift in file headers.",
+      "current_gap": "Current repo references a version bump script in `CLAUDE.md` but does not ship it.",
+      "recommendation": "Port a simplified `scripts/dev/add_version_headers.py` and document the bump procedure."
+    },
+    {
+      "id": "PREV-04",
+      "severity": "medium",
+      "area": "enforcement_integration",
+      "title": "Previous plugin treats enforcement evidence as first-class quality/compliance signal",
+      "value": "Enforcement failures block merges/deliveries predictably.",
+      "current_gap": "Current quality suite only best-effort runs `.claude/at/scripts/run_enforcements.py` and reads `.claude/at/enforcement_report.json` (not session-scoped) with limited semantics.",
+      "recommendation": "Standardize enforcement runner interface to write session-scoped reports and make the quality gate output actionable."
+    }
+  ]
+}
+
