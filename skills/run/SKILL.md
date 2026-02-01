@@ -45,7 +45,7 @@ allowed-tools: Read, Write, Edit, Grep, Glob, Bash, Task
    - Output files: `SESSION_DIR/planning/ARCHITECTURE_BRIEF.{md,json}`
 4) Plan (agentic) using `action-planner`:
    - Task: `action-planner`
-   - Inputs: `SESSION_DIR/inputs/request.md`, `SESSION_DIR/inputs/context_pack.md`, `SESSION_DIR/planning/ARCHITECTURE_BRIEF.md`
+   - Inputs: `SESSION_DIR/inputs/request.md`, `SESSION_DIR/inputs/context_pack.md`, `SESSION_DIR/planning/ARCHITECTURE_BRIEF.md`, `SESSION_DIR/planning/IDEATION.md` (if present)
    - Output files: `SESSION_DIR/planning/actions.json` + checklists.
 5) Validate the plan deterministically:
    - Run: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/validate/validate_actions.py" --session "${SESSION_DIR}"`

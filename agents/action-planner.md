@@ -26,6 +26,7 @@ Produce a **valid, parallel-safe** `planning/actions.json` for the current sessi
 - `SESSION_DIR/inputs/request.md`
 - `SESSION_DIR/inputs/context_pack.md`
 - `SESSION_DIR/planning/ARCHITECTURE_BRIEF.md` (if present; produced by `solution-architect`)
+- `SESSION_DIR/planning/IDEATION.md` (if present; produced by `/at:ideate` / `brainstormer`)
 - Any project docs referenced by the context pack (already embedded there)
 
 ## Outputs (required)
