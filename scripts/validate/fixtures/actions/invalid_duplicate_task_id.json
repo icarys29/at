@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "workflow": "deliver",
+  "tasks": [
+    {
+      "id": "T1",
+      "owner": "implementor",
+      "summary": "Duplicate id A",
+      "file_scope": {
+        "allow": ["**/*"],
+        "writes": ["src/"]
+      },
+      "acceptance_criteria": [
+        { "id": "AC1", "statement": "placeholder" }
+      ]
+    },
+    {
+      "id": "T1",
+      "owner": "tests-builder",
+      "summary": "Duplicate id B",
+      "file_scope": {
+        "allow": ["**/*"],
+        "writes": ["tests/"]
+      },
+      "acceptance_criteria": [
+        { "id": "AC1", "statement": "placeholder" }
+      ]
+    }
+  ],
+  "parallel_execution": {
+    "enabled": true,
+    "groups": [
+      { "group_id": "g1", "execution_order": 1, "tasks": ["T1"] }
+    ]
+  }
+}
+

@@ -1,0 +1,53 @@
+{
+  "checks": [
+    {
+      "details": "plugin.json.version='0.1.0' VERSION='0.1.0'",
+      "id": "plugin.version_consistency",
+      "ok": true
+    },
+    {
+      "details": "all hook script references exist",
+      "id": "hooks.script_refs_exist",
+      "ok": true
+    },
+    {
+      "details": "all agents/skills script references exist",
+      "id": "markdown.script_refs_exist",
+      "ok": true
+    },
+    {
+      "details": "all scripts have at Version/Updated header",
+      "id": "versioning.python_headers",
+      "ok": true
+    },
+    {
+      "details": "all agents/skills have version+updated frontmatter",
+      "id": "versioning.frontmatter",
+      "ok": true
+    },
+    {
+      "details": "schema workflows match validator: ['deliver', 'ideate', 'review', 'triage']",
+      "id": "contracts.schema_workflows",
+      "ok": true
+    },
+    {
+      "details": "schema owners match validator: ['action-planner', 'compliance-checker', 'ideation', 'implementor', 'quality-gate', 'reviewer', 'root-cause-analyzer', 'tests-builder']",
+      "id": "contracts.schema_owners",
+      "ok": true
+    },
+    {
+      "details": "validator fixtures behave as expected",
+      "id": "contracts.validator_fixtures",
+      "ok": true
+    }
+  ],
+  "generated_at": "2026-02-01T11:38:55.994920+00:00",
+  "issues": [],
+  "ok": true,
+  "plugin": {
+    "name": "at",
+    "version": "0.1.0"
+  },
+  "plugin_root": "/home/dav/claude/at",
+  "version": 1
+}

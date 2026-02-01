@@ -173,6 +173,38 @@ def main() -> int:
         log_path = logs_dir / f"{safe_id}.log"
         results.append(_run_command(project_root, spec, log_path))
 
+    # Optional: run repo-local enforcements if installed (CI-friendly).
+    enforcement_report: dict[str, Any] | None = None
+    runner = project_root / ".claude" / "at" / "scripts" / "run_enforcements.py"
+    if runner.exists():
+        start = time.time()
+        proc = subprocess.run(
+            f"python3 \"{runner}\"",
+            cwd=str(project_root),
+            shell=True,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+        )
+        dur_ms = int((time.time() - start) * 1000)
+        _write_log(logs_dir / "enforcements.log", f"$ python3 \"{runner}\"\n\n[exit_code={proc.returncode} duration_ms={dur_ms}]\n\n{proc.stdout}")
+        # Best-effort read of generated report (runner always writes under .claude/at/)
+        try:
+            enforcement_report = json.loads((project_root / ".claude" / "at" / "enforcement_report.json").read_text(encoding="utf-8"))
+        except Exception:
+            enforcement_report = {"version": 1, "ok": proc.returncode == 0, "note": "missing/invalid enforcement_report.json"}
+        results.append(
+            {
+                "id": "enforcement",
+                "status": "passed" if proc.returncode == 0 else "failed",
+                "exit_code": proc.returncode,
+                "duration_ms": dur_ms,
+                "log_path": str((logs_dir / "enforcements.log")).replace("\\", "/"),
+                "command": f"python3 \"{runner}\"",
+            }
+        )
+
     failed = [r for r in results if r.get("status") == "failed"]
     ok = len(failed) == 0
 
@@ -185,6 +217,8 @@ def main() -> int:
         "results": results,
     }
     write_json(out_dir / "quality_report.json", report)
+    if enforcement_report is not None:
+        write_json(out_dir / "enforcement_report.json", enforcement_report)
 
     md_lines = [
         "# Quality Report (at)",
@@ -217,4 +251,3 @@ if __name__ == "__main__":
     except Exception as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         raise SystemExit(1)
-

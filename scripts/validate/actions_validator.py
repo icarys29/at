@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import Any
 
 from lib.docs_registry import build_doc_id_to_path_map, get_docs_registry_path, get_docs_require_registry, load_docs_registry
-from lib.path_policy import normalize_repo_relative_posix_path
+from lib.path_policy import forbid_globs_from_project_config, is_forbidden_path, normalize_repo_relative_posix_path
 from lib.project import detect_project_dir, load_project_config
 
 
@@ -112,6 +112,7 @@ def validate_actions_data(data: dict[str, Any], *, project_root: Path | None = N
     if project_root is None:
         project_root = detect_project_dir()
     config = load_project_config(project_root) or {}
+    forbid_globs = forbid_globs_from_project_config(config)
 
     # Top-level structure.
     if data.get("version") != 1:
@@ -229,6 +230,39 @@ def validate_actions_data(data: dict[str, Any], *, project_root: Path | None = N
                             continue
                         if docs_map and doc_id.strip() not in docs_map:
                             errors.append(ValidationError(f"{tp}.context.doc_ids[{k}]", f"Unknown doc id: {doc_id!r}"))
+
+        # Optional: code pointers (best-effort safety validation).
+        ctx = t.get("context")
+        if isinstance(ctx, dict) and "code_pointers" in ctx:
+            cps = ctx.get("code_pointers")
+            if cps is None:
+                pass
+            elif not isinstance(cps, list):
+                errors.append(ValidationError(f"{tp}.context.code_pointers", "Must be an array of {path, pattern} objects"))
+            else:
+                for j, cp in enumerate(cps[:200]):
+                    cp_path = f"{tp}.context.code_pointers[{j}]"
+                    if not isinstance(cp, dict):
+                        errors.append(ValidationError(cp_path, "Must be an object"))
+                        continue
+                    p = cp.get("path")
+                    pat = cp.get("pattern")
+                    if not isinstance(p, str) or not p.strip():
+                        errors.append(ValidationError(f"{cp_path}.path", "Required non-empty string"))
+                    else:
+                        norm = normalize_repo_relative_posix_path(p.strip())
+                        if norm is None:
+                            errors.append(ValidationError(f"{cp_path}.path", f"Invalid repo-relative path: {p!r}"))
+                        elif is_forbidden_path(norm, forbid_globs):
+                            errors.append(ValidationError(f"{cp_path}.path", f"Forbidden by policies.forbid_secrets_globs: {norm!r}"))
+                    if not isinstance(pat, str) or not pat.strip():
+                        errors.append(ValidationError(f"{cp_path}.pattern", "Required non-empty string (regex)"))
+                    cl = cp.get("context_lines")
+                    if cl is not None and (not isinstance(cl, int) or cl < 0):
+                        errors.append(ValidationError(f"{cp_path}.context_lines", "Must be an integer >= 0"))
+                    mm = cp.get("max_matches")
+                    if mm is not None and (not isinstance(mm, int) or mm < 1):
+                        errors.append(ValidationError(f"{cp_path}.max_matches", "Must be an integer >= 1"))
 
     # depends_on references exist (best-effort; cycle detection is deferred).
     for i, t in enumerate(tasks):

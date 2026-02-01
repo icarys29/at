@@ -107,6 +107,18 @@ def main() -> int:
     else:
         results.append(("SKIP", "CLAUDE.md"))
 
+    # Learning scaffolding (P3; safe to create, never overwrites).
+    learning_root = project_root / ".claude" / "agent-team" / "learning"
+    learning_root.mkdir(parents=True, exist_ok=True)
+    (learning_root / "sessions").mkdir(parents=True, exist_ok=True)
+    (learning_root / "adr").mkdir(parents=True, exist_ok=True)
+    learning_status = learning_root / "STATUS.md"
+    if not learning_status.exists():
+        learning_status.write_text("# Learning Status (at)\n\n- Initialized: " + utc_now() + "\n", encoding="utf-8")
+        results.append(("CREATE", ".claude/agent-team/learning/STATUS.md"))
+    else:
+        results.append(("SKIP", ".claude/agent-team/learning/STATUS.md"))
+
     for status, rel in results:
         print(f"{status}\t{rel}")
 

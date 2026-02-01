@@ -6,7 +6,7 @@ project:
 workflow:
   sessions_dir: ".session"
   always_on_compliance: true
-  max_parallel_agents: 3
+  max_parallel_agents: 5
   autofix_allowed: true
   max_remediation_loops: 2
 
@@ -25,6 +25,13 @@ learning:
   emit_sessionstart_context: true
   sessionstart_context_max_chars: 1200
 
+audit:
+  enabled: false
+  traces_enabled: false
+
+telemetry:
+  enabled: true
+
 # Commands are intentionally project-editable.
 # Prefer stable, CI-friendly commands and keep them fast.
 commands:
@@ -40,4 +47,3 @@ policies:
     - ".env"
     - ".env.*"
     - "secrets/**"
-

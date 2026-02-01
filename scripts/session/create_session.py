@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import secrets
 import sys
 from datetime import datetime, timezone
@@ -23,6 +24,7 @@ sys.path.insert(0, str(SCRIPT_ROOT))
 
 from lib.io import utc_now_full, write_json  # noqa: E402
 from lib.project import detect_project_dir, get_plugin_version, get_sessions_dir  # noqa: E402
+from lib.active_session import write_active_session  # noqa: E402
 
 
 def _new_session_id() -> str:
@@ -112,6 +114,14 @@ def main() -> int:
                 "plugin_version": get_plugin_version(),
             },
         )
+
+    # Best-effort: link this Claude session to the at SESSION_DIR to help hooks resolve context
+    # without transcript heuristics. Uses CLAUDE_SESSION_ID when present.
+    try:
+        claude_session_id = os.environ.get("CLAUDE_SESSION_ID")
+        write_active_session(sessions_root, session_id=session_dir.name, claude_session_id=claude_session_id)
+    except Exception:
+        pass
 
     print(str(session_dir))
     return 0

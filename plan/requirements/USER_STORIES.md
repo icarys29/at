@@ -25,8 +25,8 @@ These stories are meant to:
 | In progress | US-DELIVER-002 | Parallel execution by default | Developer | P1 | CAP-PLAN-004, CAP-PAR-001..002 |
 | In progress | US-GATE-001 | Deterministic gates (quality/compliance/docs) | Tech Lead | P2 | CAP-GATE-001..006 |
 | Done | US-SEC-001 | Policy hooks prevent secrets exposure | Security Lead | P2 | CAP-POL-001..004 |
-| Not started | US-AUDIT-001 | Audit hooks capture tool/session/subagent events | Tech Lead | P3 | CAP-AUDIT-001..006 |
-| Not started | US-LEARN-001 | Persistent learning/memory updates | Developer | P3 | CAP-LEARN-001..004 |
+| Done | US-AUDIT-001 | Audit hooks capture tool/session/subagent events | Tech Lead | P3 | CAP-AUDIT-001..006 |
+| Done | US-LEARN-001 | Persistent learning/memory updates | Developer | P3 | CAP-LEARN-001..004 |
 
 ---
 
@@ -83,7 +83,7 @@ These stories are meant to:
 
 - Persona: Developer
 - Phase: P3
-- Status: Not started
+- Status: Done
 - Story: As a developer, I want to remove installed hooks cleanly, so that I can troubleshoot or revert policy/audit tooling safely.
 - Acceptance:
   - Hook config entries are removed from settings.
@@ -285,7 +285,7 @@ These stories are meant to:
 
 - Persona: Tech Lead
 - Phase: P3
-- Status: Not started
+- Status: Done
 - Story: As a tech lead, I want audit logs of tool usage and lifecycle events, so that workflows are observable when needed.
 - Acceptance:
   - JSONL logs exist under `.claude/audit_logs/`.
@@ -300,7 +300,7 @@ These stories are meant to:
 
 - Persona: Developer
 - Phase: P3
-- Status: Not started
+- Status: Done
 - Story: As a developer, I want the plugin to maintain a small, persistent memory, so that future work starts with better context.
 - Acceptance:
   - Learning updates write only under `.claude/agent-team/learning/`.

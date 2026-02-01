@@ -1,5 +1,7 @@
 ---
 name: sessions
+version: "0.1.0"
+updated: "2026-02-01"
 description: List existing at sessions under `workflow.sessions_dir`.
 argument-hint: ""
 allowed-tools: Bash

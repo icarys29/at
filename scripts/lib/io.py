@@ -7,7 +7,7 @@
 at: I/O utilities for file operations and timestamps
 
 Version: 0.1.0
-Updated: 2026-01-31
+Updated: 2026-02-01
 """
 from __future__ import annotations
 

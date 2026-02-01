@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "workflow": "deliver",
+  "tasks": [
+    {
+      "id": "T1",
+      "owner": "implementor",
+      "summary": "Missing parallel groups",
+      "file_scope": {
+        "allow": ["**/*"],
+        "writes": ["src/"]
+      },
+      "acceptance_criteria": [
+        { "id": "AC1", "statement": "placeholder" }
+      ]
+    }
+  ],
+  "parallel_execution": {
+    "enabled": true
+  }
+}
+

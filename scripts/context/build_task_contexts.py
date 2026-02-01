@@ -109,6 +109,68 @@ def _extract_md_sections(text: str, prefixes: list[str]) -> str:
     return "\n\n".join(blocks).rstrip()
 
 
+def _extract_code_snippets(
+    content: str,
+    pattern: str,
+    *,
+    context_lines: int,
+    max_matches: int,
+    max_total_lines: int = 240,
+) -> tuple[str, str | None]:
+    """
+    Extract up to `max_matches` snippets for regex `pattern` with `context_lines` around each match.
+    Returns (snippet_text, error_reason).
+    """
+    try:
+        rx = re.compile(pattern, flags=re.MULTILINE)
+    except re.error as exc:
+        return ("[INVALID REGEX]\n", f"invalid regex: {exc}")
+
+    lines = content.splitlines()
+    if not lines:
+        return ("[EMPTY FILE]\n", None)
+
+    ranges: list[tuple[int, int]] = []
+    matches = 0
+    for m in rx.finditer(content):
+        matches += 1
+        if matches > max_matches:
+            break
+        # Compute 0-based line index.
+        line_idx = content.count("\n", 0, m.start())
+        start = max(0, line_idx - context_lines)
+        end = min(len(lines), line_idx + context_lines + 1)
+        ranges.append((start, end))
+
+    if not ranges:
+        return ("[NO MATCHES]\n", None)
+
+    # Merge overlapping ranges.
+    ranges.sort()
+    merged: list[tuple[int, int]] = []
+    for s, e in ranges:
+        if not merged:
+            merged.append((s, e))
+            continue
+        ps, pe = merged[-1]
+        if s <= pe:
+            merged[-1] = (ps, max(pe, e))
+        else:
+            merged.append((s, e))
+
+    out: list[str] = []
+    total_lines = 0
+    for s, e in merged:
+        block = lines[s:e]
+        total_lines += len(block)
+        if total_lines > max_total_lines:
+            out.append("… [TRUNCATED]\n")
+            break
+        out.append("\n".join(block).rstrip())
+        out.append("")  # spacer
+    return ("\n".join(out).rstrip() + "\n", None)
+
+
 def _load_doc_text(
     project_root: Path,
     rel_path: str,
@@ -137,6 +199,7 @@ def _render_task_context(
     docs_map: dict[str, str] | None,
     forbid_globs: list[str],
     max_doc_chars: int,
+    max_code_chars: int,
 ) -> str:
     tid = str(task.get("id", "")).strip()
     owner = str(task.get("owner", "")).strip()
@@ -209,8 +272,52 @@ def _render_task_context(
         lines.append("```")
         lines.append("")
 
-    # Embedded docs
+    # Embedded code pointers (paths + grep patterns)
     ctx = task.get("context") if isinstance(task.get("context"), dict) else {}
+    code_pointers = ctx.get("code_pointers") if isinstance(ctx.get("code_pointers"), list) else []
+    if code_pointers:
+        lines.append("## Code Pointers (embedded)")
+        lines.append("")
+
+    for cp in code_pointers[:50]:
+        if not isinstance(cp, dict):
+            continue
+        p = cp.get("path")
+        pat = cp.get("pattern")
+        if not isinstance(p, str) or not p.strip() or not isinstance(pat, str) or not pat.strip():
+            continue
+        context_lines = int(cp.get("context_lines")) if isinstance(cp.get("context_lines"), int) else 3
+        max_matches = int(cp.get("max_matches")) if isinstance(cp.get("max_matches"), int) else 5
+
+        content, truncated, err = _load_doc_text(project_root, p.strip(), forbid_globs, max_chars=max_code_chars)
+        snippet = content
+        snippet_err = None
+        if not err:
+            snippet, snippet_err = _extract_code_snippets(
+                content,
+                pat.strip(),
+                context_lines=max(0, context_lines),
+                max_matches=max(1, max_matches),
+            )
+
+        lines.append(f"### `{p.strip()}` — /{pat.strip()}/")
+        lines.append("")
+        notes: list[str] = []
+        if err:
+            notes.append(err)
+        if snippet_err:
+            notes.append(snippet_err)
+        if truncated:
+            notes.append("truncated")
+        if notes:
+            lines.append(f"- Note: {', '.join(notes)}")
+            lines.append("")
+        lines.append("```text")
+        lines.append(snippet.rstrip())
+        lines.append("```")
+        lines.append("")
+
+    # Embedded docs
     doc_ids = ctx.get("doc_ids") if isinstance(ctx.get("doc_ids"), list) else []
     doc_sections = ctx.get("doc_sections") if isinstance(ctx.get("doc_sections"), dict) else {}
     include_full_doc = bool(ctx.get("include_full_doc")) if isinstance(ctx.get("include_full_doc"), bool) else False
@@ -272,6 +379,7 @@ def main() -> int:
     parser.add_argument("--sessions-dir", default=None)
     parser.add_argument("--session", default=None, help="Session id or directory (default: most recent)")
     parser.add_argument("--max-doc-chars", type=int, default=40_000)
+    parser.add_argument("--max-code-chars", type=int, default=12_000)
     args = parser.parse_args()
 
     project_root = detect_project_dir(args.project_dir)
@@ -333,6 +441,7 @@ def main() -> int:
             docs_map=docs_map,
             forbid_globs=forbid,
             max_doc_chars=args.max_doc_chars,
+            max_code_chars=args.max_code_chars,
         )
         write_text(ctx_path, ctx_text)
         generated += 1

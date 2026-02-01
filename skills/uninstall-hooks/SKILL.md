@@ -1,5 +1,7 @@
 ---
 name: uninstall-hooks
+version: "0.1.0"
+updated: "2026-02-01"
 description: Uninstall at-managed policy hooks from project scope (best-effort).
 argument-hint: "[--scope project|user] [--project-dir <path>]"
 allowed-tools: Read, Write, Edit, Bash

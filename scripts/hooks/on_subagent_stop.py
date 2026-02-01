@@ -22,6 +22,19 @@ SCRIPT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SCRIPT_ROOT))
 
 from lib.project import detect_project_dir, get_sessions_dir  # noqa: E402
+from lib.active_session import resolve_session_dir_from_hook  # noqa: E402
+
+
+AT_AGENT_IDS = {
+    "action-planner",
+    "implementor",
+    "tests-builder",
+    "quality-gate",
+    "compliance-checker",
+    "docs-keeper",
+    # Optional: remediation agent (if present)
+    "remediator",
+}
 
 
 @dataclass(frozen=True)
@@ -309,6 +322,10 @@ def main() -> int:
     if not hook_input or hook_input.get("hook_event_name") != "SubagentStop":
         return 0
 
+    agent_name = hook_input.get("agent")
+    if not isinstance(agent_name, str) or agent_name.strip() not in AT_AGENT_IDS:
+        return 0
+
     agent_transcript = hook_input.get("agent_transcript_path")
     if not isinstance(agent_transcript, str) or not agent_transcript.strip():
         return 0
@@ -321,7 +338,15 @@ def main() -> int:
     if not transcript_text:
         return 0
 
-    session_dir = _find_session_dir_from_text(project_root, sessions_dir, transcript_text)
+    claude_session_id = hook_input.get("session_id")
+    active = resolve_session_dir_from_hook(
+        project_root=project_root,
+        sessions_dir=sessions_dir,
+        claude_session_id=str(claude_session_id) if isinstance(claude_session_id, str) else None,
+    )
+    session_dir = active.session_dir if active else None
+    if session_dir is None:
+        session_dir = _find_session_dir_from_text(project_root, sessions_dir, transcript_text)
     if session_dir is None:
         return 0
 

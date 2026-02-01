@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "fixtures": [
+    {
+      "path": "scripts/validate/fixtures/actions/valid_minimal.json",
+      "valid": true
+    },
+    {
+      "path": "scripts/validate/fixtures/actions/invalid_missing_parallel_groups.json",
+      "valid": false,
+      "expect_error_substrings": [
+        "parallel_execution.groups"
+      ]
+    },
+    {
+      "path": "scripts/validate/fixtures/actions/invalid_glob_in_writes.json",
+      "valid": false,
+      "expect_error_substrings": [
+        "Globs are forbidden"
+      ]
+    },
+    {
+      "path": "scripts/validate/fixtures/actions/invalid_duplicate_task_id.json",
+      "valid": false,
+      "expect_error_substrings": [
+        "Duplicate task id"
+      ]
+    }
+  ]
+}
+

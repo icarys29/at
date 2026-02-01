@@ -56,6 +56,12 @@ Produce a **valid, parallel-safe** `planning/actions.json` for the current sessi
   - `id` and `statement` (required)
   - optional `verifications[]` (`file|grep|command|lsp`)
 
+### Optional: code pointers (recommended for precision)
+- For implementor/tests-builder tasks you may add `context.code_pointers[]` to improve per-task context without expanding it:
+  - Each pointer is `{path, pattern, context_lines?, max_matches?}`
+  - `path` must be repo-relative and must not match `policies.forbid_secrets_globs`.
+  - Use specific patterns (function/class names, error strings) to extract relevant snippets.
+
 ## Procedure
 1) Read request + context pack.
 2) Draft tasks (SRP, minimal).

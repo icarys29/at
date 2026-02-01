@@ -151,7 +151,7 @@ Goal: for each capability, define **what it is**, **where it is implemented**, a
 | [x] | CAP-HOOK-002 | P1 | SubagentStop enforces artifact existence and blocks missing outputs | `scripts/hooks/on_subagent_stop.py` | Missing required artifacts triggers retry; circuit breaker prevents infinite loops |
 | [x] | CAP-HOOK-003 | P1 | PreToolUse enforces file scope on Write/Edit | `scripts/hooks/enforce_file_scope.py` | Deny includes allowed `file_scope.writes[]` in message |
 | [x] | CAP-HOOK-004 | P1 | PostToolUse can validate `planning/actions.json` writes | `scripts/hooks/validate_actions_write.py` | Invalid writes are blocked with actionable schema error |
-| [ ] | CAP-HOOK-005 | P3 | SessionStart can inject learning context (best-effort) | hook + learning state | If snippet exists, it is injected; hook fails open on errors |
+| [x] | CAP-HOOK-005 | P3 | SessionStart can inject learning context (best-effort) | `scripts/hooks/sessionstart_learning_context.py`, `scripts/learning/install_learning_hooks.py` | If snippet exists, it is injected (best-effort); hook fails open on errors |
 | [ ] | CAP-HOOK-006 | P3 | Setup hook performs safe maintenance (e.g., prune audit logs) | `scripts/hooks/on_setup.py` | Runs only on explicit maintenance trigger; never blocks normal work |
 
 ---
@@ -171,12 +171,12 @@ Goal: for each capability, define **what it is**, **where it is implemented**, a
 
 | Done | ID | Phase | Capability | Implementation Pointers | Verification / Evidence |
 |---|---|---:|---|---|---|
-| [ ] | CAP-AUDIT-001 | P3 | Audit hooks installer exists and is idempotent | `skills/*audit*/scripts/install_audit_hooks.py` | Re-run does not duplicate settings hooks entries |
-| [ ] | CAP-AUDIT-002 | P3 | Tool usage JSONL logs are captured | audit hook scripts | `.claude/audit_logs/tools_YYYY-MM-DD.jsonl` written |
-| [ ] | CAP-AUDIT-003 | P3 | Session/subagent lifecycle JSONL logs are captured | audit hook scripts | corresponding JSONL files written |
-| [ ] | CAP-AUDIT-004 | P3 | Optional trace capture is explicit and off-by-default | audit hook env flag | Enabling capture writes agent traces JSONL; otherwise absent |
-| [ ] | CAP-AUDIT-005 | P3 | Audit pruning exists (dry-run default) | prune script/skill | Old logs can be pruned safely |
-| [ ] | CAP-AUDIT-006 | P3 | Audit analyzer produces a report | `scripts/audit/*` | Generates a high-signal summary + recommendations |
+| [x] | CAP-AUDIT-001 | P3 | Audit hooks installer exists and is idempotent | `scripts/audit/install_audit_hooks.py`, `skills/setup-audit-hooks/SKILL.md` | Re-run does not duplicate hook entries (managed tag pruning) |
+| [x] | CAP-AUDIT-002 | P3 | Tool usage JSONL logs are captured | `scripts/hooks/audit_{pre,post}_tool_use.py` | `.claude/audit_logs/tools.jsonl` written |
+| [x] | CAP-AUDIT-003 | P3 | Session/subagent lifecycle JSONL logs are captured | `scripts/hooks/audit_session_lifecycle.py`, `scripts/hooks/audit_subagent_stop.py` | `.claude/audit_logs/lifecycle.jsonl`, `.claude/audit_logs/subagents.jsonl` written |
+| [x] | CAP-AUDIT-004 | P3 | Optional trace capture is explicit and off-by-default | `AT_AUDIT_TRACES_ENABLED` env var | When enabled, tool input/output is included; otherwise omitted |
+| [x] | CAP-AUDIT-005 | P3 | Audit pruning exists (dry-run default) | `scripts/audit/prune_audit_logs.py`, `skills/prune-audit-logs/SKILL.md` | Old logs can be pruned safely (dry-run default) |
+| [x] | CAP-AUDIT-006 | P3 | Audit analyzer produces a report | `scripts/audit/analyze_audit_logs.py`, `skills/audit-report/SKILL.md` | Generates `.claude/audit_reports/audit_report.{json,md}` |
 
 ---
 
@@ -184,10 +184,10 @@ Goal: for each capability, define **what it is**, **where it is implemented**, a
 
 | Done | ID | Phase | Capability | Implementation Pointers | Verification / Evidence |
 |---|---|---:|---|---|---|
-| [ ] | CAP-LEARN-001 | P3 | Learning dir exists and is write-scoped | `.claude/agent-team/learning/` | All learning writes stay inside this dir |
-| [ ] | CAP-LEARN-002 | P3 | Learning update from session | `scripts/learning/update_learning_state.py` | Writes `STATUS.md` + per-session digests |
-| [ ] | CAP-LEARN-003 | P3 | Learning status command exists | `scripts/learning/learning_status.py` | Prints/exports current learning snapshot |
-| [ ] | CAP-LEARN-004 | P3 | SessionStart learning context injection (optional) | hook script | Injects a bounded-length excerpt; fails open |
+| [x] | CAP-LEARN-001 | P3 | Learning dir exists and is write-scoped | `scripts/init_project.py`, `.claude/agent-team/learning/` | All learning writes stay inside this dir |
+| [x] | CAP-LEARN-002 | P3 | Learning update from session | `scripts/learning/update_learning_state.py`, `skills/learning-update/SKILL.md` | Writes `STATUS.md` + per-session digests |
+| [x] | CAP-LEARN-003 | P3 | Learning status command exists | `scripts/learning/learning_status.py`, `skills/learning-status/SKILL.md` | Prints/exports current learning snapshot |
+| [x] | CAP-LEARN-004 | P3 | SessionStart learning context injection (optional) | `scripts/hooks/sessionstart_learning_context.py`, `skills/setup-learning-hooks/SKILL.md` | Injects a bounded excerpt (best-effort); fails open |
 
 ---
 
@@ -195,8 +195,8 @@ Goal: for each capability, define **what it is**, **where it is implemented**, a
 
 | Done | ID | Phase | Capability | Implementation Pointers | Verification / Evidence |
 |---|---|---:|---|---|---|
-| [ ] | CAP-TEL-001 | P3 | Deterministic KPI extraction per session | `scripts/telemetry/build_session_kpis.py` | Writes `telemetry/session_kpis.{json,md}` under session |
-| [ ] | CAP-TEL-002 | P3 | Optional rollup for team visibility | optional script/skill | Rollup doc exists and is stable |
+| [x] | CAP-TEL-001 | P3 | Deterministic KPI extraction per session | `scripts/telemetry/build_session_kpis.py`, `skills/telemetry-session-kpis/SKILL.md` | Writes `telemetry/session_kpis.{json,md}` under session |
+| [x] | CAP-TEL-002 | P3 | Optional rollup for team visibility | `scripts/telemetry/rollup_kpis.py`, `skills/telemetry-rollup/SKILL.md` | Writes `<sessions_dir>/telemetry_rollup.{json,md}` |
 
 ---
 
@@ -204,9 +204,9 @@ Goal: for each capability, define **what it is**, **where it is implemented**, a
 
 | Done | ID | Phase | Capability | Implementation Pointers | Verification / Evidence |
 |---|---|---:|---|---|---|
-| [ ] | CAP-PACK-001 | P3 | Project pack installer exists (rules + optional enforcement) | `skills/project-pack-*/scripts/install_project_pack.py` | Installs `.claude/rules/project/**` safely |
-| [ ] | CAP-PACK-002 | P3 | Enforcement runner is deterministic and repo-local | `.claude/at/scripts/run_enforcements.py` | Can run in CI without plugin access |
-| [ ] | CAP-PACK-003 | P3 | Quality gate integrates enforcement when configured | `agents/quality-gate.md` + runner | `quality/enforcement_report.json` produced |
+| [x] | CAP-PACK-001 | P3 | Project pack installer exists (rules + optional enforcement) | `scripts/project_pack/install_project_pack.py`, `skills/install-project-pack/SKILL.md` | Installs `.claude/at/**` safely (conservative defaults) |
+| [x] | CAP-PACK-002 | P3 | Enforcement runner is deterministic and repo-local | `.claude/at/scripts/run_enforcements.py` (installed by project pack) | Can run in CI without plugin access |
+| [x] | CAP-PACK-003 | P3 | Quality gate integrates enforcement when configured | `scripts/quality/run_quality_suite.py`, `agents/quality-gate.md` | `quality/enforcement_report.json` produced when runner exists |
 
 ---
 
@@ -214,10 +214,10 @@ Goal: for each capability, define **what it is**, **where it is implemented**, a
 
 | Done | ID | Phase | Capability | Implementation Pointers | Verification / Evidence |
 |---|---|---:|---|---|---|
-| [ ] | CAP-UPG-001 | P3 | Upgrade overlay to latest version | `scripts/upgrade/upgrade_project.py` | Conservative updates; no destructive overwrites without confirmation |
+| [x] | CAP-UPG-001 | P3 | Upgrade overlay to latest version | `scripts/upgrade/upgrade_project.py`, `skills/upgrade-project/SKILL.md` | Conservative updates; dry-run default |
 | [ ] | CAP-IMP-001 | P3 | Repo import wizard (optional) | `scripts/import/*`, `skills/import-*` | Generates a valid `.claude/project.yaml` + docs scaffolding |
-| [ ] | CAP-MAINT-001 | P3 | Uninstall hooks helper exists | uninstall script/skill | Removes installed hooks cleanly |
-| [ ] | CAP-MAINT-002 | P3 | Cleanup sessions helper exists | cleanup script/skill | Prunes sessions by policy (dry-run supported) |
+| [x] | CAP-MAINT-001 | P3 | Uninstall hooks helper exists | `skills/uninstall-hooks/SKILL.md`, `skills/uninstall-audit-hooks/SKILL.md`, `skills/uninstall-learning-hooks/SKILL.md` | Removes at-managed hooks cleanly (managed tag pruning) |
+| [x] | CAP-MAINT-002 | P3 | Cleanup sessions helper exists | `scripts/maintenance/cleanup_sessions.py`, `skills/cleanup-sessions/SKILL.md` | Prunes sessions by policy (dry-run supported) |
 
 ---
 

@@ -1,0 +1,583 @@
+{
+  "agents": [
+    "agents/action-planner.md",
+    "agents/compliance-checker.md",
+    "agents/docs-keeper.md",
+    "agents/implementor.md",
+    "agents/quality-gate.md",
+    "agents/tests-builder.md"
+  ],
+  "counts": {
+    "agents_md": 6,
+    "schemas_json": 3,
+    "scripts_py": 55,
+    "skills": 20
+  },
+  "generated_at": "2026-02-01T11:04:14.680795+00:00",
+  "git": {
+    "branch": "main",
+    "head": "f6351fe6afa6b0a5320569d23f81ad7fee6c1ccf",
+    "status_porcelain": [
+      "M agents/quality-gate.md",
+      " M plan/requirements/CAPABILITY_TABLES.md",
+      " M plan/requirements/USER_STORIES.md",
+      " M scripts/init_project.py",
+      " M scripts/lib/project.py",
+      " M scripts/quality/run_quality_suite.py",
+      " M templates/project.yaml",
+      "?? scripts/audit/",
+      "?? scripts/hooks/audit_post_tool_use.py",
+      "?? scripts/hooks/audit_pre_tool_use.py",
+      "?? scripts/hooks/audit_session_lifecycle.py",
+      "?? scripts/hooks/audit_subagent_stop.py",
+      "?? scripts/hooks/sessionstart_learning_context.py",
+      "?? scripts/learning/",
+      "?? scripts/maintenance/",
+      "?? scripts/project_pack/",
+      "?? scripts/telemetry/",
+      "?? scripts/upgrade/",
+      "?? skills/audit-report/",
+      "?? skills/cleanup-sessions/",
+      "?? skills/install-project-pack/",
+      "?? skills/learning-status/",
+      "?? skills/learning-update/",
+      "?? skills/prune-audit-logs/",
+      "?? skills/setup-audit-hooks/",
+      "?? skills/setup-learning-hooks/",
+      "?? skills/telemetry-rollup/",
+      "?? skills/telemetry-session-kpis/",
+      "?? skills/uninstall-audit-hooks/",
+      "?? skills/uninstall-learning-hooks/",
+      "?? skills/upgrade-project/"
+    ]
+  },
+  "plugin": {
+    "description": "Agent Team (at): session-backed, contract-driven workflow kernel for Claude Code",
+    "name": "at",
+    "version": "0.1.0"
+  },
+  "schemas": [
+    "schemas/actions.schema.json",
+    "schemas/project.schema.json",
+    "schemas/task_artifact.schema.json"
+  ],
+  "scripts": [
+    {
+      "category": "audit",
+      "has_at_docstring": true,
+      "has_uv_script_block": true,
+      "lines": 117,
+      "path": "scripts/audit/analyze_audit_logs.py",
+      "updated": "2026-02-01",
+      "version": "0.1.0"
+    },
+    {
+      "category": "audit",
+      "has_at_docstring": true,
+      "has_uv_script_block": true,
+      "lines": 67,
+      "path": "scripts/audit/audit_log.py",
+      "updated": "2026-02-01",
+      "version": "0.1.0"
+    },
+    {
+      "category": "audit",
+      "has_at_docstring": true,
+      "has_uv_script_block": true,
+      "lines": 130,
+      "path": "scripts/audit/install_audit_hooks.py",
+      "updated": "2026-02-01",
+      "version": "0.1.0"
+    },
+    {
+      "category": "audit",
+      "has_at_docstring": true,
+      "has_uv_script_block": true,
+      "lines": 109,
+      "path": "scripts/audit/prune_audit_logs.py",
+      "updated": "2026-02-01",
+      "version": "0.1.0"
+    },
+    {
+      "category": "audit",
+      "has_at_docstring": true,
+      "has_uv_script_block": true,
+      "lines": 98,
+      "path": "scripts/audit/uninstall_audit_hooks.py",
+      "updated": "2026-02-01",
+      "version": "0.1.0"
+    },
+    {
+      "category": "safety",
+      "has_at_docstring": true,
+      "has_uv_script_block": true,
+      "lines": 143,
+      "path": "scripts/checkpoint/create_checkpoint.py",
+      "updated": "2026-02-01",
+      "version": "0.1.0"
+    },
+    {
+      "category": "safety",
+      "has_at_docstring": true,
+      "has_uv_script_block": true,
+      "lines": 188,
+      "path": "scripts/checkpoint/restore_checkpoint.py",
+      "updated": "2026-02-01",
+      "version": "0.1.0"
+    },
+    {
+      "category": "context",
+      "has_at_docstring": false,
+      "has_uv_script_block": false,
+      "lines": 1,
+      "path": "scripts/context/__init__.py",
+      "updated": null,
+      "version": null
+    },
+    {
+      "category": "context",
+      "has_at_docstring": true,
+      "has_uv_script_block": true,
+      "lines": 148,
+      "path": "scripts/context/build_context_pack.py",
+      "updated": "2026-02-01",
+      "version": "0.1.0"
+    },
+    {
+      "category": "context",
+      "has_at_docstring": true,
+      "has_uv_script_block": true,
+      "lines": 370,
+      "path": "scripts/context/build_task_contexts.py",
+      "updated": "2026-02-01",
+      "version": "0.1.0"
+    },
+    {
+      "category": "dev",
+      "has_at_docstring": true,
+      "has_uv_script_block": true,
+      "lines": 218,
+      "path": "scripts/dev/add_version_headers.py",
+      "updated": "2026-02-01",
+      "version": "0.1.0"
+    },
+    {
+      "category": "root",
+      "has_at_docstring": true,
+      "has_uv_script_block": true,
+      "lines": 113,
+      "path": "scripts/doctor.py",
+      "updated": "2026-02-01",
+      "version": "0.1.0"
+    },
+    {
+      "category": "hook",
+      "has_at_docstring": false,
+      "has_uv_script_block": false,
+      "lines": 1,
+      "path": "scripts/hooks/__init__.py",
+      "updated": null,
+      "version": null
+    },
+    {
+      "category": "hook",
+      "has_at_docstring": true,
+      "has_uv_script_block": true,
+      "lines": 61,
+      "path": "scripts/hooks/audit_post_tool_use.py",
+      "updated": "2026-02-01",
+      "version": "0.1.0"
+    },
+    {
+      "category": "hook",
+      "has_at_docstring": true,
+      "has_uv_script_block": true,
+      "lines": 61,
+      "path": "scripts/hooks/audit_pre_tool_use.py",
+      "updated": "2026-02-01",
+      "version": "0.1.0"
+    },
+    {
+      "category": "hook",
+      "has_at_docstring": true,
+      "has_uv_script_block": true,
+      "lines": 59,
+      "path": "scripts/hooks/audit_session_lifecycle.py",
+      "updated": "2026-02-01",
+      "version": "0.1.0"
+    },
+    {
+      "category": "hook",
+      "has_at_docstring": true,
+      "has_uv_script_block": true,
+      "lines": 57,
+      "path": "scripts/hooks/audit_subagent_stop.py",
+      "updated": "2026-02-01",
+      "version": "0.1.0"
+    },
+    {
+      "category": "hook",
+      "has_at_docstring": true,
+      "has_uv_script_block": true,
+      "lines": 201,
+      "path": "scripts/hooks/enforce_file_scope.py",
+      "updated": "2026-02-01",
+      "version": "0.1.0"
+    },
+    {
+      "category": "hook",
+      "has_at_docstring": true,
+      "has_uv_script_block": true,
+      "lines": 151,
+      "path": "scripts/hooks/install_policy_hooks.py",
+      "updated": "2026-02-01",
+      "version": "0.1.0"
+    },
+    {
+      "category": "hook",
+      "has_at_docstring": true,
+      "has_uv_script_block": true,
+      "lines": 362,
+      "path": "scripts/hooks/on_subagent_stop.py",
+      "updated": "2026-02-01",
+      "version": "0.1.0"
+    },
+    {
+      "category": "hook",
+      "has_at_docstring": true,
+      "has_uv_script_block": true,
+      "lines": 123,
+      "path": "scripts/hooks/policy_pre_tool_use.py",
+      "updated": "2026-02-01",
+      "version": "0.1.0"
+    },
+    {
+      "category": "hook",
+      "has_at_docstring": true,
+      "has_uv_script_block": true,
+      "lines": 83,
+      "path": "scripts/hooks/sessionstart_learning_context.py",
+      "updated": "2026-02-01",
+      "version": "0.1.0"
+    },
+    {
+      "category": "hook",
+      "has_at_docstring": true,
+      "has_uv_script_block": true,
+      "lines": 99,
+      "path": "scripts/hooks/uninstall_policy_hooks.py",
+      "updated": "2026-02-01",
+      "version": "0.1.0"
+    },
+    {
+      "category": "hook",
+      "has_at_docstring": true,
+      "has_uv_script_block": true,
+      "lines": 84,
+      "path": "scripts/hooks/validate_actions_write.py",
+      "updated": "2026-02-01",
+      "version": "0.1.0"
+    },
+    {
+      "category": "root",
+      "has_at_docstring": true,
+      "has_uv_script_block": true,
+      "lines": 133,
+      "path": "scripts/init_project.py",
+      "updated": "2026-02-01",
+      "version": "0.1.0"
+    },
+    {
+      "category": "learning",
+      "has_at_docstring": true,
+      "has_uv_script_block": true,
+      "lines": 111,
+      "path": "scripts/learning/install_learning_hooks.py",
+      "updated": "2026-02-01",
+      "version": "0.1.0"
+    },
+    {
+      "category": "learning",
+      "has_at_docstring": true,
+      "has_uv_script_block": true,
+      "lines": 29,
+      "path": "scripts/learning/learning_state.py",
+      "updated": "2026-02-01",
+      "version": "0.1.0"
+    },
+    {
+      "category": "learning",
+      "has_at_docstring": true,
+      "has_uv_script_block": true,
+      "lines": 42,
+      "path": "scripts/learning/learning_status.py",
+      "updated": "2026-02-01",
+      "version": "0.1.0"
+    },
+    {
+      "category": "learning",
+      "has_at_docstring": true,
+      "has_uv_script_block": true,
+      "lines": 97,
+      "path": "scripts/learning/uninstall_learning_hooks.py",
+      "updated": "2026-02-01",
+      "version": "0.1.0"
+    },
+    {
+      "category": "learning",
+      "has_at_docstring": true,
+      "has_uv_script_block": true,
+      "lines": 116,
+      "path": "scripts/learning/update_learning_state.py",
+      "updated": "2026-02-01",
+      "version": "0.1.0"
+    },
+    {
+      "category": "lib",
+      "has_at_docstring": false,
+      "has_uv_script_block": false,
+      "lines": 1,
+      "path": "scripts/lib/__init__.py",
+      "updated": null,
+      "version": null
+    },
+    {
+      "category": "lib",
+      "has_at_docstring": true,
+      "has_uv_script_block": true,
+      "lines": 58,
+      "path": "scripts/lib/docs_registry.py",
+      "updated": "2026-02-01",
+      "version": "0.1.0"
+    },
+    {
+      "category": "lib",
+      "has_at_docstring": true,
+      "has_uv_script_block": true,
+      "lines": 95,
+      "path": "scripts/lib/git.py",
+      "updated": "2026-02-01",
+      "version": "0.1.0"
+    },
+    {
+      "category": "lib",
+      "has_at_docstring": true,
+      "has_uv_script_block": true,
+      "lines": 75,
+      "path": "scripts/lib/io.py",
+      "updated": "2026-01-31",
+      "version": "0.1.0"
+    },
+    {
+      "category": "lib",
+      "has_at_docstring": true,
+      "has_uv_script_block": true,
+      "lines": 129,
+      "path": "scripts/lib/path_policy.py",
+      "updated": "2026-01-31",
+      "version": "0.1.0"
+    },
+    {
+      "category": "lib",
+      "has_at_docstring": true,
+      "has_uv_script_block": true,
+      "lines": 117,
+      "path": "scripts/lib/project.py",
+      "updated": "2026-01-31",
+      "version": "0.1.0"
+    },
+    {
+      "category": "lib",
+      "has_at_docstring": true,
+      "has_uv_script_block": true,
+      "lines": 43,
+      "path": "scripts/lib/session.py",
+      "updated": "2026-02-01",
+      "version": "0.1.0"
+    },
+    {
+      "category": "lib",
+      "has_at_docstring": true,
+      "has_uv_script_block": true,
+      "lines": 150,
+      "path": "scripts/lib/simple_yaml.py",
+      "updated": "2026-01-31",
+      "version": "0.1.0"
+    },
+    {
+      "category": "maintenance",
+      "has_at_docstring": true,
+      "has_uv_script_block": true,
+      "lines": 80,
+      "path": "scripts/maintenance/cleanup_sessions.py",
+      "updated": "2026-02-01",
+      "version": "0.1.0"
+    },
+    {
+      "category": "project_pack",
+      "has_at_docstring": true,
+      "has_uv_script_block": true,
+      "lines": 149,
+      "path": "scripts/project_pack/install_project_pack.py",
+      "updated": "2026-02-01",
+      "version": "0.1.0"
+    },
+    {
+      "category": "gate",
+      "has_at_docstring": true,
+      "has_uv_script_block": true,
+      "lines": 253,
+      "path": "scripts/quality/run_quality_suite.py",
+      "updated": "2026-02-01",
+      "version": "0.1.0"
+    },
+    {
+      "category": "session",
+      "has_at_docstring": true,
+      "has_uv_script_block": true,
+      "lines": 125,
+      "path": "scripts/session/create_session.py",
+      "updated": "2026-02-01",
+      "version": "0.1.0"
+    },
+    {
+      "category": "session",
+      "has_at_docstring": true,
+      "has_uv_script_block": true,
+      "lines": 72,
+      "path": "scripts/session/list_sessions.py",
+      "updated": "2026-02-01",
+      "version": "0.1.0"
+    },
+    {
+      "category": "session",
+      "has_at_docstring": true,
+      "has_uv_script_block": true,
+      "lines": 305,
+      "path": "scripts/session/session_progress.py",
+      "updated": "2026-02-01",
+      "version": "0.1.0"
+    },
+    {
+      "category": "telemetry",
+      "has_at_docstring": true,
+      "has_uv_script_block": true,
+      "lines": 111,
+      "path": "scripts/telemetry/build_session_kpis.py",
+      "updated": "2026-02-01",
+      "version": "0.1.0"
+    },
+    {
+      "category": "telemetry",
+      "has_at_docstring": true,
+      "has_uv_script_block": true,
+      "lines": 97,
+      "path": "scripts/telemetry/rollup_kpis.py",
+      "updated": "2026-02-01",
+      "version": "0.1.0"
+    },
+    {
+      "category": "upgrade",
+      "has_at_docstring": true,
+      "has_uv_script_block": true,
+      "lines": 63,
+      "path": "scripts/upgrade/upgrade_project.py",
+      "updated": "2026-02-01",
+      "version": "0.1.0"
+    },
+    {
+      "category": "gate",
+      "has_at_docstring": false,
+      "has_uv_script_block": false,
+      "lines": 1,
+      "path": "scripts/validate/__init__.py",
+      "updated": null,
+      "version": null
+    },
+    {
+      "category": "gate",
+      "has_at_docstring": true,
+      "has_uv_script_block": true,
+      "lines": 332,
+      "path": "scripts/validate/actions_validator.py",
+      "updated": "2026-02-01",
+      "version": "0.1.0"
+    },
+    {
+      "category": "gate",
+      "has_at_docstring": true,
+      "has_uv_script_block": true,
+      "lines": 155,
+      "path": "scripts/validate/docs_gate.py",
+      "updated": "2026-02-01",
+      "version": "0.1.0"
+    },
+    {
+      "category": "gate",
+      "has_at_docstring": true,
+      "has_uv_script_block": true,
+      "lines": 204,
+      "path": "scripts/validate/parallel_conformance.py",
+      "updated": "2026-02-01",
+      "version": "0.1.0"
+    },
+    {
+      "category": "gate",
+      "has_at_docstring": true,
+      "has_uv_script_block": true,
+      "lines": 232,
+      "path": "scripts/validate/plan_adherence.py",
+      "updated": "2026-02-01",
+      "version": "0.1.0"
+    },
+    {
+      "category": "gate",
+      "has_at_docstring": true,
+      "has_uv_script_block": true,
+      "lines": 64,
+      "path": "scripts/validate/validate_actions.py",
+      "updated": "2026-02-01",
+      "version": "0.1.0"
+    },
+    {
+      "category": "gate",
+      "has_at_docstring": true,
+      "has_uv_script_block": true,
+      "lines": 140,
+      "path": "scripts/validate/validate_changed_files.py",
+      "updated": "2026-02-01",
+      "version": "0.1.0"
+    },
+    {
+      "category": "gate",
+      "has_at_docstring": true,
+      "has_uv_script_block": true,
+      "lines": 141,
+      "path": "scripts/validate/validate_task_artifacts.py",
+      "updated": "2026-02-01",
+      "version": "0.1.0"
+    }
+  ],
+  "skills": [
+    "skills/audit-report/SKILL.md",
+    "skills/cleanup-sessions/SKILL.md",
+    "skills/doctor/SKILL.md",
+    "skills/init-project/SKILL.md",
+    "skills/install-project-pack/SKILL.md",
+    "skills/learning-status/SKILL.md",
+    "skills/learning-update/SKILL.md",
+    "skills/prune-audit-logs/SKILL.md",
+    "skills/run/SKILL.md",
+    "skills/session-progress/SKILL.md",
+    "skills/sessions/SKILL.md",
+    "skills/setup-audit-hooks/SKILL.md",
+    "skills/setup-learning-hooks/SKILL.md",
+    "skills/setup-policy-hooks/SKILL.md",
+    "skills/telemetry-rollup/SKILL.md",
+    "skills/telemetry-session-kpis/SKILL.md",
+    "skills/uninstall-audit-hooks/SKILL.md",
+    "skills/uninstall-hooks/SKILL.md",
+    "skills/uninstall-learning-hooks/SKILL.md",
+    "skills/upgrade-project/SKILL.md"
+  ]
+}

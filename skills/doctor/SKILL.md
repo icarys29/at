@@ -1,5 +1,7 @@
 ---
 name: doctor
+version: "0.1.0"
+updated: "2026-02-01"
 description: Validate that the current repo overlay is usable for at (config, docs registry policy, sessions dir).
 argument-hint: "[--json]"
 allowed-tools: Read, Bash

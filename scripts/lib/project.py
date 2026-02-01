@@ -7,7 +7,7 @@
 at: Project detection and configuration utilities
 
 Version: 0.1.0
-Updated: 2026-01-31
+Updated: 2026-02-01
 """
 from __future__ import annotations
 
@@ -59,6 +59,19 @@ def get_sessions_dir(project_root: Path, config: dict[str, Any] | None = None) -
             if isinstance(sessions_dir, str) and sessions_dir.strip():
                 return sessions_dir.strip()
     return ".session"
+
+
+def get_learning_dir(project_root: Path, config: dict[str, Any] | None = None) -> str:
+    """Get `learning.dir` from config, default `.claude/agent-team/learning`."""
+    if config is None:
+        config = load_project_config(project_root)
+    if config:
+        learning = config.get("learning")
+        if isinstance(learning, dict):
+            d = learning.get("dir")
+            if isinstance(d, str) and d.strip():
+                return d.strip()
+    return ".claude/agent-team/learning"
 
 
 def get_plugin_root() -> Path:

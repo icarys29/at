@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "workflow": "deliver",
+  "tasks": [
+    {
+      "id": "T1",
+      "owner": "implementor",
+      "summary": "Implement minimal change",
+      "description": "A minimal valid task for validator fixtures.",
+      "file_scope": {
+        "allow": ["**/*"],
+        "deny": [],
+        "writes": ["src/"]
+      },
+      "acceptance_criteria": [
+        {
+          "id": "AC1",
+          "statement": "A deterministic artifact exists",
+          "verifications": [
+            { "type": "file", "path": "src/" }
+          ]
+        }
+      ]
+    }
+  ],
+  "parallel_execution": {
+    "enabled": true,
+    "max_concurrent_agents": 1,
+    "groups": [
+      { "group_id": "g1", "execution_order": 1, "tasks": ["T1"] }
+    ]
+  }
+}
+

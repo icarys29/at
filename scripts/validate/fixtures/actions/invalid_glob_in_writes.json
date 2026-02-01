@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "workflow": "deliver",
+  "tasks": [
+    {
+      "id": "T1",
+      "owner": "implementor",
+      "summary": "Glob in writes should fail",
+      "file_scope": {
+        "allow": ["**/*"],
+        "writes": ["src/*.py"]
+      },
+      "acceptance_criteria": [
+        { "id": "AC1", "statement": "placeholder" }
+      ]
+    }
+  ],
+  "parallel_execution": {
+    "enabled": true,
+    "groups": [
+      { "group_id": "g1", "execution_order": 1, "tasks": ["T1"] }
+    ]
+  }
+}
+

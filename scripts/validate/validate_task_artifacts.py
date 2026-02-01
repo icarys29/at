@@ -23,6 +23,7 @@ sys.path.insert(0, str(SCRIPT_ROOT))
 from lib.project import detect_project_dir, get_sessions_dir  # noqa: E402
 from lib.session import resolve_session_dir  # noqa: E402
 from lib.simple_yaml import load_minimal_yaml  # noqa: E402
+from lib.io import utc_now, write_json, write_text  # noqa: E402
 
 
 @dataclass(frozen=True)
@@ -111,6 +112,9 @@ def main() -> int:
     sessions_dir = args.sessions_dir or get_sessions_dir(project_root)
     session_dir = resolve_session_dir(project_root, sessions_dir, args.session)
 
+    out_dir = session_dir / "quality"
+    out_dir.mkdir(parents=True, exist_ok=True)
+
     paths: list[Path] = []
     if args.owner in {"all", "implementor"}:
         paths.extend(sorted((session_dir / "implementation" / "tasks").glob("*.yaml")))
@@ -118,12 +122,49 @@ def main() -> int:
         paths.extend(sorted((session_dir / "testing" / "tasks").glob("*.yaml")))
 
     if not paths:
+        report = {
+            "version": 1,
+            "generated_at": utc_now(),
+            "ok": False,
+            "owner": args.owner,
+            "paths_checked": 0,
+            "issues": [{"severity": "error", "path": "task_artifacts", "message": "No task artifacts found"}],
+        }
+        write_json(out_dir / "task_artifacts_report.json", report)
+        write_text(out_dir / "task_artifacts_report.md", "# Task Artifacts Report (at)\n\n- ok: `false`\n- issue: no task artifacts found\n")
         print("No task artifacts found.", file=sys.stderr)
         return 1
 
     issues: list[Issue] = []
     for p in paths:
         issues.extend(validate_task_artifact(p))
+
+    ok = len([i for i in issues if i.severity == "error"]) == 0
+    report = {
+        "version": 1,
+        "generated_at": utc_now(),
+        "ok": ok,
+        "owner": args.owner,
+        "paths_checked": len(paths),
+        "issues": [i.__dict__ for i in issues],
+    }
+    write_json(out_dir / "task_artifacts_report.json", report)
+
+    md: list[str] = []
+    md.append("# Task Artifacts Report (at)")
+    md.append("")
+    md.append(f"- generated_at: `{report['generated_at']}`")
+    md.append(f"- ok: `{str(ok).lower()}`")
+    md.append(f"- owner: `{args.owner}`")
+    md.append(f"- paths_checked: `{len(paths)}`")
+    md.append("")
+    if issues:
+        md.append("## Issues")
+        md.append("")
+        for it in issues[:200]:
+            md.append(f"- `{it.severity}` — {it.path}: {it.message}")
+        md.append("")
+    write_text(out_dir / "task_artifacts_report.md", "\n".join(md))
 
     if issues:
         print("FAIL: task artifacts validation issues found:", file=sys.stderr)

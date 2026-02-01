@@ -7,7 +7,7 @@
 at: Simple YAML parser
 
 Version: 0.1.0
-Updated: 2026-01-31
+Updated: 2026-02-01
 """
 from __future__ import annotations
 

@@ -98,6 +98,11 @@
           "items": { "type": "string" },
           "description": "Document IDs from DOCUMENTATION_REGISTRY.json"
         },
+        "code_pointers": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/code_pointer" },
+          "description": "Optional code pointers to embed into per-task contexts (paths + grep patterns)"
+        },
         "doc_sections": {
           "type": "object",
           "additionalProperties": {
@@ -115,6 +120,17 @@
           "default": false,
           "description": "When true, embed full document content; when false (default), reference only"
         }
+      }
+    },
+    "code_pointer": {
+      "type": "object",
+      "required": ["path", "pattern"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1, "description": "Repo-relative file path" },
+        "pattern": { "type": "string", "minLength": 1, "description": "Regex pattern to locate relevant code" },
+        "context_lines": { "type": "integer", "minimum": 0, "default": 3, "description": "Lines of context to include around each match" },
+        "max_matches": { "type": "integer", "minimum": 1, "default": 5, "description": "Maximum matches to embed per pointer" },
+        "note": { "type": "string", "description": "Optional rationale for this pointer" }
       }
     },
     "file_scope": {

@@ -22,6 +22,7 @@ Run the deterministic quality suite for the current session and write quality ar
 - `SESSION_DIR/quality/quality_report.json`
 - `SESSION_DIR/quality/quality_report.md`
 - `SESSION_DIR/quality/command_logs/*`
+ - Optional (when project pack is installed): `SESSION_DIR/quality/enforcement_report.json`
 
 ## Procedure
 1) Run: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/quality/run_quality_suite.py" --session "${SESSION_DIR}"`
@@ -37,4 +38,3 @@ REPO_DIFF:
 SESSION_ARTIFACTS:
 quality/quality_report.json
 quality/quality_report.md
-

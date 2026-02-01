@@ -23,6 +23,8 @@ sys.path.insert(0, str(SCRIPT_ROOT))
 
 from lib.project import detect_project_dir, get_sessions_dir  # noqa: E402
 from lib.path_policy import normalize_repo_relative_posix_path  # noqa: E402
+from lib.active_session import resolve_session_dir_from_hook  # noqa: E402
+from lib.io import load_json_safe, utc_now_full, write_json  # noqa: E402
 
 
 def _read_hook_input() -> dict[str, Any] | None:
@@ -88,6 +90,82 @@ def _find_session_and_task(project_root: Path, sessions_dir: str, transcript_pat
     return (best[1] if best else None, task_id)
 
 
+def _task_map_path(session_dir: Path) -> Path:
+    return session_dir / "status" / "transcript_task_map.json"
+
+
+def _load_task_map(session_dir: Path) -> dict[str, Any]:
+    data = load_json_safe(_task_map_path(session_dir), default={})
+    return data if isinstance(data, dict) else {}
+
+
+def _save_task_map(session_dir: Path, data: dict[str, Any]) -> None:
+    try:
+        write_json(_task_map_path(session_dir), data)
+    except Exception:
+        pass
+
+
+def _remember_task_for_transcript(session_dir: Path, transcript_path: str, task_id: str, method: str) -> None:
+    if not transcript_path or not task_id:
+        return
+    data = _load_task_map(session_dir)
+    mappings = data.get("mappings")
+    if not isinstance(mappings, dict):
+        mappings = {}
+    mappings[transcript_path] = {"task_id": task_id, "method": method, "updated_at": utc_now_full()}
+    data["version"] = 1
+    data["updated_at"] = utc_now_full()
+    data["mappings"] = mappings
+    _save_task_map(session_dir, data)
+
+
+def _get_task_from_task_map(session_dir: Path, transcript_path: str) -> str | None:
+    data = _load_task_map(session_dir)
+    mappings = data.get("mappings")
+    if not isinstance(mappings, dict):
+        return None
+    entry = mappings.get(transcript_path)
+    if not isinstance(entry, dict):
+        return None
+    tid = entry.get("task_id")
+    return tid.strip() if isinstance(tid, str) and tid.strip() else None
+
+
+def _find_task_id_in_transcript(transcript_path: Path, *, max_bytes: int = 300_000) -> str | None:
+    text = _read_tail(transcript_path, max_bytes=max_bytes)
+    if not text:
+        return None
+    m = re.search(r"inputs/task_context/(?P<task>[A-Za-z0-9_.-]+)\\.md", text)
+    if m:
+        return m.group("task")
+    return None
+
+
+def _infer_task_id_from_target(repo_rel_posix: str, tasks: dict[str, Any]) -> tuple[str | None, list[str]]:
+    """
+    Best-effort inference: find the unique task whose declared writes include repo_rel_posix.
+    Returns (task_id, candidates).
+    """
+    candidates: list[str] = []
+    for tid, meta in tasks.items():
+        if not isinstance(tid, str) or not tid.strip():
+            continue
+        if not isinstance(meta, dict):
+            continue
+        fs = meta.get("file_scope")
+        if not isinstance(fs, dict):
+            continue
+        writes = fs.get("writes")
+        if not isinstance(writes, list):
+            continue
+        if _allowed_by_writes(repo_rel_posix, writes):
+            candidates.append(tid)
+    if len(candidates) == 1:
+        return candidates[0], candidates
+    return None, candidates
+
+
 def _allowed_by_writes(repo_rel_posix: str, writes: list[str]) -> bool:
     for w in writes:
         if not isinstance(w, str) or not w.strip():
@@ -144,24 +222,35 @@ def main() -> int:
     project_root = detect_project_dir()
     sessions_dir = get_sessions_dir(project_root)
 
+    # Prefer deterministic resolution of the active SESSION_DIR using hook input (session_id),
+    # falling back to transcript heuristics only when necessary.
+    claude_session_id = hook_input.get("session_id")
+    active = resolve_session_dir_from_hook(
+        project_root=project_root,
+        sessions_dir=sessions_dir,
+        claude_session_id=str(claude_session_id) if isinstance(claude_session_id, str) else None,
+    )
+
     transcript_path = hook_input.get("transcript_path")
     if not isinstance(transcript_path, str) or not transcript_path.strip():
         return 0
 
-    session_dir, task_id = _find_session_and_task(project_root, sessions_dir, Path(transcript_path).expanduser())
-    if session_dir is None or not task_id:
-        return 0
+    # If we can't resolve a session, fail open (do not interfere with non-at usage).
+    session_dir = active.session_dir if active else None
+    task_id: str | None = None
+    if session_dir is None:
+        session_dir, task_id = _find_session_and_task(project_root, sessions_dir, Path(transcript_path).expanduser())
+        if session_dir is None:
+            return 0
+    else:
+        # Try cached mapping first (supports parallel subagent transcripts).
+        task_id = _get_task_from_task_map(session_dir, transcript_path)
 
     manifest_path = session_dir / "inputs" / "task_context_manifest.json"
     try:
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     except Exception:
-        return 0
-
-    task = ((manifest.get("tasks") or {}).get(task_id) or {}) if isinstance(manifest, dict) else {}
-    writes = ((task.get("file_scope") or {}).get("writes") or []) if isinstance(task, dict) else []
-    if not isinstance(writes, list) or not writes:
-        return 0
+        return 0  # no manifest => not in an at execution context
 
     target = Path(file_path).expanduser()
     try:
@@ -179,6 +268,40 @@ def main() -> int:
     # Always allow session artifacts.
     sessions_prefix = sessions_dir.rstrip("/") + "/"
     if repo_rel_posix == sessions_dir.rstrip("/") or repo_rel_posix.startswith(sessions_prefix):
+        return 0
+
+    tasks = (manifest.get("tasks") or {}) if isinstance(manifest, dict) else {}
+    if not isinstance(tasks, dict):
+        return 0
+
+    # Resolve task_id if missing: transcript parsing, then best-effort inference from target path.
+    if not task_id:
+        found = _find_task_id_in_transcript(Path(transcript_path).expanduser())
+        if found:
+            task_id = found
+            _remember_task_for_transcript(session_dir, transcript_path, task_id, "transcript")
+
+    if not task_id:
+        inferred, candidates = _infer_task_id_from_target(repo_rel_posix, tasks)
+        if inferred:
+            task_id = inferred
+            _remember_task_for_transcript(session_dir, transcript_path, task_id, "inferred-from-target")
+        else:
+            preview = ", ".join(sorted(candidates)[:12])
+            more = "" if len(candidates) <= 12 else f" (+{len(candidates) - 12} more)"
+            return _deny(
+                f"Cannot determine active task for {tool_name} to {repo_rel_posix!r}. "
+                "Remediation: ensure the subagent reads `SESSION_DIR/inputs/task_context/<task_id>.md` before editing, "
+                "or ensure file_scope.writes uniquely identifies the task. "
+                f"Candidate tasks for this path: {preview}{more}."
+            )
+
+    task = (tasks.get(task_id) or {}) if isinstance(tasks.get(task_id), dict) else {}
+    fs = task.get("file_scope") if isinstance(task.get("file_scope"), dict) else {}
+    writes = fs.get("writes") if isinstance(fs.get("writes"), list) else []
+    if not isinstance(writes, list) or not writes:
+        # If the task declares no writes, we can't enforce. Fail open to avoid blocking workflows
+        # that deliberately omit file_scope.writes (e.g., sequential plans).
         return 0
 
     if _allowed_by_writes(repo_rel_posix, writes):
