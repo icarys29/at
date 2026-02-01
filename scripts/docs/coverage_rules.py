@@ -25,6 +25,7 @@ Updated: 2026-02-01
 from __future__ import annotations
 
 from dataclasses import dataclass
+import re
 from typing import Any
 
 from lib.docs_validation import match_globs
@@ -82,14 +83,23 @@ def _normalize_keywords(phrases: list[str]) -> list[str]:
     for p in phrases[:500]:
         if not isinstance(p, str) or not p.strip():
             continue
-        out.append(" ".join(p.strip().lower().split()))
+        tokens = _TOKEN_RE.findall(p.strip().lower())
+        if tokens:
+            out.append(" ".join(tokens))
     return out
+
+
+_TOKEN_RE = re.compile(r"[a-z0-9]+")
 
 
 def _text_blob(keywords_text: str | None) -> str:
     if not isinstance(keywords_text, str) or not keywords_text.strip():
         return ""
-    return keywords_text.lower()
+    tokens = _TOKEN_RE.findall(keywords_text.lower())
+    if not tokens:
+        return ""
+    # Space-padded token stream enables deterministic word-boundary phrase matching using substring.
+    return " " + " ".join(tokens) + " "
 
 
 def _keywords_any_match(blob: str, phrases: list[str]) -> tuple[bool, list[str]]:
@@ -97,7 +107,9 @@ def _keywords_any_match(blob: str, phrases: list[str]) -> tuple[bool, list[str]]
         return (False, [])
     matched: list[str] = []
     for p in phrases[:500]:
-        if p and p in blob:
+        if not p:
+            continue
+        if f" {p} " in blob:
             matched.append(p)
     return (len(matched) > 0, matched[:20])
 
@@ -109,7 +121,9 @@ def _keywords_all_match(blob: str, phrases: list[str]) -> tuple[bool, list[str]]
         return (False, [])
     missing: list[str] = []
     for p in phrases[:500]:
-        if p and p not in blob:
+        if not p:
+            continue
+        if f" {p} " not in blob:
             missing.append(p)
     return (len(missing) == 0, [])
 

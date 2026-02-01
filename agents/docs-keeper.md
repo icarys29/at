@@ -30,6 +30,7 @@ This subagent is the **only component** that should modify repo documentation (d
 - `SESSION_DIR/implementation/tasks/*.yaml` and `SESSION_DIR/testing/tasks/*.yaml` (for changed_files + summaries)
 - `.claude/project.yaml` (docs config)
 - `docs/DOCUMENTATION_REGISTRY.json` (registry, v2)
+ - `SESSION_DIR/inputs/task_context/docs-keeper.md` (required for deterministic scope enforcement when hooks are enabled)
 
 ## Outputs (required)
 Repo docs must be updated (always-on when running `sync` mode):
@@ -63,6 +64,9 @@ Repo docs must be updated (always-on when running `sync` mode):
 - Level 4 — New core component (engine/framework/runtime service): create an ARD and register it.
 
 ## Mandatory procedure (sync mode)
+0) Scope contract (required when scope hooks are enabled)
+   - Read: `SESSION_DIR/inputs/task_context/docs-keeper.md` before any repo doc edits.
+   - Only edit within its declared `file_scope.writes` (expected: `docs/`).
 1) Impact analysis (deterministic)
    - Run: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/docs/docs_plan.py" --session "${SESSION_DIR}"`
    - Read: `SESSION_DIR/documentation/docs_plan.json` and `docs_plan.md`.
@@ -81,6 +85,7 @@ Repo docs must be updated (always-on when running `sync` mode):
 4) Create docs from templates (when required)
    - Use the template referenced by registry `doc_types[*].template`.
    - Allocate a deterministic id using the type prefix (e.g., `ADR-0001`, `ARD-0001`, `PAT-0001`, `RB-0001`), register immediately.
+   - Prefer allocating IDs via: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/docs/allocate_doc_id.py" --type <adr|ard|pattern|runbook>`
 5) Update registry JSON (v2; single source of truth)
    - Every entry MUST include: `id`, `type`, `path`, `title`, `tier`, `when`, `tags`, `owners`, `status`.
    - Keep `when` stable and actionable (topic + trigger), 1–2 sentences.

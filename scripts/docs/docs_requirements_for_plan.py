@@ -87,10 +87,22 @@ def main() -> int:
             continue
         if owner not in CODE_OWNERS:
             continue
+        summary_text_for_keywords = ""
+        summary = t.get("summary")
+        if isinstance(summary, str) and summary.strip():
+            summary_text_for_keywords += summary.strip()
+        desc = t.get("description")
+        if isinstance(desc, str) and desc.strip():
+            summary_text_for_keywords += "\n" + desc.strip()
+        acs = t.get("acceptance_criteria")
+        if isinstance(acs, list):
+            for ac in acs[:200]:
+                if isinstance(ac, dict) and isinstance(ac.get("statement"), str) and ac.get("statement").strip():
+                    summary_text_for_keywords += "\n" + ac.get("statement").strip()
         fs = t.get("file_scope") if isinstance(t.get("file_scope"), dict) else {}
         writes = fs.get("writes") if isinstance(fs.get("writes"), list) else []
         write_scopes = [w for w in writes if isinstance(w, str) and w.strip()]
-        plan = evaluate_coverage_rules_for_write_scopes(rules, write_scopes=write_scopes)
+        plan = evaluate_coverage_rules_for_write_scopes(rules, write_scopes=write_scopes, keywords_text=summary_text_for_keywords)
         per_task.append(
             {
                 "task_id": tid.strip(),
@@ -98,7 +110,10 @@ def main() -> int:
                 "writes": write_scopes,
                 "required_doc_ids": plan.required_doc_ids,
                 "required_create_types": plan.required_create_types,
-                "triggered_rules": [{"id": tr.rule_id, "matched_paths": tr.matched_paths, "note": tr.note or ""} for tr in plan.triggered],
+                "triggered_rules": [
+                    {"id": tr.rule_id, "matched_paths": tr.matched_paths, "matched_keywords": tr.matched_keywords, "note": tr.note or ""}
+                    for tr in plan.triggered
+                ],
             }
         )
 
@@ -139,6 +154,17 @@ def main() -> int:
                 md.append("- required_create_types:")
                 for typ in t["required_create_types"][:20]:
                     md.append(f"  - `{typ}`")
+            triggered = t.get("triggered_rules")
+            if isinstance(triggered, list) and triggered:
+                md.append("- triggered_rules:")
+                for r in triggered[:10]:
+                    if not isinstance(r, dict):
+                        continue
+                    rid = r.get("id", "")
+                    md.append(f"  - `{rid}`")
+                    kws = r.get("matched_keywords") if isinstance(r.get("matched_keywords"), list) else []
+                    if kws:
+                        md.append("    - matched_keywords: " + ", ".join([f"`{k}`" for k in kws[:10]]))
             md.append("")
 
     write_text(out_dir / "docs_requirements_for_plan.md", "\n".join(md))
@@ -148,4 +174,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

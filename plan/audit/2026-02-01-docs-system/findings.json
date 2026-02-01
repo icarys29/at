@@ -1,0 +1,120 @@
+{
+  "version": 1,
+  "generated_at": "2026-02-01",
+  "scope": {
+    "repo": "at",
+    "area": "documentation-system"
+  },
+  "findings": [
+    {
+      "id": "DOCSYS-01",
+      "severity": "critical",
+      "area": "scope_enforcement",
+      "title": "Docs-keeper repo edits can be blocked by file-scope enforcement (or pushed into Bash escape hatches)",
+      "evidence": [
+        "scripts/hooks/enforce_file_scope.py",
+        "scripts/context/build_task_contexts.py",
+        "agents/docs-keeper.md",
+        "skills/run/SKILL.md"
+      ],
+      "risk": "Deliver can fail or docs-keeper may resort to Bash-based file writes, weakening predictability and safety. The system’s core promise (auto-maintained docs after deliver) becomes unreliable.",
+      "recommendations": [
+        "Preferred: model docs updates as an explicit planned task (e.g., owner docs-keeper) with strict file_scope.writes for docs/*; generate a task context + include it in task_context_manifest.json so enforce_file_scope can authorize doc edits deterministically.",
+        "Alternative: add a deterministic allowlist for docs-keeper writes in enforce_file_scope (only docs/* + registry paths) when the active subagent is docs-keeper; avoid transcript heuristics if possible.",
+        "Close the escape hatch: consider extending scope enforcement to cover Bash (or introduce a policy hook that denies Bash writes outside SESSION_DIR unless explicitly allowed)."
+      ]
+    },
+    {
+      "id": "DOCSYS-02",
+      "severity": "high",
+      "area": "usability",
+      "title": "Docs lint/gate report insufficient details (broken links/orphans reported only as counts)",
+      "evidence": [
+        "scripts/docs/docs_lint.py",
+        "scripts/validate/docs_gate.py",
+        "scripts/lib/docs_validation.py"
+      ],
+      "risk": "Teams lose time diagnosing drift; repeated failures feel opaque and ‘LLM-ish’ even though checks are deterministic.",
+      "recommendations": [
+        "Include first N broken links with {doc, link, reason} in docs_lint and docs_gate report JSON, and render a small excerpt in MD.",
+        "Include first N orphan doc paths in docs_lint and docs_gate outputs (not just counts)."
+      ]
+    },
+    {
+      "id": "DOCSYS-03",
+      "severity": "high",
+      "area": "context_quality",
+      "title": "Keyword matching is substring-based; can produce false positives/negatives that affect required doc_ids",
+      "evidence": [
+        "scripts/docs/coverage_rules.py",
+        "scripts/validate/actions_validator.py",
+        "scripts/docs/docs_plan.py"
+      ],
+      "risk": "Plans can be blocked unexpectedly (false positives), or required docs may not be enforced (false negatives), reducing trust in the system.",
+      "recommendations": [
+        "Switch keyword matching to token/phrase matching with basic word boundaries (still deterministic) and a small stopword filter.",
+        "Add an explicit per-rule opt-in for keyword predicates (so most rules remain path-driven and stable).",
+        "Log which keywords matched in the enforcement error message (currently only doc ids are shown)."
+      ]
+    },
+    {
+      "id": "DOCSYS-04",
+      "severity": "medium",
+      "area": "planner_support",
+      "title": "docs_requirements_for_plan does not include keyword-trigger context and may diverge from enforcement",
+      "evidence": [
+        "scripts/docs/docs_requirements_for_plan.py",
+        "scripts/validate/actions_validator.py"
+      ],
+      "risk": "Planner sees a weaker/less accurate ‘required docs’ view than what validate_actions enforces, leading to avoidable plan retries.",
+      "recommendations": [
+        "Pass the same per-task summary/acceptance-criteria text into docs_requirements_for_plan that actions_validator uses, and include triggered_rules + matched_keywords."
+      ]
+    },
+    {
+      "id": "DOCSYS-05",
+      "severity": "medium",
+      "area": "predictability",
+      "title": "No deterministic ID allocator for new ADR/ARD/Pattern/Runbook documents",
+      "evidence": [
+        "agents/docs-keeper.md",
+        "docs/DOCUMENTATION_REGISTRY.json"
+      ],
+      "risk": "Multiple docs created in parallel or by different operators can collide or produce inconsistent naming, causing drift and lint failures.",
+      "recommendations": [
+        "Add a small deterministic helper script to allocate the next available id for a given type prefix by scanning registry docs[] (and optionally filesystem) and reserving it in the registry before writing the file."
+      ]
+    },
+    {
+      "id": "DOCSYS-06",
+      "severity": "medium",
+      "area": "signal_noise",
+      "title": "Docs drift warning hook can be noisy during deliver (warns before docs-keeper runs)",
+      "evidence": [
+        "scripts/hooks/docs_post_task_drift.py",
+        "skills/run/SKILL.md"
+      ],
+      "risk": "Engineers may start ignoring warnings, undermining drift detection.",
+      "recommendations": [
+        "Gate warnings to the end of deliver (Stop/SessionEnd) rather than per SubagentStop, or suppress if docs-keeper is scheduled to run in the workflow.",
+        "If keeping SubagentStop: only warn when the session has reached the gates phase (e.g., presence of quality reports) and docs registry is still untouched."
+      ]
+    },
+    {
+      "id": "DOCSYS-07",
+      "severity": "low",
+      "area": "context_size",
+      "title": "Docs embedding can become large without stronger defaults for doc_sections",
+      "evidence": [
+        "scripts/context/build_task_contexts.py",
+        "agents/action-planner.md"
+      ],
+      "risk": "Over-embedding docs increases token usage and can crowd out code context, reducing subagent performance.",
+      "recommendations": [
+        "Add a planner guideline/default: for Tier 1/2 docs, prefer doc_sections over full-doc unless necessary.",
+        "Optionally add a deterministic truncation policy per doc id (e.g., max sections or max chars), with override via include_full_doc."
+      ]
+    }
+  ]
+}
+

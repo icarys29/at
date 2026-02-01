@@ -27,13 +27,19 @@ from lib.session import resolve_session_dir  # noqa: E402
 from lib.docs_validation import find_broken_links, find_orphan_docs, run_registry_md_check, validate_registry_v2  # noqa: E402
 
 
-def _validate_registry(project_root: Path, registry_path: str, registry: dict[str, Any] | None) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+def _validate_registry(
+    project_root: Path, registry_path: str, registry: dict[str, Any] | None
+) -> tuple[list[dict[str, Any]], dict[str, Any], dict[str, Any]]:
     issues, summary, type_map = validate_registry_v2(project_root, registry_path=registry_path, registry=registry)
+    orphan_docs: list[str] = []
+    broken_links: list[dict[str, str]] = []
     if registry and type_map:
         # Orphan docs under managed dirs.
-        orphans = find_orphan_docs(project_root, registry, type_map)
-        if orphans:
-            issues.append({"severity": "error", "message": f"orphan docs detected under managed dirs: {len(orphans)} (register or delete)"})
+        orphan_docs = find_orphan_docs(project_root, registry, type_map)
+        if orphan_docs:
+            issues.append(
+                {"severity": "error", "message": f"orphan docs detected under managed dirs: {len(orphan_docs)} (register or delete)"}
+            )
 
         # Broken link detection (best-effort; avoid deep analysis).
         doc_paths: list[str] = []
@@ -41,11 +47,17 @@ def _validate_registry(project_root: Path, registry_path: str, registry: dict[st
         for it in docs:
             if isinstance(it, dict) and isinstance(it.get("path"), str) and it.get("path").strip():
                 doc_paths.append(it.get("path").strip())
-        broken = find_broken_links(project_root, doc_paths=[p for p in doc_paths if isinstance(p, str)])
-        if broken:
-            issues.append({"severity": "error", "message": f"broken markdown links detected: {len(broken)} (fix links or remove)"})
+        broken_links = find_broken_links(project_root, doc_paths=[p for p in doc_paths if isinstance(p, str)])
+        if broken_links:
+            issues.append(
+                {"severity": "error", "message": f"broken markdown links detected: {len(broken_links)} (fix links or remove)"}
+            )
 
-    return (issues, summary)
+    details = {
+        "orphan_docs": {"count": len(orphan_docs), "sample": orphan_docs[:20]},
+        "broken_links": {"count": len(broken_links), "sample": broken_links[:20]},
+    }
+    return (issues, summary, details)
 
 
 def main() -> int:
@@ -69,14 +81,16 @@ def main() -> int:
         issues = [drift_issue]
         ok = False
         summary = {"registry_path": reg_path, "docs_total": 0, "docs_missing_files": 0, "docs_missing_when": 0, "docs_missing_required_fields": 0, "tiers": {}, "types": {}}
+        details = {"orphan_docs": {"count": 0, "sample": []}, "broken_links": {"count": 0, "sample": []}}
     else:
         registry = load_docs_registry(project_root, reg_path)
         if registry is None and not require:
             issues = [{"severity": "warning", "message": f"docs.require_registry=false and registry missing: {reg_path!r}"}]
             ok = True
             summary = {"registry_path": reg_path, "docs_total": 0, "docs_missing_files": 0, "docs_missing_when": 0, "docs_missing_required_fields": 0, "tiers": {}, "types": {}}
+            details = {"orphan_docs": {"count": 0, "sample": []}, "broken_links": {"count": 0, "sample": []}}
         else:
-            issues, summary = _validate_registry(project_root, reg_path, registry)
+            issues, summary, details = _validate_registry(project_root, reg_path, registry)
             # Additional strictness: require the human-readable markdown view to match the JSON registry.
             md_check = run_registry_md_check(project_root, registry_path=reg_path)
             if md_check.get("status") == "failed":
@@ -94,6 +108,7 @@ def main() -> int:
     write_json(out_dir / "docs_summary.json", docs_summary)
 
     report = {"version": 1, "generated_at": utc_now(), "ok": ok, "require_registry": bool(require), "issues": issues}
+    report["details"] = details if isinstance(details, dict) else {}
     write_json(out_dir / "docs_gate_report.json", report)
 
     sum_md = [
@@ -119,6 +134,23 @@ def main() -> int:
             doc_id = it.get("doc_id", "")
             tag = doc_id if doc_id else "docs"
             md.append(f"- `{sev}` `{tag}` — {msg}")
+        md.append("")
+    orphan_sample = ((report.get("details") or {}).get("orphan_docs") or {}).get("sample") if isinstance(report.get("details"), dict) else None
+    if isinstance(orphan_sample, list) and orphan_sample:
+        md.append("## Orphan Docs (sample)")
+        md.append("")
+        for p in orphan_sample[:20]:
+            if isinstance(p, str) and p.strip():
+                md.append(f"- `{p.strip()}`")
+        md.append("")
+    broken_sample = ((report.get("details") or {}).get("broken_links") or {}).get("sample") if isinstance(report.get("details"), dict) else None
+    if isinstance(broken_sample, list) and broken_sample:
+        md.append("## Broken Links (sample)")
+        md.append("")
+        for it in broken_sample[:20]:
+            if not isinstance(it, dict):
+                continue
+            md.append(f"- `{it.get('doc','')}` → `{it.get('link','')}` — {it.get('reason','')}")
         md.append("")
     write_text(out_dir / "docs_gate_report.md", "\n".join(md))
 

@@ -29,6 +29,21 @@ Authoritative contract: `CLAUDE.md`.
 - Primary entrypoint: `/at:run` (deliver workflow)
 - Primary outputs: session-backed artifacts under `.session/<session_id>/`
 
+## Deliver Workflow (always-on docs maintenance)
+
+High-level flow (inputs → scripts/agents → outputs):
+
+1) Request → `scripts/session/create_session.py` → `SESSION_DIR/`
+2) Context pack → `scripts/context/build_context_pack.py` → `SESSION_DIR/inputs/context_pack.md`
+3) Plan (agentic) → `action-planner` → `SESSION_DIR/planning/actions.json`
+4) Plan gates → `scripts/validate/validate_actions.py` → pass/fail with remediation
+5) Docs requirements (deterministic) → `scripts/docs/docs_requirements_for_plan.py` → `SESSION_DIR/documentation/docs_requirements_for_plan.{json,md}`
+6) Per-task context slices → `scripts/context/build_task_contexts.py` → `SESSION_DIR/inputs/task_context/*.md` (+ manifest)
+7) Implement/test tasks (agentic) → `implementor` / `tests-builder` → `SESSION_DIR/{implementation,testing}/tasks/*.yaml`
+8) Gates → quality/compliance/changed-files → session reports
+9) Docs update (agentic, always-on) → `docs-keeper` → repo `docs/*` + regenerated registry MD
+10) Docs gate (deterministic) → `scripts/validate/docs_gate.py` → `SESSION_DIR/documentation/docs_gate_report.{json,md}`
+
 ## Local Development
 
 - Self-audit: `uv run scripts/maintenance/self_audit.py`

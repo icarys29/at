@@ -39,6 +39,7 @@ from lib.session import resolve_session_dir  # noqa: E402
 
 
 CODE_OWNERS = {"implementor", "tests-builder"}
+DOCS_KEEPER_TASK_ID = "docs-keeper"
 
 
 def _normalize_writes(writes: Any) -> list[str]:
@@ -373,8 +374,43 @@ def _render_task_context(
     return "\n".join(lines).rstrip() + "\n"
 
 
+def _render_docs_keeper_context(*, session_dir: Path, config_text: str | None) -> str:
+    lines: list[str] = []
+    lines.append(f"# Task Context: {DOCS_KEEPER_TASK_ID}")
+    lines.append("")
+    lines.append("## Task")
+    lines.append("")
+    lines.append(f"- id: `{DOCS_KEEPER_TASK_ID}`")
+    lines.append("- owner: `docs-keeper`")
+    lines.append("- summary: Keep documentation registry and docs aligned after delivered work.")
+    lines.append("")
+    lines.append("## File Scope")
+    lines.append("")
+    lines.append("- writes (STRICT, no globs):")
+    lines.append("  - `docs/`")
+    lines.append("")
+    if config_text:
+        lines.append("## Project Config (excerpt)")
+        lines.append("")
+        lines.append("```yaml")
+        lines.append(config_text.rstrip())
+        lines.append("```")
+        lines.append("")
+    lines.append("## Session Inputs")
+    lines.append("")
+    lines.append(f"- Session root: `{session_dir}`")
+    lines.append(f"- Planning: `{(session_dir / 'planning' / 'actions.json').relative_to(session_dir)}`")
+    lines.append(f"- Implementation tasks: `{(session_dir / 'implementation' / 'tasks').relative_to(session_dir)}`")
+    lines.append(f"- Testing tasks: `{(session_dir / 'testing' / 'tasks').relative_to(session_dir)}`")
+    lines.append(f"- Docs plan output: `{(session_dir / 'documentation').relative_to(session_dir)}`")
+    lines.append("")
+    return "\n".join(lines).rstrip() + "\n"
+
+
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Build per-task context slices for implementor/tests-builder tasks.")
+    parser = argparse.ArgumentParser(
+        description="Build per-task context slices for implementor/tests-builder tasks (and a docs-keeper context for scope enforcement)."
+    )
     parser.add_argument("--project-dir", default=None)
     parser.add_argument("--sessions-dir", default=None)
     parser.add_argument("--session", default=None, help="Session id or directory (default: most recent)")
@@ -457,6 +493,18 @@ def main() -> int:
             },
             "context": t.get("context", {}),
         }
+
+    # Always include docs-keeper context in the manifest so file-scope enforcement can authorize docs edits
+    # deterministically during the always-on deliver docs sync step.
+    dk_path = out_dir / f"{DOCS_KEEPER_TASK_ID}.md"
+    write_text(dk_path, _render_docs_keeper_context(session_dir=session_dir, config_text=config_text))
+    manifest_tasks[DOCS_KEEPER_TASK_ID] = {
+        "owner": "docs-keeper",
+        "summary": "Keep documentation registry and docs aligned after delivered work.",
+        "file_scope": {"allow": [], "deny": [], "writes": ["docs/"]},
+        "context": {},
+    }
+    generated += 1
 
     manifest: dict[str, Any] = {
         "version": 1,

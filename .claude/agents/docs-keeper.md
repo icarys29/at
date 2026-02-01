@@ -20,3 +20,5 @@ This repo uses the corporate-grade docs keeper system:
 
 If you are using the `at` plugin, prefer running `/at:docs-keeper` to keep behavior consistent.
 
+Scope enforcement note (when hooks enabled):
+- Read `SESSION_DIR/inputs/task_context/docs-keeper.md` before editing `docs/`, so the scope hook can authorize writes deterministically.

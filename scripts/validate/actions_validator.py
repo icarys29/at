@@ -243,19 +243,33 @@ def validate_actions_data(data: dict[str, Any], *, project_root: Path | None = N
                 # Ensure required_doc_ids for this task's planned write scopes are included in context.doc_ids[].
                 rules = registry.get("coverage_rules") if isinstance(registry, dict) else None
                 if isinstance(rules, list) and parsed_writes:
-                    required = evaluate_coverage_rules_for_write_scopes(
+                    plan = evaluate_coverage_rules_for_write_scopes(
                         rules,
                         write_scopes=[w.raw for w in parsed_writes],
                         keywords_text=summary_text_for_keywords,
-                    ).required_doc_ids
+                    )
+                    required = plan.required_doc_ids
                     if required:
                         doc_set = set([d.strip() for d in doc_ids if isinstance(d, str)]) if isinstance(doc_ids, list) else set()
                         missing = [d for d in required if d not in doc_set]
                         if missing:
+                            why: list[str] = []
+                            for tr in plan.triggered[:4]:
+                                kws = ", ".join(tr.matched_keywords[:3]) if tr.matched_keywords else ""
+                                paths = ", ".join(tr.matched_paths[:2]) if tr.matched_paths else ""
+                                bits: list[str] = [tr.rule_id]
+                                if kws:
+                                    bits.append(f"kws={kws}")
+                                if paths:
+                                    bits.append(f"paths={paths}")
+                                why.append("[" + " ".join(bits) + "]")
+                            why_s = (" Triggered rules: " + " ".join(why)) if why else ""
                             errors.append(
                                 ValidationError(
                                     f"{tp}.context.doc_ids",
-                                    "Missing required docs for this task per docs.coverage_rules: " + ", ".join([repr(d) for d in missing]),
+                                    "Missing required docs for this task per docs.coverage_rules: "
+                                    + ", ".join([repr(d) for d in missing])
+                                    + why_s,
                                 )
                             )
 

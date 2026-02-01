@@ -49,19 +49,21 @@ def main() -> int:
     elif md_check.get("status") == "skipped":
         issues.append({"severity": "warning", "message": f"registry markdown check skipped: {md_check.get('reason','')}"})
 
+    orphan_docs: list[str] = []
+    broken_links: list[dict[str, str]] = []
     if registry and type_map:
-        orphans = find_orphan_docs(project_root, registry, type_map)
-        if orphans:
-            issues.append({"severity": "error", "message": f"orphan docs detected under managed dirs: {len(orphans)}"})
+        orphan_docs = find_orphan_docs(project_root, registry, type_map)
+        if orphan_docs:
+            issues.append({"severity": "error", "message": f"orphan docs detected under managed dirs: {len(orphan_docs)}"})
 
         doc_paths: list[str] = []
         docs = registry.get("docs") if isinstance(registry.get("docs"), list) else []
         for it in docs:
             if isinstance(it, dict) and isinstance(it.get("path"), str) and it.get("path").strip():
                 doc_paths.append(it.get("path").strip())
-        broken = find_broken_links(project_root, doc_paths=doc_paths)
-        if broken:
-            issues.append({"severity": "error", "message": f"broken markdown links detected: {len(broken)}"})
+        broken_links = find_broken_links(project_root, doc_paths=doc_paths)
+        if broken_links:
+            issues.append({"severity": "error", "message": f"broken markdown links detected: {len(broken_links)}"})
 
     ok = not any(i.get("severity") == "error" for i in issues)
 
@@ -72,6 +74,10 @@ def main() -> int:
         "registry_path": registry_path,
         "summary": summary,
         "issues": issues,
+        "details": {
+            "orphan_docs": {"count": len(orphan_docs), "sample": orphan_docs[:20]},
+            "broken_links": {"count": len(broken_links), "sample": broken_links[:20]},
+        },
     }
 
     def _resolve_out(p: str) -> Path:
@@ -99,6 +105,18 @@ def main() -> int:
             for it in issues[:200]:
                 md.append(f"- `{it.get('severity','')}` — {it.get('message','')}")
             md.append("")
+        if orphan_docs:
+            md.append("## Orphan Docs (sample)")
+            md.append("")
+            for p in orphan_docs[:20]:
+                md.append(f"- `{p}`")
+            md.append("")
+        if broken_links:
+            md.append("## Broken Links (sample)")
+            md.append("")
+            for it in broken_links[:20]:
+                md.append(f"- `{it.get('doc','')}` → `{it.get('link','')}` — {it.get('reason','')}")
+            md.append("")
         write_text(outp, "\n".join(md))
 
     if ok:
@@ -115,4 +133,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
