@@ -1,0 +1,340 @@
+{
+  "version": 1,
+  "created": "2026-02-01",
+  "source": {
+    "current_plugin": { "name": "at", "version": "0.1.0", "repo": "/home/dav/claude/at" },
+    "former_plugin": { "name": "at", "version": "0.7.42", "repo": "/home/dav/claude/claude-agent-team-plugin" }
+  },
+  "principles": [
+    "Do not copy former plugin implementation verbatim; treat it as a product benchmark and source of user stories only.",
+    "Prefer deterministic scripts + explicit artifacts over interactive stateful wizards.",
+    "Prefer low-sensitivity session artifacts for observability; keep audit traces opt-in and off-by-default.",
+    "Keep strictness configurable to support onboarding (lenient) and corporate enforcement (strict).",
+    "Avoid Node in core; keep Python-first to reduce operational dependencies."
+  ],
+  "parallelization": {
+    "waves": [
+      {
+        "id": "W0",
+        "name": "Parallel-ready foundations",
+        "depends_on": [],
+        "items": ["A1", "B1", "B2", "C2", "E1", "G1", "G2"]
+      },
+      {
+        "id": "W1",
+        "name": "Second wave (unblocks off W0 outputs)",
+        "depends_on": ["W0"],
+        "items": ["A2", "A3", "C1", "D1", "E2"]
+      },
+      {
+        "id": "W2",
+        "name": "Onboarding/upgrade critical path",
+        "depends_on": ["W1"],
+        "items": ["D2", "F1"]
+      }
+    ],
+    "coordination_hotspots": [
+      "skills/run/SKILL.md",
+      "scripts/maintenance/self_audit.py",
+      "schemas/project.schema.json",
+      "templates/project.yaml",
+      "scripts/validate/*"
+    ],
+    "notes": [
+      "Items in W0 can be developed concurrently, but coordinate merges for hotspot files.",
+      "Waves represent dependency gates, not calendar time; if a dependency item finishes early, its dependents can start immediately."
+    ]
+  },
+  "workstreams": [
+    { "id": "WS-A", "name": "Kernel Workflows", "priority": "P0" },
+    { "id": "WS-B", "name": "Truthful Contracts (Verifications/LSP)", "priority": "P0" },
+    { "id": "WS-C", "name": "Observability (Artifact-first)", "priority": "P1" },
+    { "id": "WS-D", "name": "Onboarding & Upgrades", "priority": "P0" },
+    { "id": "WS-E", "name": "Targeted Remediation Tools", "priority": "P1" },
+    { "id": "WS-F", "name": "Optional Advanced Enforcement", "priority": "P2" },
+    { "id": "WS-G", "name": "Packaging & Hygiene", "priority": "P0" }
+  ],
+  "items": [
+    {
+      "id": "A1",
+      "workstream": "WS-A",
+      "priority": "P0",
+      "title": "Add triage/review workflows to /at:run",
+      "problem": "Current /at:run is deliver-centric; schema references triage/review owners but agents/workflows are missing.",
+      "proposal": [
+        "Extend /at:run to accept workflow token (deliver|triage|review|ideate).",
+        "Add minimal agents for reviewer + root-cause-analyzer.",
+        "Add deterministic scripts to orchestrate triage/review artifact generation and gating."
+      ],
+      "deliverables": [
+        "skills/run/SKILL.md",
+        "agents/reviewer.md",
+        "agents/root-cause-analyzer.md",
+        "scripts/workflow/run_triage.py",
+        "scripts/workflow/run_review.py",
+        "scripts/maintenance/self_audit.py"
+      ],
+      "verification": [
+        "uv run scripts/maintenance/self_audit.py --strict",
+        "Session fixtures: triage/review sessions create required artifacts and produce a progress report."
+      ],
+      "dependencies": [],
+      "status": "planned"
+    },
+    {
+      "id": "A2",
+      "workstream": "WS-A",
+      "priority": "P0",
+      "title": "Deliver dry-run (plan-only preview)",
+      "problem": "Current rebuild lacks a safe preview mode that emits a plan/report without repo edits.",
+      "proposal": [
+        "Implement a deterministic dry-run path: session → context pack → architecture brief → user stories → actions.json → validate actions → docs requirements → STOP.",
+        "Write final/dry_run_report.{md,json} describing planned tasks, file scopes, required docs, and next phase."
+      ],
+      "deliverables": [
+        "skills/run/SKILL.md",
+        "scripts/workflow/generate_dry_run_report.py",
+        "docs/runbooks/(optional) document dry-run usage"
+      ],
+      "verification": [
+        "Dry-run must not create checkpoints or dispatch code-writing tasks.",
+        "Report is stable except for generated_at timestamp."
+      ],
+      "dependencies": ["A1"],
+      "status": "planned"
+    },
+    {
+      "id": "A3",
+      "workstream": "WS-A",
+      "priority": "P0",
+      "title": "TDD strategy as a planning directive",
+      "problem": "Former plugin exposed a TDD workflow; current rebuild has no first-class way to enforce tests-first ordering.",
+      "proposal": [
+        "Add workflow.strategy=default|tdd (optional).",
+        "Teach action-planner to emit tests-builder tasks that precede implementor tasks when strategy=tdd.",
+        "Validate ordering via validate_actions.py or a dedicated gate when enabled."
+      ],
+      "deliverables": [
+        "schemas/project.schema.json",
+        "templates/project.yaml",
+        "agents/action-planner.md",
+        "scripts/validate/validate_actions.py"
+      ],
+      "verification": [
+        "Planner fixtures: when tdd enabled, tests tasks are required and ordered before implementation.",
+        "validate_actions rejects non-TDD plans when strategy=tdd."
+      ],
+      "dependencies": ["A1"],
+      "status": "planned"
+    },
+    {
+      "id": "B1",
+      "workstream": "WS-B",
+      "priority": "P0",
+      "title": "Fix lsp verification contract (no silent skipping)",
+      "problem": "Schema allows verification.type=lsp but current gates treat it as not implemented, risking false confidence.",
+      "proposal": [
+        "Add lsp.enabled and lsp.mode=fail|warn|skip to .claude/project.yaml.",
+        "Implement an LSP verifier agent (tools include LSP) that runs lsp verifications and writes deterministic evidence artifacts.",
+        "If lsp is disabled, either reject lsp verifications at plan validation time or force explicit SKIP in reports based on lsp.mode."
+      ],
+      "deliverables": [
+        "schemas/project.schema.json",
+        "templates/project.yaml",
+        "agents/lsp-verifier.md",
+        "scripts/validate/plan_adherence.py",
+        "scripts/validate/gates_summary.py"
+      ],
+      "verification": [
+        "Plan validation fails (or reports skip) when lsp verifications exist but lsp.enabled=false.",
+        "LSP evidence artifacts are written when enabled."
+      ],
+      "dependencies": [],
+      "status": "planned"
+    },
+    {
+      "id": "B2",
+      "workstream": "WS-B",
+      "priority": "P0",
+      "title": "Deterministic verification runner for file/grep/command",
+      "problem": "Acceptance criteria verifications exist but evidence production is incomplete and uneven across types.",
+      "proposal": [
+        "Add a deterministic script that evaluates file/grep/command verifications from actions.json and writes evidence.",
+        "Make verifications an explicit gate with actionable failures.",
+        "Leave lsp verifications to the dedicated LSP agent (B1)."
+      ],
+      "deliverables": [
+        "scripts/validate/run_verifications.py",
+        "scripts/validate/verifications_gate.py",
+        "scripts/validate/gates_summary.py"
+      ],
+      "verification": [
+        "Fixture sessions: passing and failing verifications produce stable evidence + correct gate outcomes."
+      ],
+      "dependencies": [],
+      "status": "planned"
+    },
+    {
+      "id": "C1",
+      "workstream": "WS-C",
+      "priority": "P1",
+      "title": "Session diagnostics report (artifact-first)",
+      "problem": "Current audit-report is lightweight and not very actionable; former plugin’s session auditor provided coaching value.",
+      "proposal": [
+        "Build diagnostics from session artifacts (actions, task summaries, gates, telemetry) with minimal sensitivity.",
+        "Optionally enrich with audit logs when enabled."
+      ],
+      "deliverables": [
+        "scripts/session/session_diagnostics.py",
+        "skills/session-diagnostics/SKILL.md"
+      ],
+      "verification": [
+        "Given same session artifacts, diagnostics output is deterministic.",
+        "Report includes next-step recommendations based on failing gates."
+      ],
+      "dependencies": ["B2"],
+      "status": "planned"
+    },
+    {
+      "id": "C2",
+      "workstream": "WS-C",
+      "priority": "P1",
+      "title": "Improve audit-report usefulness without enabling traces",
+      "problem": "Counters are insufficient for diagnosing slowdowns/failures; traces are too sensitive for default.",
+      "proposal": [
+        "Add timing summaries, slowest tool calls, and blocked reasons derived from JSONL metadata only.",
+        "Keep trace payload capture opt-in and clearly separated."
+      ],
+      "deliverables": ["scripts/audit/analyze_audit_logs.py"],
+      "verification": ["Audit reports do not include tool input/output unless explicitly enabled."],
+      "dependencies": [],
+      "status": "planned"
+    },
+    {
+      "id": "D1",
+      "workstream": "WS-D",
+      "priority": "P0",
+      "title": "Onboarding analyzer (propose then apply)",
+      "problem": "Current plugin lacks an onboarding path for existing repos beyond init-project templates.",
+      "proposal": [
+        "Analyze repo to propose overlay config, language packs, and docs registry seeds without modifying code.",
+        "Apply only with explicit --apply and always back up overlay changes."
+      ],
+      "deliverables": [
+        "scripts/onboarding/analyze_repo.py",
+        "scripts/onboarding/apply_onboarding.py",
+        "skills/onboard/SKILL.md"
+      ],
+      "verification": [
+        "Dry-run produces a proposal report only.",
+        "Apply is idempotent and limited to overlay/docs."
+      ],
+      "dependencies": ["G2"],
+      "status": "planned"
+    },
+    {
+      "id": "D2",
+      "workstream": "WS-D",
+      "priority": "P0",
+      "title": "Overlay migrations framework (plan/apply/rollback)",
+      "problem": "upgrade-project is too minimal for long-lived teams; drift will accumulate.",
+      "proposal": [
+        "Implement schema-versioned migrations with dry-run planning and backups.",
+        "Expose as /at:upgrade-project with --apply, plus rollback support."
+      ],
+      "deliverables": [
+        "scripts/upgrade/migrate_overlay.py",
+        "skills/upgrade-project/SKILL.md",
+        "scripts/upgrade/upgrade_project.py"
+      ],
+      "verification": [
+        "Every migration emits a report, a backup location, and an explicit diff summary.",
+        "Rollback restores previous overlay state."
+      ],
+      "dependencies": ["D1"],
+      "status": "planned"
+    },
+    {
+      "id": "E1",
+      "workstream": "WS-E",
+      "priority": "P1",
+      "title": "Targeted quality remediation runner",
+      "problem": "When quality fails, the only option is rerun full suite or manual work; former plugin had a focused fixer.",
+      "proposal": [
+        "Given quality_report.json, rerun a single failing command deterministically with bounded remediation (format-only by default).",
+        "Record what changed and re-run only the affected check."
+      ],
+      "deliverables": [
+        "scripts/quality/rerun_quality_command.py",
+        "skills/fix-quality/SKILL.md"
+      ],
+      "verification": ["Produces stable rerun logs and updates quality report deterministically."],
+      "dependencies": [],
+      "status": "planned"
+    },
+    {
+      "id": "E2",
+      "workstream": "WS-E",
+      "priority": "P1",
+      "title": "PR/CI verify runner (composable)",
+      "problem": "No single entry point exists for running the project’s configured checks + enforcements + docs lint before PR.",
+      "proposal": [
+        "Add a verify runner that composes: enforcement (optional) → quality suite → docs lint.",
+        "Emit one report and exit code suitable for CI."
+      ],
+      "deliverables": ["scripts/quality/verify.py", "skills/verify/SKILL.md"],
+      "verification": ["Exit code matches report.ok; logs stored under session when run in-session."],
+      "dependencies": ["E1"],
+      "status": "planned"
+    },
+    {
+      "id": "F1",
+      "workstream": "WS-F",
+      "priority": "P2",
+      "title": "Optional god-class detection as an installable enforcement check",
+      "problem": "Former plugin had SRP pressure via god-class tooling; current rebuild lacks a comparable enforcement option.",
+      "proposal": [
+        "Provide an installer that copies a deterministic checker into .claude/at/scripts and wires it into enforcement.json.",
+        "Keep it opt-in; do not run by default."
+      ],
+      "deliverables": [
+        "scripts/enforcement/install_god_class_check.py",
+        "templates/project_pack/enforcement/(optional checker template)",
+        "docs/runbooks/(optional) document how to enable"
+      ],
+      "verification": ["When enabled, enforcement runner reports failures and quality gate blocks when mode=fail."],
+      "dependencies": ["D2"],
+      "status": "planned"
+    },
+    {
+      "id": "G1",
+      "workstream": "WS-G",
+      "priority": "P0",
+      "title": "Add canonical .claude-plugin/plugin.json manifest",
+      "problem": "Current manifest layout is less aligned with upstream plugin discovery expectations.",
+      "proposal": [
+        "Introduce .claude-plugin/plugin.json as the canonical manifest for Claude Code.",
+        "Keep version consistent with root VERSION and any internal metadata."
+      ],
+      "deliverables": [".claude-plugin/plugin.json", "scripts/maintenance/self_audit.py", "README.md"],
+      "verification": ["self_audit checks version consistency across manifests; plugin loads via claude --plugin-dir ."],
+      "dependencies": [],
+      "status": "planned"
+    },
+    {
+      "id": "G2",
+      "workstream": "WS-G",
+      "priority": "P0",
+      "title": "Validate YAML frontmatter across skills/agents",
+      "problem": "Invalid YAML in frontmatter can prevent commands/agents from loading; current self-audit does not parse YAML.",
+      "proposal": [
+        "Extend self_audit to parse YAML frontmatter and fail on invalid documents.",
+        "Fix offending files (e.g., unquoted strings containing ':')."
+      ],
+      "deliverables": ["scripts/maintenance/self_audit.py", "skills/**/SKILL.md", "agents/*.md"],
+      "verification": ["uv run scripts/maintenance/self_audit.py --strict fails before fix and passes after."],
+      "dependencies": [],
+      "status": "planned"
+    }
+  ]
+}
