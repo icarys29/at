@@ -27,6 +27,7 @@ from lib.active_session import resolve_session_dir_from_hook  # noqa: E402
 
 AT_AGENT_IDS = {
     "action-planner",
+    "solution-architect",
     "implementor",
     "tests-builder",
     "quality-gate",

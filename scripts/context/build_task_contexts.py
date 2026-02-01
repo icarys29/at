@@ -295,6 +295,23 @@ def _render_task_context(
         lines.append("```")
         lines.append("")
 
+    # Session architecture brief (if present). This is produced before planning to
+    # enforce pattern reuse and constraints without expanding the planner's role.
+    brief_path = session_dir / "planning" / "ARCHITECTURE_BRIEF.md"
+    if brief_path.exists():
+        brief_rel = brief_path.relative_to(session_dir).as_posix()
+        brief_content, brief_truncated = safe_read_text(brief_path, max_chars=12_000)
+        lines.append("## Architecture Brief (session, embedded)")
+        lines.append("")
+        lines.append(f"- Source: `{brief_rel}`")
+        if brief_truncated:
+            lines.append("- Note: truncated")
+        lines.append("")
+        lines.append("```md")
+        lines.append(brief_content.rstrip())
+        lines.append("```")
+        lines.append("")
+
     # Always-on rules: keep small, but make them visible to implementors/tests.
     # Include global + project architecture + language rules for configured primary languages.
     cfg = load_project_config(project_root) or {}

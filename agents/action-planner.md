@@ -25,6 +25,7 @@ Produce a **valid, parallel-safe** `planning/actions.json` for the current sessi
 ## Inputs (expected)
 - `SESSION_DIR/inputs/request.md`
 - `SESSION_DIR/inputs/context_pack.md`
+- `SESSION_DIR/planning/ARCHITECTURE_BRIEF.md` (if present; produced by `solution-architect`)
 - Any project docs referenced by the context pack (already embedded there)
 
 ## Outputs (required)

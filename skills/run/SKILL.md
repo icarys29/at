@@ -39,9 +39,13 @@ allowed-tools: Read, Write, Edit, Grep, Glob, Bash, Task
 2) Write the request to `SESSION_DIR/inputs/request.md`.
 3) Build the context pack:
    - Run: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/context/build_context_pack.py" --session "${SESSION_DIR}"`
+3.5) Architecture brief (agentic, SRP-separated from planning):
+   - Task: `solution-architect`
+   - Inputs: `SESSION_DIR/inputs/request.md`, `SESSION_DIR/inputs/context_pack.md`
+   - Output files: `SESSION_DIR/planning/ARCHITECTURE_BRIEF.{md,json}`
 4) Plan (agentic) using `action-planner`:
    - Task: `action-planner`
-   - Inputs: `SESSION_DIR/inputs/request.md`, `SESSION_DIR/inputs/context_pack.md`
+   - Inputs: `SESSION_DIR/inputs/request.md`, `SESSION_DIR/inputs/context_pack.md`, `SESSION_DIR/planning/ARCHITECTURE_BRIEF.md`
    - Output files: `SESSION_DIR/planning/actions.json` + checklists.
 5) Validate the plan deterministically:
    - Run: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/validate/validate_actions.py" --session "${SESSION_DIR}"`
