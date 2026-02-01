@@ -1,0 +1,43 @@
+project:
+  name: "CHANGE_ME"
+  primary_languages:
+    - "python"
+
+workflow:
+  sessions_dir: ".session"
+  always_on_compliance: true
+  max_parallel_agents: 3
+  autofix_allowed: true
+  max_remediation_loops: 2
+
+docs:
+  registry_path: "docs/DOCUMENTATION_REGISTRY.json"
+  min_review_tier: 2
+  # Recommended default for onboarding: allow deliver to run before the registry is curated.
+  require_registry: false
+  sections_enabled: false
+
+learning:
+  enabled: true
+  dir: ".claude/agent-team/learning"
+  max_sessions: 50
+  emit_adr_stubs: true
+  emit_sessionstart_context: true
+  sessionstart_context_max_chars: 1200
+
+# Commands are intentionally project-editable.
+# Prefer stable, CI-friendly commands and keep them fast.
+commands:
+  python:
+    format: "python -m ruff format ."
+    lint: "python -m ruff check ."
+    typecheck: "python -m mypy ."
+    test: "python -m pytest -q"
+    build: ""
+
+policies:
+  forbid_secrets_globs:
+    - ".env"
+    - ".env.*"
+    - "secrets/**"
+

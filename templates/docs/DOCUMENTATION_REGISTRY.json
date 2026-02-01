@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "docs": [
+    {
+      "id": "DOC-PROJECT-CONTEXT",
+      "path": "docs/PROJECT_CONTEXT.md",
+      "title": "Project Context",
+      "tier": 1,
+      "tags": ["context"]
+    }
+  ],
+  "coverage_rules": []
+}
+

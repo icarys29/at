@@ -1,0 +1,332 @@
+#!/usr/bin/env python3
+# /// script
+# requires-python = ">=3.10"
+# dependencies = []
+# ///
+"""
+at: actions.json validation (shared)
+
+Version: 0.1.0
+Updated: 2026-02-01
+"""
+from __future__ import annotations
+
+import json
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
+
+from lib.docs_registry import build_doc_id_to_path_map, get_docs_registry_path, get_docs_require_registry, load_docs_registry
+from lib.path_policy import normalize_repo_relative_posix_path
+from lib.project import detect_project_dir, load_project_config
+
+
+@dataclass(frozen=True)
+class ValidationError:
+    path: str
+    message: str
+
+
+ALLOWED_WORKFLOWS = {"deliver", "triage", "review", "ideate"}
+ALLOWED_OWNERS = {
+    "action-planner",
+    "implementor",
+    "tests-builder",
+    "quality-gate",
+    "compliance-checker",
+    "root-cause-analyzer",
+    "reviewer",
+    "ideation",
+}
+CODE_OWNERS = {"implementor", "tests-builder"}
+
+
+def _contains_glob_chars(value: str) -> bool:
+    return any(ch in value for ch in ["*", "?", "[", "]"])
+
+
+def _expect_type(errors: list[ValidationError], value: Any, expected: type, path: str) -> bool:
+    if not isinstance(value, expected):
+        errors.append(ValidationError(path, f"Expected {expected.__name__}, got {type(value).__name__}"))
+        return False
+    return True
+
+
+@dataclass(frozen=True)
+class WriteScope:
+    raw: str
+    path: str  # normalized repo-relative posix (no leading ./)
+    kind: str  # "file" | "dir"
+
+
+def _parse_write_scopes(errors: list[ValidationError], writes: list[Any], path_prefix: str) -> list[WriteScope]:
+    scopes: list[WriteScope] = []
+    seen: set[tuple[str, str]] = set()
+    for i, raw in enumerate(writes):
+        p = f"{path_prefix}[{i}]"
+        if not isinstance(raw, str) or not raw.strip():
+            errors.append(ValidationError(p, "Must be a non-empty string"))
+            continue
+        s = raw.strip()
+        if _contains_glob_chars(s):
+            errors.append(ValidationError(p, "Globs are forbidden in file_scope.writes (use exact files or dir prefixes ending in '/')"))
+            continue
+        is_dir = s.endswith("/")
+        norm = normalize_repo_relative_posix_path(s)
+        if norm is None:
+            errors.append(ValidationError(p, f"Invalid repo-relative path: {raw!r}"))
+            continue
+        if is_dir and not norm.endswith("/"):
+            norm = norm + "/"
+        if not is_dir and norm.endswith("/"):
+            errors.append(ValidationError(p, "File path must not end with '/'"))
+            continue
+        kind = "dir" if is_dir else "file"
+        key = (kind, norm)
+        if key in seen:
+            errors.append(ValidationError(p, f"Duplicate write scope: {raw!r}"))
+            continue
+        seen.add(key)
+        scopes.append(WriteScope(raw=s, path=norm, kind=kind))
+    return scopes
+
+
+def _scopes_overlap(a: WriteScope, b: WriteScope) -> bool:
+    # dir-dir: overlap if either is prefix of the other.
+    if a.kind == "dir" and b.kind == "dir":
+        return a.path.startswith(b.path) or b.path.startswith(a.path)
+    # file-file: overlap if same file.
+    if a.kind == "file" and b.kind == "file":
+        return a.path == b.path
+    # file-dir: overlap if file under dir.
+    if a.kind == "file" and b.kind == "dir":
+        return a.path.startswith(b.path)
+    if a.kind == "dir" and b.kind == "file":
+        return b.path.startswith(a.path)
+    return False
+
+
+def validate_actions_data(data: dict[str, Any], *, project_root: Path | None = None) -> list[ValidationError]:
+    errors: list[ValidationError] = []
+
+    if project_root is None:
+        project_root = detect_project_dir()
+    config = load_project_config(project_root) or {}
+
+    # Top-level structure.
+    if data.get("version") != 1:
+        errors.append(ValidationError("version", "Must be 1"))
+
+    workflow = data.get("workflow")
+    if workflow not in ALLOWED_WORKFLOWS:
+        errors.append(ValidationError("workflow", f"Must be one of {sorted(ALLOWED_WORKFLOWS)}, got {workflow!r}"))
+
+    tasks = data.get("tasks")
+    if not _expect_type(errors, tasks, list, "tasks"):
+        return errors
+    if not tasks:
+        errors.append(ValidationError("tasks", "Must have at least one task"))
+        return errors
+
+    # Parallel execution must be explicit (default ON UX).
+    parallel = data.get("parallel_execution")
+    if not isinstance(parallel, dict):
+        errors.append(ValidationError("parallel_execution", "Required object (set enabled=true by default)"))
+        parallel = {}
+
+    parallel_enabled = parallel.get("enabled")
+    if not isinstance(parallel_enabled, bool):
+        errors.append(ValidationError("parallel_execution.enabled", "Required boolean"))
+        parallel_enabled = False
+
+    groups = parallel.get("groups")
+    if parallel_enabled:
+        if not isinstance(groups, list) or not groups:
+            errors.append(ValidationError("parallel_execution.groups", "Required non-empty array when enabled=true"))
+            groups = []
+
+    # Task ids unique.
+    seen_task_ids: set[str] = set()
+    task_by_id: dict[str, dict[str, Any]] = {}
+
+    require_registry = get_docs_require_registry(config)
+    registry_path = get_docs_registry_path(config)
+    registry = load_docs_registry(project_root, registry_path)
+    docs_map = build_doc_id_to_path_map(registry)
+    if require_registry and not docs_map:
+        errors.append(ValidationError("docs.registry_path", f"docs.require_registry=true but registry is missing/invalid: {registry_path!r}"))
+
+    for i, t in enumerate(tasks):
+        tp = f"tasks[{i}]"
+        if not _expect_type(errors, t, dict, tp):
+            continue
+        tid = t.get("id")
+        if not isinstance(tid, str) or not tid.strip():
+            errors.append(ValidationError(f"{tp}.id", "Required non-empty string"))
+            continue
+        tid = tid.strip()
+        if tid in seen_task_ids:
+            errors.append(ValidationError(f"{tp}.id", f"Duplicate task id: {tid!r}"))
+            continue
+        seen_task_ids.add(tid)
+        task_by_id[tid] = t
+
+        owner = t.get("owner")
+        if owner not in ALLOWED_OWNERS:
+            errors.append(ValidationError(f"{tp}.owner", f"Must be one of {sorted(ALLOWED_OWNERS)}, got {owner!r}"))
+
+        summary = t.get("summary")
+        if not isinstance(summary, str) or not summary.strip():
+            # Common mistake: using 'title'
+            if isinstance(t.get("title"), str) and t.get("title"):
+                errors.append(ValidationError(tp, "Uses 'title' but schema requires 'summary'"))
+            errors.append(ValidationError(f"{tp}.summary", "Required non-empty string"))
+
+        file_scope = t.get("file_scope")
+        if not _expect_type(errors, file_scope, dict, f"{tp}.file_scope"):
+            continue
+        allow = file_scope.get("allow")
+        if not isinstance(allow, list) or not allow:
+            if isinstance(file_scope.get("reads"), list):
+                errors.append(ValidationError(f"{tp}.file_scope", "Uses 'reads' but schema requires 'allow'"))
+            errors.append(ValidationError(f"{tp}.file_scope.allow", "Required non-empty array"))
+
+        # Code tasks need writes if parallel enabled.
+        if owner in CODE_OWNERS and parallel_enabled:
+            writes = file_scope.get("writes")
+            if not isinstance(writes, list) or not writes:
+                errors.append(ValidationError(f"{tp}.file_scope.writes", "Required non-empty array for code tasks when parallel_execution.enabled=true"))
+            else:
+                _parse_write_scopes(errors, writes, f"{tp}.file_scope.writes")
+
+        acceptance = t.get("acceptance_criteria")
+        if not isinstance(acceptance, list) or not acceptance:
+            errors.append(ValidationError(f"{tp}.acceptance_criteria", "Required non-empty array"))
+        else:
+            for j, ac in enumerate(acceptance):
+                ap = f"{tp}.acceptance_criteria[{j}]"
+                if not isinstance(ac, dict):
+                    errors.append(ValidationError(ap, "Must be an object"))
+                    continue
+                if not isinstance(ac.get("id"), str) or not str(ac.get("id")).strip():
+                    errors.append(ValidationError(f"{ap}.id", "Required non-empty string"))
+                if not isinstance(ac.get("statement"), str) or not str(ac.get("statement")).strip():
+                    errors.append(ValidationError(f"{ap}.statement", "Required non-empty string"))
+
+        # Docs registry constraints (code tasks only).
+        if owner in CODE_OWNERS and require_registry:
+            ctx = t.get("context")
+            if not isinstance(ctx, dict):
+                errors.append(ValidationError(f"{tp}.context", "Required object for code tasks when docs.require_registry=true"))
+            else:
+                doc_ids = ctx.get("doc_ids")
+                if not isinstance(doc_ids, list) or not doc_ids:
+                    errors.append(ValidationError(f"{tp}.context.doc_ids", "Required non-empty array when docs.require_registry=true"))
+                else:
+                    for k, doc_id in enumerate(doc_ids):
+                        if not isinstance(doc_id, str) or not doc_id.strip():
+                            errors.append(ValidationError(f"{tp}.context.doc_ids[{k}]", "Must be a non-empty string"))
+                            continue
+                        if docs_map and doc_id.strip() not in docs_map:
+                            errors.append(ValidationError(f"{tp}.context.doc_ids[{k}]", f"Unknown doc id: {doc_id!r}"))
+
+    # depends_on references exist (best-effort; cycle detection is deferred).
+    for i, t in enumerate(tasks):
+        if not isinstance(t, dict):
+            continue
+        tid = t.get("id")
+        if not isinstance(tid, str) or not tid.strip():
+            continue
+        depends = t.get("depends_on")
+        if depends is None:
+            continue
+        if not isinstance(depends, list):
+            errors.append(ValidationError(f"tasks[{i}].depends_on", "Must be an array of task ids"))
+            continue
+        for j, dep in enumerate(depends):
+            if not isinstance(dep, str) or not dep.strip():
+                errors.append(ValidationError(f"tasks[{i}].depends_on[{j}]", "Must be a non-empty string"))
+                continue
+            if dep.strip() not in task_by_id:
+                errors.append(ValidationError(f"tasks[{i}].depends_on[{j}]", f"Unknown task id: {dep!r}"))
+
+    # Parallel groups invariants + write-scope overlap detection.
+    if parallel_enabled and isinstance(groups, list):
+        all_group_tasks: list[str] = []
+        for gi, g in enumerate(groups):
+            gp = f"parallel_execution.groups[{gi}]"
+            if not isinstance(g, dict):
+                errors.append(ValidationError(gp, "Must be an object"))
+                continue
+            if not isinstance(g.get("group_id"), str) or not str(g.get("group_id")).strip():
+                errors.append(ValidationError(f"{gp}.group_id", "Required non-empty string"))
+            if not isinstance(g.get("execution_order"), int) or g.get("execution_order", 0) < 1:
+                errors.append(ValidationError(f"{gp}.execution_order", "Required integer >= 1"))
+            gt = g.get("tasks")
+            if not isinstance(gt, list) or not gt:
+                errors.append(ValidationError(f"{gp}.tasks", "Required non-empty array of task ids"))
+                continue
+            for tj, task_id in enumerate(gt):
+                if not isinstance(task_id, str) or not task_id.strip():
+                    errors.append(ValidationError(f"{gp}.tasks[{tj}]", "Must be a non-empty string"))
+                    continue
+                task_id = task_id.strip()
+                all_group_tasks.append(task_id)
+                task = task_by_id.get(task_id)
+                if task is None:
+                    errors.append(ValidationError(f"{gp}.tasks[{tj}]", f"Unknown task id: {task_id!r}"))
+                    continue
+                owner = task.get("owner")
+                if owner not in CODE_OWNERS:
+                    errors.append(ValidationError(f"{gp}.tasks[{tj}]", f"Task owner must be implementor/tests-builder, got {owner!r}"))
+
+            # Overlaps within this group.
+            scopes_by_task: dict[str, list[WriteScope]] = {}
+            for task_id in [str(x).strip() for x in gt if isinstance(x, str) and str(x).strip()]:
+                task = task_by_id.get(task_id)
+                if not isinstance(task, dict):
+                    continue
+                fs = task.get("file_scope")
+                if not isinstance(fs, dict):
+                    continue
+                writes = fs.get("writes")
+                if not isinstance(writes, list) or not writes:
+                    continue
+                scopes_by_task[task_id] = _parse_write_scopes(errors, writes, f"tasks[{task_id}].file_scope.writes")
+
+            task_ids = sorted(scopes_by_task.keys())
+            for ai, a_id in enumerate(task_ids):
+                for b_id in task_ids[ai + 1 :]:
+                    for a_scope in scopes_by_task[a_id]:
+                        for b_scope in scopes_by_task[b_id]:
+                            if _scopes_overlap(a_scope, b_scope):
+                                errors.append(
+                                    ValidationError(
+                                        gp,
+                                        f"Write-scope overlap in group between {a_id!r} ({a_scope.raw!r}) and {b_id!r} ({b_scope.raw!r})",
+                                    )
+                                )
+                                break
+
+        # Each code task appears in exactly one group.
+        code_task_ids = [tid for tid, t in task_by_id.items() if isinstance(t, dict) and t.get("owner") in CODE_OWNERS]
+        missing = [tid for tid in code_task_ids if tid not in all_group_tasks]
+        if missing:
+            errors.append(ValidationError("parallel_execution.groups", f"Missing code tasks from groups: {missing!r}"))
+        dupes = sorted({t for t in all_group_tasks if all_group_tasks.count(t) > 1})
+        if dupes:
+            errors.append(ValidationError("parallel_execution.groups", f"Duplicate task ids across groups: {dupes!r}"))
+
+    return errors
+
+
+def validate_actions_file(path: Path, *, project_root: Path | None = None) -> list[ValidationError]:
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        return [ValidationError(str(path), "File not found")]
+    except json.JSONDecodeError as exc:
+        return [ValidationError(str(path), f"Invalid JSON: {exc}")]
+    if not isinstance(data, dict):
+        return [ValidationError(str(path), f"Root must be an object, got {type(data).__name__}")]
+    return validate_actions_data(data, project_root=project_root)

@@ -1,0 +1,337 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://at/schemas/actions.schema.json",
+  "title": "actions.json",
+  "description": "Task graph for at workflows (deliver, triage, review, ideate)",
+  "type": "object",
+  "required": ["version", "workflow", "tasks", "parallel_execution"],
+  "properties": {
+    "version": {
+      "type": "integer",
+      "const": 1,
+      "description": "Schema version (must be 1)"
+    },
+    "workflow": {
+      "type": "string",
+      "enum": ["deliver", "triage", "review", "ideate"],
+      "description": "Workflow type"
+    },
+    "prerequisites": {
+      "$ref": "#/$defs/prerequisites",
+      "description": "Pre-flight requirements (tools, credentials, files) that must be satisfied before tasks run"
+    },
+    "allow_globs": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Top-level allow globs for non-standard paths (optional)"
+    },
+    "tasks": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/task" },
+      "description": "Ordered list of tasks forming a DAG"
+    },
+    "parallel_execution": {
+      "$ref": "#/$defs/parallel_execution",
+      "description": "Parallelization hints for implementor/tests-builder tasks"
+    }
+  },
+  "$defs": {
+    "task": {
+      "type": "object",
+      "required": ["id", "owner", "summary", "file_scope", "acceptance_criteria"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Unique task identifier (e.g., 'T1', 'task-01')"
+        },
+        "owner": {
+          "type": "string",
+          "enum": ["action-planner", "implementor", "tests-builder", "quality-gate", "compliance-checker", "root-cause-analyzer", "reviewer", "ideation"],
+          "description": "Agent responsible for this task"
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Short 1-line summary for display"
+        },
+        "description": {
+          "type": "string",
+          "description": "Detailed task requirements (recommended for implementor/tests-builder tasks)"
+        },
+        "depends_on": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "Task IDs this task depends on (forms a DAG, no cycles)"
+        },
+        "context": {
+          "$ref": "#/$defs/task_context",
+          "description": "Documentation context for the task (required for implementor/tests-builder when docs.require_registry=true)"
+        },
+        "file_scope": {
+          "$ref": "#/$defs/file_scope",
+          "description": "File access restrictions for this task"
+        },
+        "acceptance_criteria": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/acceptance_criterion" },
+          "description": "Verifiable acceptance criteria for this task"
+        },
+        "srp_projection": {
+          "$ref": "#/$defs/srp_projection",
+          "description": "God class risk projection (optional, for flagged tasks)"
+        },
+        "skip_if": {
+          "$ref": "#/$defs/skip_condition",
+          "description": "Condition under which this task should be skipped (optional)"
+        }
+      }
+    },
+    "task_context": {
+      "type": "object",
+      "properties": {
+        "doc_ids": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Document IDs from DOCUMENTATION_REGISTRY.json"
+        },
+        "doc_sections": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "description": "Map of doc_id to list of heading prefixes to extract"
+        },
+        "justification": {
+          "type": "string",
+          "description": "Short rationale for the chosen doc_ids"
+        },
+        "include_full_doc": {
+          "type": "boolean",
+          "default": false,
+          "description": "When true, embed full document content; when false (default), reference only"
+        }
+      }
+    },
+    "file_scope": {
+      "type": "object",
+      "required": ["allow"],
+      "properties": {
+        "allow": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" },
+          "description": "Glob patterns for files the task can read"
+        },
+        "deny": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "Glob patterns for files the task cannot access"
+        },
+        "writes": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Exact file paths or directory prefixes (ending in '/') the task will write (no globs)"
+        }
+      }
+    },
+    "acceptance_criterion": {
+      "type": "object",
+      "required": ["id", "statement"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Unique criterion id (e.g., AC1)"
+        },
+        "statement": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Human-readable criterion statement"
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["critical", "high", "medium", "low"],
+          "default": "high",
+          "description": "Severity if this criterion fails"
+        },
+        "verifications": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/verification" },
+          "description": "Concrete checks (file/grep/command/lsp) for this criterion"
+        }
+      }
+    },
+    "verification": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["file", "grep", "command", "lsp"],
+          "description": "Verification type"
+        },
+        "path": { "type": "string", "description": "Path for file/grep" },
+        "pattern": { "type": "string", "description": "Pattern for grep" },
+        "command": { "type": "string", "description": "Command to run (for command)" },
+        "must_succeed": { "type": "boolean", "default": true, "description": "Whether command must succeed" },
+        "lsp": {
+          "type": "object",
+          "description": "LSP verification spec",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": ["definition_exists", "hover_contains", "references_min"],
+              "description": "LSP check kind"
+            },
+            "path": { "type": "string", "minLength": 1, "description": "File containing the symbol" },
+            "symbol": { "type": "string", "minLength": 1, "description": "Symbol name to check" },
+            "must_contain": { "type": "string", "description": "Required in hover text (for hover_contains)" },
+            "min_results": { "type": "integer", "minimum": 0, "description": "Minimum references (for references_min)" }
+          }
+        }
+      }
+    },
+    "parallel_execution": {
+      "type": "object",
+      "required": ["enabled"],
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether parallel execution is enabled (default true)"
+        },
+        "max_concurrent_agents": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 3,
+          "description": "Maximum agents running concurrently"
+        },
+        "groups": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/parallel_group" },
+          "description": "Execution groups (required when enabled=true)"
+        }
+      },
+      "if": { "properties": { "enabled": { "const": true } } },
+      "then": { "required": ["enabled", "groups"] }
+    },
+    "parallel_group": {
+      "type": "object",
+      "required": ["group_id", "execution_order", "tasks"],
+      "properties": {
+        "group_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Unique group identifier (e.g., 'group-1')"
+        },
+        "execution_order": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Order in which this group runs (lower = earlier)"
+        },
+        "depends_on_groups": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "Group IDs that must complete before this group starts"
+        },
+        "tasks": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" },
+          "description": "Task IDs in this group (must be implementor/tests-builder tasks)"
+        }
+      }
+    },
+    "srp_projection": {
+      "type": "object",
+      "properties": {
+        "target_class": { "type": "string", "description": "Class name being modified" },
+        "target_file": { "type": "string", "description": "File containing the class" },
+        "estimated_sloc_delta": { "type": "integer", "description": "Estimated lines of code added" },
+        "estimated_methods_delta": { "type": "integer", "description": "Estimated methods added" },
+        "risk_level": { "type": "string", "enum": ["low", "medium", "high"] },
+        "recommendation": { "type": "string", "description": "Mitigation recommendation if risk is high" }
+      }
+    },
+    "prerequisites": {
+      "type": "object",
+      "description": "Pre-flight requirements that must be satisfied before tasks run",
+      "properties": {
+        "tools": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "check"],
+            "properties": {
+              "name": { "type": "string", "description": "Tool name (e.g., 'go', 'protoc', 'golangci-lint')" },
+              "check": { "type": "string", "description": "Command to check availability (exit 0 = available)" },
+              "required": { "type": "boolean", "default": true, "description": "If true, missing tool blocks execution" }
+            }
+          },
+          "description": "Tools that must be available"
+        },
+        "env_vars": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name"],
+            "properties": {
+              "name": { "type": "string", "description": "Environment variable name" },
+              "required": { "type": "boolean", "default": false, "description": "If true, missing var blocks execution" },
+              "affects_tasks": { "type": "array", "items": { "type": "string" }, "description": "Task IDs that depend on this var (skipped if var missing)" }
+            }
+          },
+          "description": "Environment variables that affect task execution"
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["path"],
+            "properties": {
+              "path": { "type": "string", "description": "File or glob pattern that must exist" },
+              "required": { "type": "boolean", "default": false, "description": "If true, missing file blocks execution" }
+            }
+          },
+          "description": "Files that must exist"
+        }
+      }
+    },
+    "skip_condition": {
+      "type": "object",
+      "description": "Condition under which a task should be skipped",
+      "properties": {
+        "file_exists": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Skip if ALL these files/globs already exist"
+        },
+        "file_missing": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Skip if ANY of these files/globs are missing"
+        },
+        "env_missing": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Skip if ANY of these environment variables are not set"
+        },
+        "command_fails": {
+          "type": "string",
+          "description": "Skip if this command exits non-zero"
+        },
+        "reason": {
+          "type": "string",
+          "description": "Human-readable explanation for why task may be skipped"
+        }
+      }
+    }
+  }
+}

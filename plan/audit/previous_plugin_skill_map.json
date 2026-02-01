@@ -1,0 +1,275 @@
+{
+  "audit": {
+    "agents_referenced": [],
+    "mentions_task_tool": false,
+    "scripts": [
+      "scripts/audit/audit_analyzer.py"
+    ],
+    "skill_path": "skills/audit/SKILL.md"
+  },
+  "audit-hooks-deployer": {
+    "agents_referenced": [],
+    "mentions_task_tool": true,
+    "scripts": [
+      "scripts/install_audit_hooks.py"
+    ],
+    "skill_path": "skills/audit-hooks-deployer/SKILL.md"
+  },
+  "cleanup-sessions": {
+    "agents_referenced": [],
+    "mentions_task_tool": false,
+    "scripts": [
+      "scripts/maintenance/cleanup_sessions.py"
+    ],
+    "skill_path": "skills/cleanup-sessions/SKILL.md"
+  },
+  "continuous-learning": {
+    "agents_referenced": [],
+    "mentions_task_tool": false,
+    "scripts": [],
+    "skill_path": "skills/continuous-learning/SKILL.md"
+  },
+  "docs": {
+    "agents_referenced": [
+      "docs-keeper"
+    ],
+    "mentions_task_tool": true,
+    "scripts": [
+      "scripts/docs/analyze_codebase.py",
+      "scripts/docs/audit_docs.py",
+      "scripts/docs/bootstrap_docs.py",
+      "scripts/docs/generate_docs.py",
+      "scripts/docs/sync_registry.py",
+      "scripts/docs/validate_docs.py"
+    ],
+    "skill_path": "skills/docs/SKILL.md"
+  },
+  "doctor": {
+    "agents_referenced": [],
+    "mentions_task_tool": false,
+    "scripts": [
+      "scripts/doctor.py"
+    ],
+    "skill_path": "skills/doctor/SKILL.md"
+  },
+  "god-class-detector": {
+    "agents_referenced": [],
+    "mentions_task_tool": false,
+    "scripts": [
+      "scripts/check_god_classes.py",
+      "scripts/install_god_class_detector.py"
+    ],
+    "skill_path": "skills/god-class-detector/SKILL.md"
+  },
+  "help": {
+    "agents_referenced": [],
+    "mentions_task_tool": true,
+    "scripts": [],
+    "skill_path": "skills/help/SKILL.md"
+  },
+  "import-repo": {
+    "agents_referenced": [
+      "docs-keeper"
+    ],
+    "mentions_task_tool": false,
+    "scripts": [
+      "scripts/docs/analyze_codebase.py",
+      "scripts/docs/audit_docs.py",
+      "scripts/doctor.py",
+      "scripts/import/detect_docs.py",
+      "scripts/import/detect_tooling.py",
+      "scripts/import/generate_config.py",
+      "scripts/init_project.py"
+    ],
+    "skill_path": "skills/import-repo/SKILL.md"
+  },
+  "init-project": {
+    "agents_referenced": [],
+    "mentions_task_tool": false,
+    "scripts": [
+      "scripts/init_project.py"
+    ],
+    "skill_path": "skills/init-project/SKILL.md"
+  },
+  "learning-status": {
+    "agents_referenced": [],
+    "mentions_task_tool": false,
+    "scripts": [
+      "scripts/learning/learning_status.py"
+    ],
+    "skill_path": "skills/learning-status/SKILL.md"
+  },
+  "learning-update": {
+    "agents_referenced": [],
+    "mentions_task_tool": false,
+    "scripts": [
+      "scripts/learning/update_learning_state.py"
+    ],
+    "skill_path": "skills/learning-update/SKILL.md"
+  },
+  "policy-hooks-deployer": {
+    "agents_referenced": [],
+    "mentions_task_tool": false,
+    "scripts": [
+      "scripts/install_policy_hooks.py"
+    ],
+    "skill_path": "skills/policy-hooks-deployer/SKILL.md"
+  },
+  "project-bootstrapper": {
+    "agents_referenced": [],
+    "mentions_task_tool": false,
+    "scripts": [
+      "scripts/init_project.py"
+    ],
+    "skill_path": "skills/project-bootstrapper/SKILL.md"
+  },
+  "project-pack-interviewer": {
+    "agents_referenced": [],
+    "mentions_task_tool": false,
+    "scripts": [
+      "scripts/install_project_pack.py",
+      "scripts/run_enforcements.py"
+    ],
+    "skill_path": "skills/project-pack-interviewer/SKILL.md"
+  },
+  "prune-audit-logs": {
+    "agents_referenced": [],
+    "mentions_task_tool": false,
+    "scripts": [
+      "scripts/audit/prune_audit_logs.py"
+    ],
+    "skill_path": "skills/prune-audit-logs/SKILL.md"
+  },
+  "registry": {
+    "agents_referenced": [],
+    "mentions_task_tool": false,
+    "scripts": [],
+    "skill_path": "skills/registry/SKILL.md"
+  },
+  "repo-importer": {
+    "agents_referenced": [],
+    "mentions_task_tool": false,
+    "scripts": [],
+    "skill_path": "skills/repo-importer/SKILL.md"
+  },
+  "resolve-failed-quality": {
+    "agents_referenced": [],
+    "mentions_task_tool": false,
+    "scripts": [
+      "scripts/quality/run_quality_suite.py"
+    ],
+    "skill_path": "skills/resolve-failed-quality/SKILL.md"
+  },
+  "retrospective": {
+    "agents_referenced": [],
+    "mentions_task_tool": false,
+    "scripts": [
+      "scripts/session/session_progress.py",
+      "scripts/telemetry/build_session_kpis.py"
+    ],
+    "skill_path": "skills/retrospective/SKILL.md"
+  },
+  "run": {
+    "agents_referenced": [
+      "implementor",
+      "tests-builder"
+    ],
+    "mentions_task_tool": true,
+    "scripts": [
+      "scripts/checkpoint/create_checkpoint.py",
+      "scripts/checkpoint/restore_checkpoint.py",
+      "scripts/context/build_context_pack.py",
+      "scripts/doctor.py",
+      "scripts/session/create_session.py",
+      "scripts/session/list_sessions.py",
+      "scripts/session/session_progress.py"
+    ],
+    "skill_path": "skills/run/SKILL.md"
+  },
+  "session-auditor": {
+    "agents_referenced": [],
+    "mentions_task_tool": true,
+    "scripts": [
+      "scripts/audit/session_auditor.py",
+      "scripts/audit/session_auditor.py\\"
+    ],
+    "skill_path": "skills/session-auditor/SKILL.md"
+  },
+  "session-kpis": {
+    "agents_referenced": [],
+    "mentions_task_tool": false,
+    "scripts": [
+      "scripts/telemetry/build_session_kpis.py"
+    ],
+    "skill_path": "skills/session-kpis/SKILL.md"
+  },
+  "session-progress": {
+    "agents_referenced": [],
+    "mentions_task_tool": false,
+    "scripts": [
+      "scripts/session/session_progress.py"
+    ],
+    "skill_path": "skills/session-progress/SKILL.md"
+  },
+  "sessions": {
+    "agents_referenced": [],
+    "mentions_task_tool": false,
+    "scripts": [
+      "scripts/session/list_sessions.py"
+    ],
+    "skill_path": "skills/sessions/SKILL.md"
+  },
+  "setup-audit-hooks": {
+    "agents_referenced": [],
+    "mentions_task_tool": true,
+    "scripts": [
+      "scripts/install_audit_hooks.py"
+    ],
+    "skill_path": "skills/setup-audit-hooks/SKILL.md"
+  },
+  "setup-policy-hooks": {
+    "agents_referenced": [],
+    "mentions_task_tool": false,
+    "scripts": [
+      "scripts/install_policy_hooks.py"
+    ],
+    "skill_path": "skills/setup-policy-hooks/SKILL.md"
+  },
+  "strategic-compact": {
+    "agents_referenced": [],
+    "mentions_task_tool": false,
+    "scripts": [],
+    "skill_path": "skills/strategic-compact/SKILL.md"
+  },
+  "tdd-workflow": {
+    "agents_referenced": [
+      "tdd-guide",
+      "tests-builder"
+    ],
+    "mentions_task_tool": false,
+    "scripts": [],
+    "skill_path": "skills/tdd-workflow/SKILL.md"
+  },
+  "uninstall-hooks": {
+    "agents_referenced": [],
+    "mentions_task_tool": false,
+    "scripts": [
+      "scripts/hooks/uninstall_hooks.py"
+    ],
+    "skill_path": "skills/uninstall-hooks/SKILL.md"
+  },
+  "upgrade": {
+    "agents_referenced": [],
+    "mentions_task_tool": false,
+    "scripts": [
+      "scripts/upgrade/upgrade_project.py"
+    ],
+    "skill_path": "skills/upgrade/SKILL.md"
+  },
+  "verify": {
+    "agents_referenced": [],
+    "mentions_task_tool": false,
+    "scripts": [],
+    "skill_path": "skills/verify/SKILL.md"
+  }
+}

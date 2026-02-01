@@ -1,0 +1,1353 @@
+{
+  "agents": [
+    {
+      "deprecated": "true",
+      "description": "[DEPRECATED - use docs-keeper instead] Bootstrap, discover, update, and validate project documentation.",
+      "name": "docs-builder",
+      "notes": "Deprecated by docs-keeper.",
+      "path": "agents/docs-builder.md",
+      "phase": "DROP"
+    },
+    {
+      "deprecated": "true",
+      "description": "[DEPRECATED - use docs-keeper instead] Generate, audit, or migrate documentation.",
+      "name": "docs-generator",
+      "notes": "Deprecated by docs-keeper.",
+      "path": "agents/docs-generator.md",
+      "phase": "DROP"
+    },
+    {
+      "deprecated": "",
+      "description": "Create a verifiable, executable plan (actions.json + traceability + verification checklist). Use before any implementation work.",
+      "name": "action-planner",
+      "notes": "",
+      "path": "agents/action-planner.md",
+      "phase": "P1"
+    },
+    {
+      "deprecated": "",
+      "description": "Implement non-test code changes assigned by actions.json, within declared file scope. Use for production code changes (not tests).",
+      "name": "implementor",
+      "notes": "",
+      "path": "agents/implementor.md",
+      "phase": "P1"
+    },
+    {
+      "deprecated": "",
+      "description": "Write or update tests assigned by actions.json and project conventions (tests-only by default). Use when tests are required or failing.",
+      "name": "tests-builder",
+      "notes": "",
+      "path": "agents/tests-builder.md",
+      "phase": "P1"
+    },
+    {
+      "deprecated": "",
+      "description": "Verify acceptance criteria and checklist items with evidence, producing a binary APPROVE/REJECT decision.",
+      "name": "compliance-checker",
+      "notes": "",
+      "path": "agents/compliance-checker.md",
+      "phase": "P2"
+    },
+    {
+      "deprecated": "",
+      "description": "Unified documentation management agent. Maintains documentation as a living contract through bootstrap, sync, update, discover, generate, and audit modes. Supports LSP for enhanced code understanding.",
+      "name": "docs-keeper",
+      "notes": "",
+      "path": "agents/docs-keeper.md",
+      "phase": "P2"
+    },
+    {
+      "deprecated": "",
+      "description": "Run configured quality commands from .claude/project.yaml (format/lint/typecheck/test/build/e2e) and capture evidence for the session.",
+      "name": "quality-gate",
+      "notes": "",
+      "path": "agents/quality-gate.md",
+      "phase": "P2"
+    },
+    {
+      "deprecated": "",
+      "description": "Interactive ideation agent with user stories, traceability matrix, SRP/DRY/KISS compliance, and plugin-aware recommendations.",
+      "name": "ideation",
+      "notes": "",
+      "path": "agents/ideation.md",
+      "phase": "P2-OPT"
+    },
+    {
+      "deprecated": "",
+      "description": "Run LSP-based semantic verification checks declared in planning/actions.json (acceptance_criteria.verification.type='lsp') and write deterministic evidence artifacts under quality/.",
+      "name": "lsp-verifier",
+      "notes": "",
+      "path": "agents/lsp-verifier.md",
+      "phase": "P2-OPT"
+    },
+    {
+      "deprecated": "",
+      "description": "Review changes for correctness, plan compliance, and policy adherence. Verifies all planned tasks and acceptance criteria are implemented.",
+      "name": "reviewer",
+      "notes": "",
+      "path": "agents/reviewer.md",
+      "phase": "P2-OPT"
+    },
+    {
+      "deprecated": "",
+      "description": "Reproduce and isolate issues, confirm root cause, and propose fix + prevention. Produces analysis/root_cause.md.",
+      "name": "root-cause-analyzer",
+      "notes": "",
+      "path": "agents/root-cause-analyzer.md",
+      "phase": "P2-OPT"
+    },
+    {
+      "deprecated": "",
+      "description": "Guide Test-Driven Development through Red-Green-Refactor cycles. Use with `/at:run deliver --tdd` for test-first feature development.",
+      "name": "tdd-guide",
+      "notes": "",
+      "path": "agents/tdd-guide.md",
+      "phase": "P2-OPT"
+    },
+    {
+      "deprecated": "",
+      "description": "Audit analysis phases (triage, ideate) for issue investigation, option exploration, and recommendation quality",
+      "name": "analysis-auditor",
+      "notes": "Only needed if you keep the session-auditor subsystem.",
+      "path": "agents/analysis-auditor.md",
+      "phase": "P3-OPT"
+    },
+    {
+      "deprecated": "",
+      "description": "Aggregate audit results from phase auditors, calculate overall scores, and generate recommendations",
+      "name": "audit-aggregator",
+      "notes": "Only needed if you keep the session-auditor subsystem.",
+      "path": "agents/audit-aggregator.md",
+      "phase": "P3-OPT"
+    },
+    {
+      "deprecated": "",
+      "description": "Audit the compliance verification phase, analyzing acceptance criteria verification and approval decisions",
+      "name": "compliance-auditor",
+      "notes": "Only needed if you keep the session-auditor subsystem.",
+      "path": "agents/compliance-auditor.md",
+      "phase": "P3-OPT"
+    },
+    {
+      "deprecated": "",
+      "description": "Audit the planning phase of a workflow session, analyzing actions.json structure, context selection, and task breakdown quality",
+      "name": "planning-auditor",
+      "notes": "Only needed if you keep the session-auditor subsystem.",
+      "path": "agents/planning-auditor.md",
+      "phase": "P3-OPT"
+    },
+    {
+      "deprecated": "",
+      "description": "Audit the quality gate phase, analyzing command execution, pass/fail results, and coverage metrics",
+      "name": "quality-auditor",
+      "notes": "Only needed if you keep the session-auditor subsystem.",
+      "path": "agents/quality-auditor.md",
+      "phase": "P3-OPT"
+    },
+    {
+      "deprecated": "",
+      "description": "Audit the code review phase, analyzing review thoroughness, finding quality, and feedback actionability",
+      "name": "review-auditor",
+      "notes": "Only needed if you keep the session-auditor subsystem.",
+      "path": "agents/review-auditor.md",
+      "phase": "P3-OPT"
+    },
+    {
+      "deprecated": "",
+      "description": "Audit individual implementation/test tasks, analyzing context usage, tool efficiency, and completion status",
+      "name": "task-auditor",
+      "notes": "Only needed if you keep the session-auditor subsystem.",
+      "path": "agents/task-auditor.md",
+      "phase": "P3-OPT"
+    }
+  ],
+  "js_files": [
+    {
+      "description": "Auto-Format Hook (PostToolUse)",
+      "notes": "Prefer Python-only hooks to avoid Node dependency.",
+      "path": "scripts/hooks/auto-format.js",
+      "phase": "DROP",
+      "used_by": []
+    },
+    {
+      "description": "Session End Hook (Stop)",
+      "notes": "Prefer Python-only hooks to avoid Node dependency.",
+      "path": "scripts/hooks/session-end.js",
+      "phase": "DROP",
+      "used_by": [
+        "hooks"
+      ]
+    },
+    {
+      "description": "Session Start Hook",
+      "notes": "Prefer Python-only hooks to avoid Node dependency.",
+      "path": "scripts/hooks/session-start.js",
+      "phase": "DROP",
+      "used_by": []
+    },
+    {
+      "description": "Language Detection Library",
+      "notes": "Prefer Python-only hooks to avoid Node dependency.",
+      "path": "scripts/lib/language-detector.js",
+      "phase": "DROP",
+      "used_by": []
+    },
+    {
+      "description": "Utility functions for hooks and scripts",
+      "notes": "Prefer Python-only hooks to avoid Node dependency.",
+      "path": "scripts/lib/utils.js",
+      "phase": "DROP",
+      "used_by": []
+    },
+    {
+      "description": "Debug Statement Detection Hook (PostToolUse)",
+      "notes": "Optional UX: debug-statement reminder; can be rewritten in Python.",
+      "path": "scripts/hooks/detect-debug.js",
+      "phase": "P3-OPT",
+      "used_by": [
+        "hooks"
+      ]
+    },
+    {
+      "description": "Strategic Compact Suggester (PreToolUse)",
+      "notes": "Optional UX: /compact reminders; not core.",
+      "path": "scripts/hooks/suggest-compact.js",
+      "phase": "P3-OPT",
+      "used_by": [
+        "hooks"
+      ]
+    }
+  ],
+  "legend": {
+    "DROP": "Do not carry into rebuild",
+    "P0": "Foundations / shared libs",
+    "P0-DEV": "Dev-only tooling",
+    "P1": "Core kernel (session + plan + execution scaffolding)",
+    "P1-OPT": "Nice-to-have for P1",
+    "P2": "Core gates (quality/compliance/docs) + safety",
+    "P2-OPT": "Optional P2 capabilities",
+    "P3-OPT": "Advanced/optional subsystems"
+  },
+  "python_files": [
+    {
+      "category": "inception",
+      "description": "",
+      "notes": "",
+      "path": "scripts/inception/__init__.py",
+      "phase": "DROP",
+      "used_by": []
+    },
+    {
+      "category": "inception",
+      "description": "Apply inception patterns",
+      "notes": "",
+      "path": "scripts/inception/apply_inception.py",
+      "phase": "DROP",
+      "used_by": []
+    },
+    {
+      "category": "validate",
+      "description": "Validate agent output artifacts",
+      "notes": "Appears unused + schema drift vs current task artifacts; remove in rebuild.",
+      "path": "scripts/validate/validate_agent_artifact.py",
+      "phase": "DROP",
+      "used_by": []
+    },
+    {
+      "category": "lib",
+      "description": "",
+      "notes": "",
+      "path": "scripts/lib/__init__.py",
+      "phase": "P0",
+      "used_by": []
+    },
+    {
+      "category": "lib",
+      "description": "Documentation configuration dataclass",
+      "notes": "",
+      "path": "scripts/lib/docs_config.py",
+      "phase": "P0",
+      "used_by": []
+    },
+    {
+      "category": "lib",
+      "description": "Plugin script: enforcer_conventions",
+      "notes": "",
+      "path": "scripts/lib/enforcer_conventions.py",
+      "phase": "P0",
+      "used_by": []
+    },
+    {
+      "category": "lib",
+      "description": "I/O utilities for file operations and timestamps",
+      "notes": "",
+      "path": "scripts/lib/io.py",
+      "phase": "P0",
+      "used_by": []
+    },
+    {
+      "category": "lib",
+      "description": "Path policy utilities",
+      "notes": "",
+      "path": "scripts/lib/path_policy.py",
+      "phase": "P0",
+      "used_by": []
+    },
+    {
+      "category": "lib",
+      "description": "Project detection and configuration utilities",
+      "notes": "",
+      "path": "scripts/lib/project.py",
+      "phase": "P0",
+      "used_by": []
+    },
+    {
+      "category": "lib",
+      "description": "Simple YAML parser",
+      "notes": "",
+      "path": "scripts/lib/simple_yaml.py",
+      "phase": "P0",
+      "used_by": []
+    },
+    {
+      "category": "dev",
+      "description": "Add version headers to all plugin files",
+      "notes": "",
+      "path": "scripts/dev/add_version_headers.py",
+      "phase": "P0-DEV",
+      "used_by": []
+    },
+    {
+      "category": "dev",
+      "description": "Clean up Python bytecode files",
+      "notes": "",
+      "path": "scripts/dev/cleanup_bytecode.py",
+      "phase": "P0-DEV",
+      "used_by": []
+    },
+    {
+      "category": "context",
+      "description": "",
+      "notes": "",
+      "path": "scripts/context/__init__.py",
+      "phase": "P1",
+      "used_by": []
+    },
+    {
+      "category": "context",
+      "description": "Build context pack for agent workflows",
+      "notes": "",
+      "path": "scripts/context/build_context_pack.py",
+      "phase": "P1",
+      "used_by": [
+        "skills"
+      ]
+    },
+    {
+      "category": "context",
+      "description": "Build per-task context slices from actions.json",
+      "notes": "",
+      "path": "scripts/context/build_task_contexts.py",
+      "phase": "P1",
+      "used_by": [
+        "run"
+      ]
+    },
+    {
+      "category": "hooks",
+      "description": "Enforce file scope restrictions on Write/Edit tools",
+      "notes": "",
+      "path": "scripts/hooks/enforce_file_scope.py",
+      "phase": "P1",
+      "used_by": [
+        "hooks"
+      ]
+    },
+    {
+      "category": "hooks",
+      "description": "Subagent stop hook for artifact validation",
+      "notes": "",
+      "path": "scripts/hooks/on_subagent_stop.py",
+      "phase": "P1",
+      "used_by": [
+        "hooks"
+      ]
+    },
+    {
+      "category": "scripts_root",
+      "description": "Plugin health check and diagnostics",
+      "notes": "",
+      "path": "scripts/doctor.py",
+      "phase": "P1",
+      "used_by": [
+        "skills",
+        "run"
+      ]
+    },
+    {
+      "category": "scripts_root",
+      "description": "Initialize project with plugin",
+      "notes": "",
+      "path": "scripts/init_project.py",
+      "phase": "P1",
+      "used_by": [
+        "skills"
+      ]
+    },
+    {
+      "category": "session",
+      "description": "",
+      "notes": "",
+      "path": "scripts/session/__init__.py",
+      "phase": "P1",
+      "used_by": []
+    },
+    {
+      "category": "session",
+      "description": "Create new workflow session",
+      "notes": "",
+      "path": "scripts/session/create_session.py",
+      "phase": "P1",
+      "used_by": [
+        "skills"
+      ]
+    },
+    {
+      "category": "session",
+      "description": "List existing sessions",
+      "notes": "",
+      "path": "scripts/session/list_sessions.py",
+      "phase": "P1",
+      "used_by": [
+        "skills"
+      ]
+    },
+    {
+      "category": "session",
+      "description": "Track and report session progress",
+      "notes": "",
+      "path": "scripts/session/session_progress.py",
+      "phase": "P1",
+      "used_by": [
+        "skills"
+      ]
+    },
+    {
+      "category": "validate",
+      "description": "Validate actions.json structure",
+      "notes": "",
+      "path": "scripts/validate/validate_actions.py",
+      "phase": "P1",
+      "used_by": [
+        "run"
+      ]
+    },
+    {
+      "category": "workflow",
+      "description": "",
+      "notes": "",
+      "path": "scripts/workflow/__init__.py",
+      "phase": "P1-OPT",
+      "used_by": []
+    },
+    {
+      "category": "workflow",
+      "description": "Generate dry run report",
+      "notes": "",
+      "path": "scripts/workflow/generate_dry_run_report.py",
+      "phase": "P1-OPT",
+      "used_by": [
+        "run"
+      ]
+    },
+    {
+      "category": "quality",
+      "description": "",
+      "notes": "",
+      "path": "scripts/quality/__init__.py",
+      "phase": "P2",
+      "used_by": []
+    },
+    {
+      "category": "quality",
+      "description": "Run quality gate commands",
+      "notes": "",
+      "path": "scripts/quality/run_quality_suite.py",
+      "phase": "P2",
+      "used_by": [
+        "skills"
+      ]
+    },
+    {
+      "category": "validate",
+      "description": "",
+      "notes": "",
+      "path": "scripts/validate/__init__.py",
+      "phase": "P2",
+      "used_by": []
+    },
+    {
+      "category": "validate",
+      "description": "Check subagent capabilities",
+      "notes": "",
+      "path": "scripts/validate/check_subagent_capability.py",
+      "phase": "P2",
+      "used_by": []
+    },
+    {
+      "category": "validate",
+      "description": "Documentation gate validation",
+      "notes": "",
+      "path": "scripts/validate/docs_gate.py",
+      "phase": "P2",
+      "used_by": [
+        "run"
+      ]
+    },
+    {
+      "category": "validate",
+      "description": "LSP-based verification gate",
+      "notes": "",
+      "path": "scripts/validate/lsp_gate.py",
+      "phase": "P2",
+      "used_by": [
+        "run"
+      ]
+    },
+    {
+      "category": "validate",
+      "description": "Validate parallel execution conformance",
+      "notes": "",
+      "path": "scripts/validate/parallel_conformance.py",
+      "phase": "P2",
+      "used_by": [
+        "run"
+      ]
+    },
+    {
+      "category": "validate",
+      "description": "Verify plan adherence after implementation",
+      "notes": "",
+      "path": "scripts/validate/plan_adherence.py",
+      "phase": "P2",
+      "used_by": [
+        "run"
+      ]
+    },
+    {
+      "category": "validate",
+      "description": "Validate files changed by agents",
+      "notes": "",
+      "path": "scripts/validate/validate_changed_files.py",
+      "phase": "P2",
+      "used_by": []
+    },
+    {
+      "category": "checkpoint",
+      "description": "",
+      "notes": "",
+      "path": "scripts/checkpoint/__init__.py",
+      "phase": "P2-OPT",
+      "used_by": []
+    },
+    {
+      "category": "checkpoint",
+      "description": "Create git checkpoint before implementation",
+      "notes": "",
+      "path": "scripts/checkpoint/create_checkpoint.py",
+      "phase": "P2-OPT",
+      "used_by": [
+        "skills",
+        "run"
+      ]
+    },
+    {
+      "category": "checkpoint",
+      "description": "Restore git checkpoint on failure",
+      "notes": "",
+      "path": "scripts/checkpoint/restore_checkpoint.py",
+      "phase": "P2-OPT",
+      "used_by": [
+        "skills"
+      ]
+    },
+    {
+      "category": "docs",
+      "description": "",
+      "notes": "",
+      "path": "scripts/docs/__init__.py",
+      "phase": "P2-OPT",
+      "used_by": []
+    },
+    {
+      "category": "docs",
+      "description": "Analyze codebase for documentation",
+      "notes": "",
+      "path": "scripts/docs/analyze_codebase.py",
+      "phase": "P2-OPT",
+      "used_by": [
+        "skills"
+      ]
+    },
+    {
+      "category": "docs",
+      "description": "Plugin script: analyze_with_lsp",
+      "notes": "Not referenced by workflows; keep only if docs generation needs it.",
+      "path": "scripts/docs/analyze_with_lsp.py",
+      "phase": "P2-OPT",
+      "used_by": []
+    },
+    {
+      "category": "docs",
+      "description": "Audit documentation completeness",
+      "notes": "",
+      "path": "scripts/docs/audit_docs.py",
+      "phase": "P2-OPT",
+      "used_by": [
+        "skills"
+      ]
+    },
+    {
+      "category": "docs",
+      "description": "Plugin script: bootstrap_docs",
+      "notes": "",
+      "path": "scripts/docs/bootstrap_docs.py",
+      "phase": "P2-OPT",
+      "used_by": [
+        "skills"
+      ]
+    },
+    {
+      "category": "docs",
+      "description": "Ensure documentation for changes",
+      "notes": "",
+      "path": "scripts/docs/ensure_change_doc.py",
+      "phase": "P2-OPT",
+      "used_by": []
+    },
+    {
+      "category": "docs",
+      "description": "Plugin script: generate_docs",
+      "notes": "",
+      "path": "scripts/docs/generate_docs.py",
+      "phase": "P2-OPT",
+      "used_by": [
+        "skills"
+      ]
+    },
+    {
+      "category": "docs",
+      "description": "Populate registry with doc sections",
+      "notes": "Nice-to-have (sections indexing); not required for core deliver.",
+      "path": "scripts/docs/populate_registry_sections.py",
+      "phase": "P2-OPT",
+      "used_by": []
+    },
+    {
+      "category": "docs",
+      "description": "Plugin script: sync_registry",
+      "notes": "",
+      "path": "scripts/docs/sync_registry.py",
+      "phase": "P2-OPT",
+      "used_by": [
+        "skills"
+      ]
+    },
+    {
+      "category": "docs",
+      "description": "Plugin script: validate_docs",
+      "notes": "",
+      "path": "scripts/docs/validate_docs.py",
+      "phase": "P2-OPT",
+      "used_by": [
+        "skills"
+      ]
+    },
+    {
+      "category": "hooks",
+      "description": "",
+      "notes": "",
+      "path": "scripts/hooks/__init__.py",
+      "phase": "P2-OPT",
+      "used_by": []
+    },
+    {
+      "category": "hooks",
+      "description": "Audit logging hook for tool and agent tracking",
+      "notes": "",
+      "path": "scripts/hooks/audit_log.py",
+      "phase": "P2-OPT",
+      "used_by": []
+    },
+    {
+      "category": "hooks",
+      "description": "Generate hooks.json configuration",
+      "notes": "",
+      "path": "scripts/hooks/generate_hooks_json.py",
+      "phase": "P2-OPT",
+      "used_by": []
+    },
+    {
+      "category": "hooks",
+      "description": "Session start hook for initialization",
+      "notes": "",
+      "path": "scripts/hooks/on_session_start.py",
+      "phase": "P2-OPT",
+      "used_by": [
+        "hooks"
+      ]
+    },
+    {
+      "category": "hooks",
+      "description": "Setup hook for plugin initialization",
+      "notes": "",
+      "path": "scripts/hooks/on_setup.py",
+      "phase": "P2-OPT",
+      "used_by": [
+        "hooks"
+      ]
+    },
+    {
+      "category": "hooks",
+      "description": "Resolve agent paths for custom agents",
+      "notes": "",
+      "path": "scripts/hooks/resolve_agent_path.py",
+      "phase": "P2-OPT",
+      "used_by": []
+    },
+    {
+      "category": "hooks",
+      "description": "Uninstall plugin hooks from settings",
+      "notes": "",
+      "path": "scripts/hooks/uninstall_hooks.py",
+      "phase": "P2-OPT",
+      "used_by": [
+        "skills"
+      ]
+    },
+    {
+      "category": "hooks",
+      "description": "Validate actions.json writes against schema",
+      "notes": "",
+      "path": "scripts/hooks/validate_actions_write.py",
+      "phase": "P2-OPT",
+      "used_by": [
+        "hooks"
+      ]
+    },
+    {
+      "category": "hooks",
+      "description": "Validate Task tool invocations",
+      "notes": "",
+      "path": "scripts/hooks/validate_task_invocation.py",
+      "phase": "P2-OPT",
+      "used_by": [
+        "hooks"
+      ]
+    },
+    {
+      "category": "skill_asset",
+      "description": "Portable Claude Code Hook: Policy Enforcement (at)",
+      "notes": "",
+      "path": "skills/policy-hooks-deployer/assets/hooks/policy_pre_tool_use.py",
+      "phase": "P2-OPT",
+      "used_by": []
+    },
+    {
+      "category": "skill_script",
+      "description": "Install at policy enforcement hooks into a Claude Code project or user scope.",
+      "notes": "",
+      "path": "skills/policy-hooks-deployer/scripts/install_policy_hooks.py",
+      "phase": "P2-OPT",
+      "used_by": [
+        "skills"
+      ]
+    },
+    {
+      "category": "agents",
+      "description": "Generate project-specific agents",
+      "notes": "",
+      "path": "scripts/agents/generate_project_agents.py",
+      "phase": "P3-OPT",
+      "used_by": []
+    },
+    {
+      "category": "audit",
+      "description": "",
+      "notes": "",
+      "path": "scripts/audit/__init__.py",
+      "phase": "P3-OPT",
+      "used_by": []
+    },
+    {
+      "category": "audit",
+      "description": "Analyze audit logs",
+      "notes": "",
+      "path": "scripts/audit/audit_analyzer.py",
+      "phase": "P3-OPT",
+      "used_by": [
+        "skills"
+      ]
+    },
+    {
+      "category": "audit",
+      "description": "Parse and extract data from audit log files",
+      "notes": "",
+      "path": "scripts/audit/audit_log_parser.py",
+      "phase": "P3-OPT",
+      "used_by": []
+    },
+    {
+      "category": "audit",
+      "description": "Prune old audit log entries",
+      "notes": "",
+      "path": "scripts/audit/prune_audit_logs.py",
+      "phase": "P3-OPT",
+      "used_by": [
+        "skills"
+      ]
+    },
+    {
+      "category": "audit",
+      "description": "Generate audit recommendations",
+      "notes": "",
+      "path": "scripts/audit/recommendations.py",
+      "phase": "P3-OPT",
+      "used_by": []
+    },
+    {
+      "category": "audit",
+      "description": "Generate audit reports in markdown and JSON",
+      "notes": "",
+      "path": "scripts/audit/report_generator.py",
+      "phase": "P3-OPT",
+      "used_by": []
+    },
+    {
+      "category": "audit",
+      "description": "Score audit metrics",
+      "notes": "",
+      "path": "scripts/audit/scoring.py",
+      "phase": "P3-OPT",
+      "used_by": []
+    },
+    {
+      "category": "audit",
+      "description": "Run full session audits",
+      "notes": "",
+      "path": "scripts/audit/session_auditor.py",
+      "phase": "P3-OPT",
+      "used_by": [
+        "skills"
+      ]
+    },
+    {
+      "category": "audit",
+      "description": "Extract detailed subagent data from audit logs",
+      "notes": "",
+      "path": "scripts/audit/subagent_extractor.py",
+      "phase": "P3-OPT",
+      "used_by": []
+    },
+    {
+      "category": "audit",
+      "description": "Write per-subagent audit reports",
+      "notes": "",
+      "path": "scripts/audit/subagent_report_writer.py",
+      "phase": "P3-OPT",
+      "used_by": []
+    },
+    {
+      "category": "import",
+      "description": "",
+      "notes": "",
+      "path": "scripts/import/__init__.py",
+      "phase": "P3-OPT",
+      "used_by": []
+    },
+    {
+      "category": "import",
+      "description": "Detect existing documentation",
+      "notes": "",
+      "path": "scripts/import/detect_docs.py",
+      "phase": "P3-OPT",
+      "used_by": [
+        "skills"
+      ]
+    },
+    {
+      "category": "import",
+      "description": "Detect project tooling configuration",
+      "notes": "",
+      "path": "scripts/import/detect_tooling.py",
+      "phase": "P3-OPT",
+      "used_by": [
+        "skills"
+      ]
+    },
+    {
+      "category": "import",
+      "description": "Generate project configuration",
+      "notes": "",
+      "path": "scripts/import/generate_config.py",
+      "phase": "P3-OPT",
+      "used_by": [
+        "skills"
+      ]
+    },
+    {
+      "category": "learning",
+      "description": "Show learning/memory status",
+      "notes": "",
+      "path": "scripts/learning/learning_status.py",
+      "phase": "P3-OPT",
+      "used_by": [
+        "skills"
+      ]
+    },
+    {
+      "category": "learning",
+      "description": "Update learning state from sessions",
+      "notes": "",
+      "path": "scripts/learning/update_learning_state.py",
+      "phase": "P3-OPT",
+      "used_by": [
+        "skills",
+        "run"
+      ]
+    },
+    {
+      "category": "maintenance",
+      "description": "",
+      "notes": "",
+      "path": "scripts/maintenance/__init__.py",
+      "phase": "P3-OPT",
+      "used_by": []
+    },
+    {
+      "category": "maintenance",
+      "description": "Clean up old sessions",
+      "notes": "",
+      "path": "scripts/maintenance/cleanup_sessions.py",
+      "phase": "P3-OPT",
+      "used_by": [
+        "skills"
+      ]
+    },
+    {
+      "category": "orchestrator",
+      "description": "Workflow orchestration engine for at.",
+      "notes": "Only needed if you move orchestration into Python (state machine); otherwise skip.",
+      "path": "scripts/orchestrator/__init__.py",
+      "phase": "P3-OPT",
+      "used_by": []
+    },
+    {
+      "category": "orchestrator",
+      "description": "Phase implementations for workflow engine.",
+      "notes": "Only needed if you move orchestration into Python (state machine); otherwise skip.",
+      "path": "scripts/orchestrator/phases/__init__.py",
+      "phase": "P3-OPT",
+      "used_by": []
+    },
+    {
+      "category": "orchestrator",
+      "description": "Doctor phase implementation",
+      "notes": "Only needed if you move orchestration into Python (state machine); otherwise skip.",
+      "path": "scripts/orchestrator/phases/phase_doctor.py",
+      "phase": "P3-OPT",
+      "used_by": []
+    },
+    {
+      "category": "orchestrator",
+      "description": "Core workflow orchestration engine",
+      "notes": "Only needed if you move orchestration into Python (state machine); otherwise skip.",
+      "path": "scripts/orchestrator/workflow_engine.py",
+      "phase": "P3-OPT",
+      "used_by": []
+    },
+    {
+      "category": "skill_asset",
+      "description": "Portable Claude Code Hook: Session Lifecycle Audit (at)",
+      "notes": "",
+      "path": "skills/audit-hooks-deployer/assets/hooks/audit_sessions.py",
+      "phase": "P3-OPT",
+      "used_by": []
+    },
+    {
+      "category": "skill_asset",
+      "description": "Portable Claude Code Hook: Subagent Lifecycle Audit (at)",
+      "notes": "",
+      "path": "skills/audit-hooks-deployer/assets/hooks/audit_subagents.py",
+      "phase": "P3-OPT",
+      "used_by": []
+    },
+    {
+      "category": "skill_asset",
+      "description": "Portable Claude Code Hook: Tool Usage Audit (at)",
+      "notes": "",
+      "path": "skills/audit-hooks-deployer/assets/hooks/audit_tools.py",
+      "phase": "P3-OPT",
+      "used_by": []
+    },
+    {
+      "category": "skill_asset",
+      "description": "Claude Code Hook: Auto-Approve Session File Edits (at)",
+      "notes": "",
+      "path": "skills/audit-hooks-deployer/assets/hooks/auto_approve_session.py",
+      "phase": "P3-OPT",
+      "used_by": []
+    },
+    {
+      "category": "skill_asset",
+      "description": "Claude Code Hook: Context Injection (at)",
+      "notes": "",
+      "path": "skills/audit-hooks-deployer/assets/hooks/context_inject.py",
+      "phase": "P3-OPT",
+      "used_by": []
+    },
+    {
+      "category": "skill_asset",
+      "description": "God class detection (portable, no third-party deps).",
+      "notes": "",
+      "path": "skills/god-class-detector/assets/check_god_classes.py",
+      "phase": "P3-OPT",
+      "used_by": [
+        "skills"
+      ]
+    },
+    {
+      "category": "skill_asset",
+      "description": "Architecture boundary enforcement (portable, no third-party deps).",
+      "notes": "",
+      "path": "skills/project-pack-interviewer/assets/enforcement/check_architecture_boundaries.py",
+      "phase": "P3-OPT",
+      "used_by": []
+    },
+    {
+      "category": "skill_asset",
+      "description": "Run at enforcement checks for a repo (fail-the-gate by default).",
+      "notes": "",
+      "path": "skills/project-pack-interviewer/assets/enforcement/run_enforcements.py",
+      "phase": "P3-OPT",
+      "used_by": []
+    },
+    {
+      "category": "skill_script",
+      "description": "Install at audit hooks into a Claude Code project or user scope.",
+      "notes": "",
+      "path": "skills/audit-hooks-deployer/scripts/install_audit_hooks.py",
+      "phase": "P3-OPT",
+      "used_by": [
+        "skills"
+      ]
+    },
+    {
+      "category": "skill_script",
+      "description": "Install god class detection for at.",
+      "notes": "",
+      "path": "skills/god-class-detector/scripts/install_god_class_detector.py",
+      "phase": "P3-OPT",
+      "used_by": [
+        "skills"
+      ]
+    },
+    {
+      "category": "skill_script",
+      "description": "Install repo-specific project pack rules and (optional) enforcement for at.",
+      "notes": "",
+      "path": "skills/project-pack-interviewer/scripts/install_project_pack.py",
+      "phase": "P3-OPT",
+      "used_by": [
+        "skills"
+      ]
+    },
+    {
+      "category": "telemetry",
+      "description": "",
+      "notes": "",
+      "path": "scripts/telemetry/__init__.py",
+      "phase": "P3-OPT",
+      "used_by": []
+    },
+    {
+      "category": "telemetry",
+      "description": "Build session KPI metrics",
+      "notes": "",
+      "path": "scripts/telemetry/build_session_kpis.py",
+      "phase": "P3-OPT",
+      "used_by": [
+        "skills",
+        "run"
+      ]
+    },
+    {
+      "category": "upgrade",
+      "description": "Upgrade project to latest plugin version",
+      "notes": "",
+      "path": "scripts/upgrade/upgrade_project.py",
+      "phase": "P3-OPT",
+      "used_by": [
+        "skills"
+      ]
+    }
+  ],
+  "skills": [
+    {
+      "description": "Validate and auto-fix .claude/project.yaml and tool availability for at",
+      "name": "doctor",
+      "notes": "",
+      "path": "skills/doctor/SKILL.md",
+      "phase": "P1",
+      "user_invocable": "true"
+    },
+    {
+      "description": "Generate a project overlay for at (CLAUDE.md, .claude/rules, .claude/project.yaml) for Python/Go/TypeScript/Rust",
+      "name": "init-project",
+      "notes": "",
+      "path": "skills/init-project/SKILL.md",
+      "phase": "P1",
+      "user_invocable": ""
+    },
+    {
+      "description": "Run a contract-driven workflow (deliver/triage/review/ideate) with always-on sessions and quality/compliance gates",
+      "name": "run",
+      "notes": "",
+      "path": "skills/run/SKILL.md",
+      "phase": "P1",
+      "user_invocable": "true"
+    },
+    {
+      "description": "Show a session progress report and the recommended next step (best-effort; supports resume workflows)",
+      "name": "session-progress",
+      "notes": "",
+      "path": "skills/session-progress/SKILL.md",
+      "phase": "P1",
+      "user_invocable": "true"
+    },
+    {
+      "description": "List at sessions (reads workflow.sessions_dir and prints session id/workflow/status/updated_at)",
+      "name": "sessions",
+      "notes": "",
+      "path": "skills/sessions/SKILL.md",
+      "phase": "P1",
+      "user_invocable": "true"
+    },
+    {
+      "description": "Manage project documentation - bootstrap, generate from codebase analysis with LSP, sync registry, audit coverage.",
+      "name": "docs",
+      "notes": "",
+      "path": "skills/docs/SKILL.md",
+      "phase": "P2-OPT",
+      "user_invocable": "true"
+    },
+    {
+      "description": "Install and configure Claude Code policy enforcement hooks (fail-the-gate) to block secrets access and dangerous commands based on .claude/project.yaml policies. Use when hardening a project, enforcing no-.env access, preventing destructive shell commands, or enabling corporate-grade guardrails.",
+      "name": "policy-hooks-deployer",
+      "notes": "Consolidate into one command (keep one name, keep other as alias).",
+      "path": "skills/policy-hooks-deployer/SKILL.md",
+      "phase": "P2-OPT",
+      "user_invocable": "true"
+    },
+    {
+      "description": "[DEPRECATED - use /at:docs instead] Manual registry management. Registry is now auto-maintained.",
+      "name": "registry",
+      "notes": "",
+      "path": "skills/registry/SKILL.md",
+      "phase": "P2-OPT",
+      "user_invocable": "true"
+    },
+    {
+      "description": "Resolve a failing quality check from quality/quality_report.json by fixing root cause and re-running the failing command deterministically",
+      "name": "resolve-failed-quality",
+      "notes": "",
+      "path": "skills/resolve-failed-quality/SKILL.md",
+      "phase": "P2-OPT",
+      "user_invocable": "true"
+    },
+    {
+      "description": "Install and configure at policy enforcement hooks (opt-in) to block secrets access and dangerous commands",
+      "name": "setup-policy-hooks",
+      "notes": "Consolidate into one command (keep one name, keep other as alias).",
+      "path": "skills/setup-policy-hooks/SKILL.md",
+      "phase": "P2-OPT",
+      "user_invocable": "true"
+    },
+    {
+      "description": "Test-Driven Development workflow skill for implementing features using Red-Green-Refactor cycle",
+      "name": "tdd-workflow",
+      "notes": "",
+      "path": "skills/tdd-workflow/SKILL.md",
+      "phase": "P2-OPT",
+      "user_invocable": ""
+    },
+    {
+      "description": "Uninstall at hooks from Claude Code settings (audit/policy)",
+      "name": "uninstall-hooks",
+      "notes": "",
+      "path": "skills/uninstall-hooks/SKILL.md",
+      "phase": "P2-OPT",
+      "user_invocable": "true"
+    },
+    {
+      "description": "Run comprehensive verification checks before PR",
+      "name": "verify",
+      "notes": "",
+      "path": "skills/verify/SKILL.md",
+      "phase": "P2-OPT",
+      "user_invocable": "true"
+    },
+    {
+      "description": "Analyze Claude Code audit logs under .claude/audit_logs (sessions/tools/subagents/traces) for observability and debugging",
+      "name": "audit",
+      "notes": "",
+      "path": "skills/audit/SKILL.md",
+      "phase": "P3-OPT",
+      "user_invocable": "true"
+    },
+    {
+      "description": "Install and configure Claude Code hooks for tool/session/subagent auditing (writes JSONL logs under .claude/audit_logs). Use when setting up hooks, enabling audit logging, deploying hook scripts, or preparing for agent management/observability.",
+      "name": "audit-hooks-deployer",
+      "notes": "Consolidate into one command (keep one name, keep other as alias).",
+      "path": "skills/audit-hooks-deployer/SKILL.md",
+      "phase": "P3-OPT",
+      "user_invocable": "true"
+    },
+    {
+      "description": "Clean up old sessions based on retention policy (max age and count)",
+      "name": "cleanup-sessions",
+      "notes": "",
+      "path": "skills/cleanup-sessions/SKILL.md",
+      "phase": "P3-OPT",
+      "user_invocable": "true"
+    },
+    {
+      "description": "Automatically extract reusable patterns from Claude Code sessions and save them for future use",
+      "name": "continuous-learning",
+      "notes": "",
+      "path": "skills/continuous-learning/SKILL.md",
+      "phase": "P3-OPT",
+      "user_invocable": ""
+    },
+    {
+      "description": "Scan codebase for god classes (SRP violations) and generate refactoring suggestions. Configurable thresholds for SLOC, methods, dependencies, and reasons-to-change.",
+      "name": "god-class-audit",
+      "notes": "",
+      "path": "skills/god-class-detector/SKILL.md",
+      "phase": "P3-OPT",
+      "user_invocable": "true"
+    },
+    {
+      "description": "Display comprehensive help for at. Shows available commands, workflows, common use cases, and links to detailed documentation. Use when you need guidance on how to use the plugin effectively.",
+      "name": "help",
+      "notes": "",
+      "path": "skills/help/SKILL.md",
+      "phase": "P3-OPT",
+      "user_invocable": "true"
+    },
+    {
+      "description": "Wizard to import an existing repository into at with auto-detection of tooling, docs, and guided configuration",
+      "name": "import-repo",
+      "notes": "Merge into one import wizard; avoid duplicate flows.",
+      "path": "skills/import-repo/SKILL.md",
+      "phase": "P3-OPT",
+      "user_invocable": "true"
+    },
+    {
+      "description": "Show the current automatic learning/memory status for this project (at)",
+      "name": "learning-status",
+      "notes": "",
+      "path": "skills/learning-status/SKILL.md",
+      "phase": "P3-OPT",
+      "user_invocable": "true"
+    },
+    {
+      "description": "Update the project's automatic learning/memory artifacts from a session (defaults to latest)",
+      "name": "learning-update",
+      "notes": "",
+      "path": "skills/learning-update/SKILL.md",
+      "phase": "P3-OPT",
+      "user_invocable": "true"
+    },
+    {
+      "description": "Bootstrap a repo for at by generating CLAUDE.md, .claude/project.yaml, baseline rules under .claude/rules/at/, a repo-owned rules pack under .claude/rules/project/, and docs scaffolding (docs registry + PROJECT_CONTEXT). Use when setting up a new repo for session-based workflows and corporate-grade Python/Go/TypeScript/Rust commands.",
+      "name": "project-bootstrapper",
+      "notes": "",
+      "path": "skills/project-bootstrapper/SKILL.md",
+      "phase": "P3-OPT",
+      "user_invocable": "true"
+    },
+    {
+      "description": "Interview the user and generate repo-specific \"project pack\" rules under .claude/rules/project/ with corporate-grade constraints (SRP/DRY, architecture boundaries). Recommends whether hexagonal architecture is appropriate based on repo objective/complexity, asks for confirmation, and can install deterministic architecture boundary enforcement that fails the quality gate.",
+      "name": "project-pack-interviewer",
+      "notes": "",
+      "path": "skills/project-pack-interviewer/SKILL.md",
+      "phase": "P3-OPT",
+      "user_invocable": "true"
+    },
+    {
+      "description": "Prune .claude/audit_logs JSONL files (keep N days; dry-run by default)",
+      "name": "prune-audit-logs",
+      "notes": "",
+      "path": "skills/prune-audit-logs/SKILL.md",
+      "phase": "P3-OPT",
+      "user_invocable": "true"
+    },
+    {
+      "description": "Import an existing repository into at. Auto-detects languages, package managers, linters, formatters, type checkers, test runners, and documentation. Generates project.yaml, docs registry, and PROJECT_CONTEXT.md. Use when onboarding an existing codebase.",
+      "name": "repo-importer",
+      "notes": "Merge into one import wizard; avoid duplicate flows.",
+      "path": "skills/repo-importer/SKILL.md",
+      "phase": "P3-OPT",
+      "user_invocable": "true"
+    },
+    {
+      "description": "Generate a controlled retrospective from a session (quality/compliance/docs outcomes) and propose improvements to rules/docs (requires confirmation to apply)",
+      "name": "retrospective",
+      "notes": "",
+      "path": "skills/retrospective/SKILL.md",
+      "phase": "P3-OPT",
+      "user_invocable": "true"
+    },
+    {
+      "description": "Audit workflow sessions to evaluate quality, efficiency, and generate improvement recommendations. Supports parallel analysis and historical comparison.",
+      "name": "session-auditor",
+      "notes": "",
+      "path": "skills/session-auditor/SKILL.md",
+      "phase": "P3-OPT",
+      "user_invocable": "true"
+    },
+    {
+      "description": "Generate per-session telemetry KPIs (files changed, tasks done, gate outcomes) and optionally roll up into docs/AGENTIC_KPIS.md",
+      "name": "session-kpis",
+      "notes": "",
+      "path": "skills/session-kpis/SKILL.md",
+      "phase": "P3-OPT",
+      "user_invocable": "true"
+    },
+    {
+      "description": "Install and configure at audit hooks (opt-in) for tool/session/subagent logging under .claude/audit_logs",
+      "name": "setup-audit-hooks",
+      "notes": "Consolidate into one command (keep one name, keep other as alias).",
+      "path": "skills/setup-audit-hooks/SKILL.md",
+      "phase": "P3-OPT",
+      "user_invocable": "true"
+    },
+    {
+      "description": "Suggests manual context compaction at logical workflow boundaries rather than arbitrary auto-compaction",
+      "name": "strategic-compact",
+      "notes": "Low value; drop unless users request.",
+      "path": "skills/strategic-compact/SKILL.md",
+      "phase": "P3-OPT",
+      "user_invocable": ""
+    },
+    {
+      "description": "Upgrade project's at configuration to the latest plugin version. Audits schema, hooks, and rules for changes, creates backups, and applies safe upgrades.",
+      "name": "upgrade",
+      "notes": "",
+      "path": "skills/upgrade/SKILL.md",
+      "phase": "P3-OPT",
+      "user_invocable": "true"
+    }
+  ]
+}

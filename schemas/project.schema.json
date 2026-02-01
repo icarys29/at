@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://at/schemas/project.schema.json",
+  "title": "project.yaml (at)",
+  "description": "Minimal schema for `.claude/project.yaml` used by the at plugin (keep permissive; expand in later phases).",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["project", "workflow", "commands"],
+  "properties": {
+    "project": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "primary_languages": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["python", "go", "typescript", "rust", "java", "csharp", "cpp"]
+          }
+        }
+      }
+    },
+    "workflow": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["sessions_dir"],
+      "properties": {
+        "sessions_dir": { "type": "string", "minLength": 1, "default": ".session" },
+        "always_on_compliance": { "type": "boolean", "default": true },
+        "max_parallel_agents": { "type": "integer", "minimum": 1, "default": 3 },
+        "autofix_allowed": { "type": "boolean", "default": true },
+        "max_remediation_loops": { "type": "integer", "minimum": 0, "default": 2 }
+      }
+    },
+    "docs": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "registry_path": { "type": "string", "minLength": 1, "default": "docs/DOCUMENTATION_REGISTRY.json" },
+        "min_review_tier": { "type": "integer", "minimum": 1, "maximum": 3, "default": 2 },
+        "require_registry": { "type": "boolean", "default": false },
+        "sections_enabled": { "type": "boolean", "default": false }
+      }
+    },
+    "learning": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "enabled": { "type": "boolean", "default": true },
+        "dir": { "type": "string", "minLength": 1, "default": ".claude/agent-team/learning" },
+        "max_sessions": { "type": "integer", "minimum": 0, "default": 50 },
+        "emit_adr_stubs": { "type": "boolean", "default": true },
+        "emit_sessionstart_context": { "type": "boolean", "default": true },
+        "sessionstart_context_max_chars": { "type": "integer", "minimum": 0, "default": 1200 }
+      }
+    },
+    "commands": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "allow_unlisted": { "type": "boolean", "default": false }
+      },
+      "patternProperties": {
+        "^[a-z][a-z0-9_-]*$": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "format": { "type": "string" },
+            "lint": { "type": "string" },
+            "typecheck": { "type": "string" },
+            "test": { "type": "string" },
+            "build": { "type": "string" }
+          }
+        }
+      }
+    },
+    "policies": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "forbid_secrets_globs": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    }
+  }
+}
+

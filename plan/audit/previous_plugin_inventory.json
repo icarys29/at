@@ -1,0 +1,1288 @@
+{
+  "agents": [
+    {
+      "deprecated": null,
+      "deprecated_by": null,
+      "description": "Create a verifiable, executable plan (actions.json + traceability + verification checklist). Use before any implementation work.",
+      "model": "sonnet",
+      "name": "action-planner",
+      "path": "agents/action-planner.md",
+      "tools": "Read, Write, Grep, Glob, Bash",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "deprecated": null,
+      "deprecated_by": null,
+      "description": "Audit analysis phases (triage, ideate) for issue investigation, option exploration, and recommendation quality",
+      "model": "haiku",
+      "name": "analysis-auditor",
+      "path": "agents/analysis-auditor.md",
+      "tools": "Read, Grep, Glob",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "deprecated": null,
+      "deprecated_by": null,
+      "description": "Aggregate audit results from phase auditors, calculate overall scores, and generate recommendations",
+      "model": "sonnet",
+      "name": "audit-aggregator",
+      "path": "agents/audit-aggregator.md",
+      "tools": "Read, Grep, Glob",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "deprecated": null,
+      "deprecated_by": null,
+      "description": "Audit the compliance verification phase, analyzing acceptance criteria verification and approval decisions",
+      "model": "haiku",
+      "name": "compliance-auditor",
+      "path": "agents/compliance-auditor.md",
+      "tools": "Read, Grep, Glob",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "deprecated": null,
+      "deprecated_by": null,
+      "description": "Verify acceptance criteria and checklist items with evidence, producing a binary APPROVE/REJECT decision.",
+      "model": "sonnet",
+      "name": "compliance-checker",
+      "path": "agents/compliance-checker.md",
+      "tools": "Read, Write, Grep, Glob, Bash, mcp__playwright__browser_navigate, mcp__playwright__browser_snapshot, mcp__playwright__browser_click, mcp__playwright__browser_type, mcp__playwright__browser_fill_form, mcp__playwright__browser_wait_for, mcp__playwright__browser_take_screenshot, mcp__playwright__browser_close, mcp__playwright__browser_console_messages, mcp__playwright__browser_network_requests",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "deprecated": "true",
+      "deprecated_by": "docs-keeper",
+      "description": "[DEPRECATED - use docs-keeper instead] Bootstrap, discover, update, and validate project documentation.",
+      "model": "sonnet",
+      "name": "docs-builder",
+      "path": "agents/docs-builder.md",
+      "tools": "Read, Write, Edit, Grep, Glob, Bash",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "deprecated": "true",
+      "deprecated_by": "docs-keeper",
+      "description": "[DEPRECATED - use docs-keeper instead] Generate, audit, or migrate documentation.",
+      "model": "sonnet",
+      "name": "docs-generator",
+      "path": "agents/docs-generator.md",
+      "tools": "Read, Write, Edit, Grep, Glob, Bash",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "deprecated": null,
+      "deprecated_by": null,
+      "description": "Unified documentation management agent. Maintains documentation as a living contract through bootstrap, sync, update, discover, generate, and audit modes. Supports LSP for enhanced code understanding.",
+      "model": "sonnet",
+      "name": "docs-keeper",
+      "path": "agents/docs-keeper.md",
+      "tools": "Read, Write, Edit, Grep, Glob, Bash, LSP",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "deprecated": null,
+      "deprecated_by": null,
+      "description": "Interactive ideation agent with user stories, traceability matrix, SRP/DRY/KISS compliance, and plugin-aware recommendations.",
+      "model": "sonnet",
+      "name": "ideation",
+      "path": "agents/ideation.md",
+      "tools": "Read, Write, Grep, Glob, AskUserQuestion",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "deprecated": null,
+      "deprecated_by": null,
+      "description": "Implement non-test code changes assigned by actions.json, within declared file scope. Use for production code changes (not tests).",
+      "model": "sonnet",
+      "name": "implementor",
+      "path": "agents/implementor.md",
+      "tools": "Read, Write, Edit, Grep, Glob, Bash",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "deprecated": null,
+      "deprecated_by": null,
+      "description": "Run LSP-based semantic verification checks declared in planning/actions.json (acceptance_criteria.verification.type='lsp') and write deterministic evidence artifacts under quality/.",
+      "model": "sonnet",
+      "name": "lsp-verifier",
+      "path": "agents/lsp-verifier.md",
+      "tools": "Read, Write, Grep, Glob, LSP",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "deprecated": null,
+      "deprecated_by": null,
+      "description": "Audit the planning phase of a workflow session, analyzing actions.json structure, context selection, and task breakdown quality",
+      "model": "haiku",
+      "name": "planning-auditor",
+      "path": "agents/planning-auditor.md",
+      "tools": "Read, Grep, Glob",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "deprecated": null,
+      "deprecated_by": null,
+      "description": "Audit the quality gate phase, analyzing command execution, pass/fail results, and coverage metrics",
+      "model": "haiku",
+      "name": "quality-auditor",
+      "path": "agents/quality-auditor.md",
+      "tools": "Read, Grep, Glob",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "deprecated": null,
+      "deprecated_by": null,
+      "description": "Run configured quality commands from .claude/project.yaml (format/lint/typecheck/test/build/e2e) and capture evidence for the session.",
+      "model": "sonnet",
+      "name": "quality-gate",
+      "path": "agents/quality-gate.md",
+      "tools": "Read, Write, Edit, Grep, Glob, Bash",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "deprecated": null,
+      "deprecated_by": null,
+      "description": "Audit the code review phase, analyzing review thoroughness, finding quality, and feedback actionability",
+      "model": "haiku",
+      "name": "review-auditor",
+      "path": "agents/review-auditor.md",
+      "tools": "Read, Grep, Glob",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "deprecated": null,
+      "deprecated_by": null,
+      "description": "Review changes for correctness, plan compliance, and policy adherence. Verifies all planned tasks and acceptance criteria are implemented.",
+      "model": "sonnet",
+      "name": "reviewer",
+      "path": "agents/reviewer.md",
+      "tools": "Read, Grep, Glob, Bash, mcp__playwright__browser_navigate, mcp__playwright__browser_snapshot, mcp__playwright__browser_click, mcp__playwright__browser_type, mcp__playwright__browser_fill_form, mcp__playwright__browser_wait_for, mcp__playwright__browser_take_screenshot, mcp__playwright__browser_close, mcp__playwright__browser_console_messages, mcp__playwright__browser_network_requests",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "deprecated": null,
+      "deprecated_by": null,
+      "description": "Reproduce and isolate issues, confirm root cause, and propose fix + prevention. Produces analysis/root_cause.md.",
+      "model": "sonnet",
+      "name": "root-cause-analyzer",
+      "path": "agents/root-cause-analyzer.md",
+      "tools": "Read, Write, Grep, Glob, Bash",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "deprecated": null,
+      "deprecated_by": null,
+      "description": "Audit individual implementation/test tasks, analyzing context usage, tool efficiency, and completion status",
+      "model": "haiku",
+      "name": "task-auditor",
+      "path": "agents/task-auditor.md",
+      "tools": "Read, Grep, Glob",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "deprecated": null,
+      "deprecated_by": null,
+      "description": "Guide Test-Driven Development through Red-Green-Refactor cycles. Use with `/at:run deliver --tdd` for test-first feature development.",
+      "model": "sonnet",
+      "name": "tdd-guide",
+      "path": "agents/tdd-guide.md",
+      "tools": "Read, Write, Edit, Grep, Glob, Bash",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "deprecated": null,
+      "deprecated_by": null,
+      "description": "Write or update tests assigned by actions.json and project conventions (tests-only by default). Use when tests are required or failing.",
+      "model": "sonnet",
+      "name": "tests-builder",
+      "path": "agents/tests-builder.md",
+      "tools": "Read, Write, Edit, Grep, Glob, Bash",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    }
+  ],
+  "js_files": [
+    {
+      "category": "js",
+      "description": "Auto-Format Hook (PostToolUse)",
+      "path": "scripts/hooks/auto-format.js"
+    },
+    {
+      "category": "js",
+      "description": "Debug Statement Detection Hook (PostToolUse)",
+      "path": "scripts/hooks/detect-debug.js"
+    },
+    {
+      "category": "js",
+      "description": "Session End Hook (Stop)",
+      "path": "scripts/hooks/session-end.js"
+    },
+    {
+      "category": "js",
+      "description": "Session Start Hook",
+      "path": "scripts/hooks/session-start.js"
+    },
+    {
+      "category": "js",
+      "description": "Strategic Compact Suggester (PreToolUse)",
+      "path": "scripts/hooks/suggest-compact.js"
+    },
+    {
+      "category": "js",
+      "description": "Language Detection Library",
+      "path": "scripts/lib/language-detector.js"
+    },
+    {
+      "category": "js",
+      "description": "Utility functions for hooks and scripts",
+      "path": "scripts/lib/utils.js"
+    }
+  ],
+  "plugin": {
+    "path": ".claude-plugin/plugin.json",
+    "plugin_json": {
+      "author": {
+        "name": "claude-agent-team-plugin contributors"
+      },
+      "description": "Workflow-kernel plugin for Claude Code: contract-driven sessions, deterministic gates, docs-as-contract, TDD workflows, task-level context slices, and automatic project learning/memory.",
+      "keywords": [
+        "agents",
+        "skills",
+        "workflow",
+        "sessions",
+        "quality",
+        "compliance",
+        "review",
+        "triage",
+        "audit",
+        "planning",
+        "testing",
+        "tdd",
+        "verification",
+        "docs",
+        "learning"
+      ],
+      "license": "MIT",
+      "lspServers": "./.lsp.json",
+      "name": "at",
+      "repository": "https://github.com/dav/claude-agent-team-plugin",
+      "version": "0.7.42"
+    }
+  },
+  "python_files": [
+    {
+      "category": "agents",
+      "description": "Generate project-specific agents",
+      "path": "scripts/agents/generate_project_agents.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "audit",
+      "description": null,
+      "path": "scripts/audit/__init__.py",
+      "updated": null,
+      "version": null
+    },
+    {
+      "category": "audit",
+      "description": "Analyze audit logs",
+      "path": "scripts/audit/audit_analyzer.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "audit",
+      "description": "Parse and extract data from audit log files",
+      "path": "scripts/audit/audit_log_parser.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "audit",
+      "description": "Prune old audit log entries",
+      "path": "scripts/audit/prune_audit_logs.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "audit",
+      "description": "Generate audit recommendations",
+      "path": "scripts/audit/recommendations.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "audit",
+      "description": "Generate audit reports in markdown and JSON",
+      "path": "scripts/audit/report_generator.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "audit",
+      "description": "Score audit metrics",
+      "path": "scripts/audit/scoring.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "audit",
+      "description": "Run full session audits",
+      "path": "scripts/audit/session_auditor.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "audit",
+      "description": "Extract detailed subagent data from audit logs",
+      "path": "scripts/audit/subagent_extractor.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "audit",
+      "description": "Write per-subagent audit reports",
+      "path": "scripts/audit/subagent_report_writer.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "checkpoint",
+      "description": null,
+      "path": "scripts/checkpoint/__init__.py",
+      "updated": null,
+      "version": null
+    },
+    {
+      "category": "checkpoint",
+      "description": "Create git checkpoint before implementation",
+      "path": "scripts/checkpoint/create_checkpoint.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "checkpoint",
+      "description": "Restore git checkpoint on failure",
+      "path": "scripts/checkpoint/restore_checkpoint.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "context",
+      "description": null,
+      "path": "scripts/context/__init__.py",
+      "updated": null,
+      "version": null
+    },
+    {
+      "category": "context",
+      "description": "Build context pack for agent workflows",
+      "path": "scripts/context/build_context_pack.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "context",
+      "description": "Build per-task context slices from actions.json",
+      "path": "scripts/context/build_task_contexts.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "dev",
+      "description": "Add version headers to all plugin files",
+      "path": "scripts/dev/add_version_headers.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "dev",
+      "description": "Clean up Python bytecode files",
+      "path": "scripts/dev/cleanup_bytecode.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "docs",
+      "description": null,
+      "path": "scripts/docs/__init__.py",
+      "updated": null,
+      "version": null
+    },
+    {
+      "category": "docs",
+      "description": "Analyze codebase for documentation",
+      "path": "scripts/docs/analyze_codebase.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "docs",
+      "description": "Plugin script: analyze_with_lsp",
+      "path": "scripts/docs/analyze_with_lsp.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "docs",
+      "description": "Audit documentation completeness",
+      "path": "scripts/docs/audit_docs.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "docs",
+      "description": "Plugin script: bootstrap_docs",
+      "path": "scripts/docs/bootstrap_docs.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "docs",
+      "description": "Ensure documentation for changes",
+      "path": "scripts/docs/ensure_change_doc.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "docs",
+      "description": "Plugin script: generate_docs",
+      "path": "scripts/docs/generate_docs.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "docs",
+      "description": "Populate registry with doc sections",
+      "path": "scripts/docs/populate_registry_sections.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "docs",
+      "description": "Plugin script: sync_registry",
+      "path": "scripts/docs/sync_registry.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "docs",
+      "description": "Plugin script: validate_docs",
+      "path": "scripts/docs/validate_docs.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "scripts_root",
+      "description": "Plugin health check and diagnostics",
+      "path": "scripts/doctor.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "hooks",
+      "description": null,
+      "path": "scripts/hooks/__init__.py",
+      "updated": null,
+      "version": null
+    },
+    {
+      "category": "hooks",
+      "description": "Audit logging hook for tool and agent tracking",
+      "path": "scripts/hooks/audit_log.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "hooks",
+      "description": "Enforce file scope restrictions on Write/Edit tools",
+      "path": "scripts/hooks/enforce_file_scope.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "hooks",
+      "description": "Generate hooks.json configuration",
+      "path": "scripts/hooks/generate_hooks_json.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "hooks",
+      "description": "Session start hook for initialization",
+      "path": "scripts/hooks/on_session_start.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "hooks",
+      "description": "Setup hook for plugin initialization",
+      "path": "scripts/hooks/on_setup.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "hooks",
+      "description": "Subagent stop hook for artifact validation",
+      "path": "scripts/hooks/on_subagent_stop.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "hooks",
+      "description": "Resolve agent paths for custom agents",
+      "path": "scripts/hooks/resolve_agent_path.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "hooks",
+      "description": "Uninstall plugin hooks from settings",
+      "path": "scripts/hooks/uninstall_hooks.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "hooks",
+      "description": "Validate actions.json writes against schema",
+      "path": "scripts/hooks/validate_actions_write.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "hooks",
+      "description": "Validate Task tool invocations",
+      "path": "scripts/hooks/validate_task_invocation.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "import",
+      "description": null,
+      "path": "scripts/import/__init__.py",
+      "updated": null,
+      "version": null
+    },
+    {
+      "category": "import",
+      "description": "Detect existing documentation",
+      "path": "scripts/import/detect_docs.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "import",
+      "description": "Detect project tooling configuration",
+      "path": "scripts/import/detect_tooling.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "import",
+      "description": "Generate project configuration",
+      "path": "scripts/import/generate_config.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "inception",
+      "description": null,
+      "path": "scripts/inception/__init__.py",
+      "updated": null,
+      "version": null
+    },
+    {
+      "category": "inception",
+      "description": "Apply inception patterns",
+      "path": "scripts/inception/apply_inception.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "scripts_root",
+      "description": "Initialize project with plugin",
+      "path": "scripts/init_project.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "learning",
+      "description": "Show learning/memory status",
+      "path": "scripts/learning/learning_status.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "learning",
+      "description": "Update learning state from sessions",
+      "path": "scripts/learning/update_learning_state.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "lib",
+      "description": null,
+      "path": "scripts/lib/__init__.py",
+      "updated": null,
+      "version": null
+    },
+    {
+      "category": "lib",
+      "description": "Documentation configuration dataclass",
+      "path": "scripts/lib/docs_config.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "lib",
+      "description": "Plugin script: enforcer_conventions",
+      "path": "scripts/lib/enforcer_conventions.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "lib",
+      "description": "I/O utilities for file operations and timestamps",
+      "path": "scripts/lib/io.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "lib",
+      "description": "Path policy utilities",
+      "path": "scripts/lib/path_policy.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "lib",
+      "description": "Project detection and configuration utilities",
+      "path": "scripts/lib/project.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "lib",
+      "description": "Simple YAML parser",
+      "path": "scripts/lib/simple_yaml.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "maintenance",
+      "description": null,
+      "path": "scripts/maintenance/__init__.py",
+      "updated": null,
+      "version": null
+    },
+    {
+      "category": "maintenance",
+      "description": "Clean up old sessions",
+      "path": "scripts/maintenance/cleanup_sessions.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "orchestrator",
+      "description": "Workflow orchestration engine for at.",
+      "path": "scripts/orchestrator/__init__.py",
+      "updated": null,
+      "version": null
+    },
+    {
+      "category": "orchestrator",
+      "description": "Phase implementations for workflow engine.",
+      "path": "scripts/orchestrator/phases/__init__.py",
+      "updated": null,
+      "version": null
+    },
+    {
+      "category": "orchestrator",
+      "description": "Doctor phase implementation",
+      "path": "scripts/orchestrator/phases/phase_doctor.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "orchestrator",
+      "description": "Core workflow orchestration engine",
+      "path": "scripts/orchestrator/workflow_engine.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "quality",
+      "description": null,
+      "path": "scripts/quality/__init__.py",
+      "updated": null,
+      "version": null
+    },
+    {
+      "category": "quality",
+      "description": "Run quality gate commands",
+      "path": "scripts/quality/run_quality_suite.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "session",
+      "description": null,
+      "path": "scripts/session/__init__.py",
+      "updated": null,
+      "version": null
+    },
+    {
+      "category": "session",
+      "description": "Create new workflow session",
+      "path": "scripts/session/create_session.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "session",
+      "description": "List existing sessions",
+      "path": "scripts/session/list_sessions.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "session",
+      "description": "Track and report session progress",
+      "path": "scripts/session/session_progress.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "telemetry",
+      "description": null,
+      "path": "scripts/telemetry/__init__.py",
+      "updated": null,
+      "version": null
+    },
+    {
+      "category": "telemetry",
+      "description": "Build session KPI metrics",
+      "path": "scripts/telemetry/build_session_kpis.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "upgrade",
+      "description": "Upgrade project to latest plugin version",
+      "path": "scripts/upgrade/upgrade_project.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "validate",
+      "description": null,
+      "path": "scripts/validate/__init__.py",
+      "updated": null,
+      "version": null
+    },
+    {
+      "category": "validate",
+      "description": "Check subagent capabilities",
+      "path": "scripts/validate/check_subagent_capability.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "validate",
+      "description": "Documentation gate validation",
+      "path": "scripts/validate/docs_gate.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "validate",
+      "description": "LSP-based verification gate",
+      "path": "scripts/validate/lsp_gate.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "validate",
+      "description": "Validate parallel execution conformance",
+      "path": "scripts/validate/parallel_conformance.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "validate",
+      "description": "Verify plan adherence after implementation",
+      "path": "scripts/validate/plan_adherence.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "validate",
+      "description": "Validate actions.json structure",
+      "path": "scripts/validate/validate_actions.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "validate",
+      "description": "Validate agent output artifacts",
+      "path": "scripts/validate/validate_agent_artifact.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "validate",
+      "description": "Validate files changed by agents",
+      "path": "scripts/validate/validate_changed_files.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "workflow",
+      "description": null,
+      "path": "scripts/workflow/__init__.py",
+      "updated": null,
+      "version": null
+    },
+    {
+      "category": "workflow",
+      "description": "Generate dry run report",
+      "path": "scripts/workflow/generate_dry_run_report.py",
+      "updated": "2026-01-30",
+      "version": "0.7.41"
+    },
+    {
+      "category": "skill_asset",
+      "description": "Portable Claude Code Hook: Session Lifecycle Audit (at)",
+      "path": "skills/audit-hooks-deployer/assets/hooks/audit_sessions.py",
+      "updated": null,
+      "version": null
+    },
+    {
+      "category": "skill_asset",
+      "description": "Portable Claude Code Hook: Subagent Lifecycle Audit (at)",
+      "path": "skills/audit-hooks-deployer/assets/hooks/audit_subagents.py",
+      "updated": null,
+      "version": null
+    },
+    {
+      "category": "skill_asset",
+      "description": "Portable Claude Code Hook: Tool Usage Audit (at)",
+      "path": "skills/audit-hooks-deployer/assets/hooks/audit_tools.py",
+      "updated": null,
+      "version": null
+    },
+    {
+      "category": "skill_asset",
+      "description": "Claude Code Hook: Auto-Approve Session File Edits (at)",
+      "path": "skills/audit-hooks-deployer/assets/hooks/auto_approve_session.py",
+      "updated": null,
+      "version": null
+    },
+    {
+      "category": "skill_asset",
+      "description": "Claude Code Hook: Context Injection (at)",
+      "path": "skills/audit-hooks-deployer/assets/hooks/context_inject.py",
+      "updated": null,
+      "version": null
+    },
+    {
+      "category": "skill_script",
+      "description": "Install at audit hooks into a Claude Code project or user scope.",
+      "path": "skills/audit-hooks-deployer/scripts/install_audit_hooks.py",
+      "updated": null,
+      "version": null
+    },
+    {
+      "category": "skill_asset",
+      "description": "God class detection (portable, no third-party deps).",
+      "path": "skills/god-class-detector/assets/check_god_classes.py",
+      "updated": null,
+      "version": null
+    },
+    {
+      "category": "skill_script",
+      "description": "Install god class detection for at.",
+      "path": "skills/god-class-detector/scripts/install_god_class_detector.py",
+      "updated": null,
+      "version": null
+    },
+    {
+      "category": "skill_asset",
+      "description": "Portable Claude Code Hook: Policy Enforcement (at)",
+      "path": "skills/policy-hooks-deployer/assets/hooks/policy_pre_tool_use.py",
+      "updated": null,
+      "version": null
+    },
+    {
+      "category": "skill_script",
+      "description": "Install at policy enforcement hooks into a Claude Code project or user scope.",
+      "path": "skills/policy-hooks-deployer/scripts/install_policy_hooks.py",
+      "updated": null,
+      "version": null
+    },
+    {
+      "category": "skill_asset",
+      "description": "Architecture boundary enforcement (portable, no third-party deps).",
+      "path": "skills/project-pack-interviewer/assets/enforcement/check_architecture_boundaries.py",
+      "updated": null,
+      "version": null
+    },
+    {
+      "category": "skill_asset",
+      "description": "Run at enforcement checks for a repo (fail-the-gate by default).",
+      "path": "skills/project-pack-interviewer/assets/enforcement/run_enforcements.py",
+      "updated": null,
+      "version": null
+    },
+    {
+      "category": "skill_script",
+      "description": "Install repo-specific project pack rules and (optional) enforcement for at.",
+      "path": "skills/project-pack-interviewer/scripts/install_project_pack.py",
+      "updated": null,
+      "version": null
+    }
+  ],
+  "skills": [
+    {
+      "allowed_tools": "Read, Glob, Grep, Bash",
+      "description": "Analyze Claude Code audit logs under .claude/audit_logs (sessions/tools/subagents/traces) for observability and debugging",
+      "model": "sonnet",
+      "name": "audit",
+      "path": "skills/audit/SKILL.md",
+      "updated": "2026-01-30",
+      "user_invocable": "true",
+      "version": "0.7.41"
+    },
+    {
+      "allowed_tools": "",
+      "description": "Install and configure Claude Code hooks for tool/session/subagent auditing (writes JSONL logs under .claude/audit_logs). Use when setting up hooks, enabling audit logging, deploying hook scripts, or preparing for agent management/observability.",
+      "model": null,
+      "name": "audit-hooks-deployer",
+      "path": "skills/audit-hooks-deployer/SKILL.md",
+      "updated": "2026-01-30",
+      "user_invocable": "true",
+      "version": "0.7.41"
+    },
+    {
+      "allowed_tools": "Bash, Read",
+      "description": "Clean up old sessions based on retention policy (max age and count)",
+      "model": "haiku",
+      "name": "cleanup-sessions",
+      "path": "skills/cleanup-sessions/SKILL.md",
+      "updated": "2026-01-30",
+      "user_invocable": "true",
+      "version": "0.7.41"
+    },
+    {
+      "allowed_tools": null,
+      "description": "Automatically extract reusable patterns from Claude Code sessions and save them for future use",
+      "model": null,
+      "name": "continuous-learning",
+      "path": "skills/continuous-learning/SKILL.md",
+      "updated": "2026-01-30",
+      "user_invocable": null,
+      "version": "0.7.41"
+    },
+    {
+      "allowed_tools": "",
+      "description": "Manage project documentation - bootstrap, generate from codebase analysis with LSP, sync registry, audit coverage.",
+      "model": "sonnet",
+      "name": "docs",
+      "path": "skills/docs/SKILL.md",
+      "updated": "2026-01-30",
+      "user_invocable": "true",
+      "version": "0.7.41"
+    },
+    {
+      "allowed_tools": "Read, Grep, Glob, Bash, AskUserQuestion",
+      "description": "Validate and auto-fix .claude/project.yaml and tool availability for at",
+      "model": "sonnet",
+      "name": "doctor",
+      "path": "skills/doctor/SKILL.md",
+      "updated": "2026-01-30",
+      "user_invocable": "true",
+      "version": "0.7.41"
+    },
+    {
+      "allowed_tools": "",
+      "description": "Scan codebase for god classes (SRP violations) and generate refactoring suggestions. Configurable thresholds for SLOC, methods, dependencies, and reasons-to-change.",
+      "model": "sonnet",
+      "name": "god-class-audit",
+      "path": "skills/god-class-detector/SKILL.md",
+      "updated": "2026-01-30",
+      "user_invocable": "true",
+      "version": "0.7.41"
+    },
+    {
+      "allowed_tools": "",
+      "description": "Display comprehensive help for at. Shows available commands, workflows, common use cases, and links to detailed documentation. Use when you need guidance on how to use the plugin effectively.",
+      "model": null,
+      "name": "help",
+      "path": "skills/help/SKILL.md",
+      "updated": "2026-01-30",
+      "user_invocable": "true",
+      "version": "0.7.41"
+    },
+    {
+      "allowed_tools": "Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion",
+      "description": "Wizard to import an existing repository into at with auto-detection of tooling, docs, and guided configuration",
+      "model": "sonnet",
+      "name": "import-repo",
+      "path": "skills/import-repo/SKILL.md",
+      "updated": "2026-01-30",
+      "user_invocable": "true",
+      "version": "0.7.41"
+    },
+    {
+      "allowed_tools": "Read, Glob, Grep, Bash, AskUserQuestion",
+      "description": "Generate a project overlay for at (CLAUDE.md, .claude/rules, .claude/project.yaml) for Python/Go/TypeScript/Rust",
+      "model": "sonnet",
+      "name": "init-project",
+      "path": "skills/init-project/SKILL.md",
+      "updated": "2026-01-30",
+      "user_invocable": null,
+      "version": "0.7.41"
+    },
+    {
+      "allowed_tools": "Read, Bash",
+      "description": "Show the current automatic learning/memory status for this project (at)",
+      "model": "sonnet",
+      "name": "learning-status",
+      "path": "skills/learning-status/SKILL.md",
+      "updated": "2026-01-30",
+      "user_invocable": "true",
+      "version": "0.7.41"
+    },
+    {
+      "allowed_tools": "Read, Bash",
+      "description": "Update the project's automatic learning/memory artifacts from a session (defaults to latest)",
+      "model": "sonnet",
+      "name": "learning-update",
+      "path": "skills/learning-update/SKILL.md",
+      "updated": "2026-01-30",
+      "user_invocable": "true",
+      "version": "0.7.41"
+    },
+    {
+      "allowed_tools": "",
+      "description": "Install and configure Claude Code policy enforcement hooks (fail-the-gate) to block secrets access and dangerous commands based on .claude/project.yaml policies. Use when hardening a project, enforcing no-.env access, preventing destructive shell commands, or enabling corporate-grade guardrails.",
+      "model": null,
+      "name": "policy-hooks-deployer",
+      "path": "skills/policy-hooks-deployer/SKILL.md",
+      "updated": "2026-01-30",
+      "user_invocable": "true",
+      "version": "0.7.41"
+    },
+    {
+      "allowed_tools": "",
+      "description": "Bootstrap a repo for at by generating CLAUDE.md, .claude/project.yaml, baseline rules under .claude/rules/at/, a repo-owned rules pack under .claude/rules/project/, and docs scaffolding (docs registry + PROJECT_CONTEXT). Use when setting up a new repo for session-based workflows and corporate-grade Python/Go/TypeScript/Rust commands.",
+      "model": null,
+      "name": "project-bootstrapper",
+      "path": "skills/project-bootstrapper/SKILL.md",
+      "updated": "2026-01-30",
+      "user_invocable": "true",
+      "version": "0.7.41"
+    },
+    {
+      "allowed_tools": "",
+      "description": "Interview the user and generate repo-specific \"project pack\" rules under .claude/rules/project/ with corporate-grade constraints (SRP/DRY, architecture boundaries). Recommends whether hexagonal architecture is appropriate based on repo objective/complexity, asks for confirmation, and can install deterministic architecture boundary enforcement that fails the quality gate.",
+      "model": null,
+      "name": "project-pack-interviewer",
+      "path": "skills/project-pack-interviewer/SKILL.md",
+      "updated": "2026-01-30",
+      "user_invocable": "true",
+      "version": "0.7.41"
+    },
+    {
+      "allowed_tools": "Read, Glob, Grep, Bash, AskUserQuestion",
+      "description": "Prune .claude/audit_logs JSONL files (keep N days; dry-run by default)",
+      "model": "sonnet",
+      "name": "prune-audit-logs",
+      "path": "skills/prune-audit-logs/SKILL.md",
+      "updated": "2026-01-30",
+      "user_invocable": "true",
+      "version": "0.7.41"
+    },
+    {
+      "allowed_tools": "",
+      "description": "[DEPRECATED - use /at:docs instead] Manual registry management. Registry is now auto-maintained.",
+      "model": "sonnet",
+      "name": "registry",
+      "path": "skills/registry/SKILL.md",
+      "updated": "2026-01-30",
+      "user_invocable": "true",
+      "version": "0.7.41"
+    },
+    {
+      "allowed_tools": "",
+      "description": "Import an existing repository into at. Auto-detects languages, package managers, linters, formatters, type checkers, test runners, and documentation. Generates project.yaml, docs registry, and PROJECT_CONTEXT.md. Use when onboarding an existing codebase.",
+      "model": null,
+      "name": "repo-importer",
+      "path": "skills/repo-importer/SKILL.md",
+      "updated": "2026-01-30",
+      "user_invocable": "true",
+      "version": "0.7.41"
+    },
+    {
+      "allowed_tools": "Read, Write, Edit, Grep, Glob, Bash, AskUserQuestion",
+      "description": "Resolve a failing quality check from quality/quality_report.json by fixing root cause and re-running the failing command deterministically",
+      "model": "sonnet",
+      "name": "resolve-failed-quality",
+      "path": "skills/resolve-failed-quality/SKILL.md",
+      "updated": "2026-01-30",
+      "user_invocable": "true",
+      "version": "0.7.41"
+    },
+    {
+      "allowed_tools": "Read, Write, Edit, Grep, Glob, Bash, AskUserQuestion",
+      "description": "Generate a controlled retrospective from a session (quality/compliance/docs outcomes) and propose improvements to rules/docs (requires confirmation to apply)",
+      "model": "sonnet",
+      "name": "retrospective",
+      "path": "skills/retrospective/SKILL.md",
+      "updated": "2026-01-30",
+      "user_invocable": "true",
+      "version": "0.7.41"
+    },
+    {
+      "allowed_tools": "Task, Read, Write, Bash, AskUserQuestion, TaskCreate, TaskUpdate, TaskList, TaskGet",
+      "description": "Run a contract-driven workflow (deliver/triage/review/ideate) with always-on sessions and quality/compliance gates",
+      "model": "opus",
+      "name": "run",
+      "path": "skills/run/SKILL.md",
+      "updated": "2026-01-31",
+      "user_invocable": "true",
+      "version": "0.7.42"
+    },
+    {
+      "allowed_tools": "",
+      "description": "Audit workflow sessions to evaluate quality, efficiency, and generate improvement recommendations. Supports parallel analysis and historical comparison.",
+      "model": null,
+      "name": "session-auditor",
+      "path": "skills/session-auditor/SKILL.md",
+      "updated": "2026-01-30",
+      "user_invocable": "true",
+      "version": "0.7.41"
+    },
+    {
+      "allowed_tools": "Read, Bash",
+      "description": "Generate per-session telemetry KPIs (files changed, tasks done, gate outcomes) and optionally roll up into docs/AGENTIC_KPIS.md",
+      "model": "sonnet",
+      "name": "session-kpis",
+      "path": "skills/session-kpis/SKILL.md",
+      "updated": "2026-01-30",
+      "user_invocable": "true",
+      "version": "0.7.41"
+    },
+    {
+      "allowed_tools": "Read, Grep, Glob, Bash",
+      "description": "Show a session progress report and the recommended next step (best-effort; supports resume workflows)",
+      "model": "sonnet",
+      "name": "session-progress",
+      "path": "skills/session-progress/SKILL.md",
+      "updated": "2026-01-30",
+      "user_invocable": "true",
+      "version": "0.7.41"
+    },
+    {
+      "allowed_tools": "Read, Grep, Glob, Bash",
+      "description": "List at sessions (reads workflow.sessions_dir and prints session id/workflow/status/updated_at)",
+      "model": "sonnet",
+      "name": "sessions",
+      "path": "skills/sessions/SKILL.md",
+      "updated": "2026-01-30",
+      "user_invocable": "true",
+      "version": "0.7.41"
+    },
+    {
+      "allowed_tools": "Read, Glob, Grep, Bash, AskUserQuestion",
+      "description": "Install and configure at audit hooks (opt-in) for tool/session/subagent logging under .claude/audit_logs",
+      "model": "sonnet",
+      "name": "setup-audit-hooks",
+      "path": "skills/setup-audit-hooks/SKILL.md",
+      "updated": "2026-01-30",
+      "user_invocable": "true",
+      "version": "0.7.41"
+    },
+    {
+      "allowed_tools": "Read, Glob, Grep, Bash, AskUserQuestion",
+      "description": "Install and configure at policy enforcement hooks (opt-in) to block secrets access and dangerous commands",
+      "model": "sonnet",
+      "name": "setup-policy-hooks",
+      "path": "skills/setup-policy-hooks/SKILL.md",
+      "updated": "2026-01-30",
+      "user_invocable": "true",
+      "version": "0.7.41"
+    },
+    {
+      "allowed_tools": null,
+      "description": "Suggests manual context compaction at logical workflow boundaries rather than arbitrary auto-compaction",
+      "model": null,
+      "name": "strategic-compact",
+      "path": "skills/strategic-compact/SKILL.md",
+      "updated": "2026-01-30",
+      "user_invocable": null,
+      "version": "0.7.41"
+    },
+    {
+      "allowed_tools": null,
+      "description": "Test-Driven Development workflow skill for implementing features using Red-Green-Refactor cycle",
+      "model": null,
+      "name": "tdd-workflow",
+      "path": "skills/tdd-workflow/SKILL.md",
+      "updated": "2026-01-30",
+      "user_invocable": null,
+      "version": "0.7.41"
+    },
+    {
+      "allowed_tools": "Read, Glob, Grep, Bash, AskUserQuestion",
+      "description": "Uninstall at hooks from Claude Code settings (audit/policy)",
+      "model": "sonnet",
+      "name": "uninstall-hooks",
+      "path": "skills/uninstall-hooks/SKILL.md",
+      "updated": "2026-01-30",
+      "user_invocable": "true",
+      "version": "0.7.41"
+    },
+    {
+      "allowed_tools": "",
+      "description": "Upgrade project's at configuration to the latest plugin version. Audits schema, hooks, and rules for changes, creates backups, and applies safe upgrades.",
+      "model": null,
+      "name": "upgrade",
+      "path": "skills/upgrade/SKILL.md",
+      "updated": "2026-01-30",
+      "user_invocable": "true",
+      "version": "0.7.41"
+    },
+    {
+      "allowed_tools": "Bash, Read, Grep",
+      "description": "Run comprehensive verification checks before PR",
+      "model": "sonnet",
+      "name": "verify",
+      "path": "skills/verify/SKILL.md",
+      "updated": "2026-01-30",
+      "user_invocable": "true",
+      "version": "0.7.41"
+    }
+  ]
+}
