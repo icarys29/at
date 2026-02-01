@@ -29,6 +29,8 @@ The goal is **high UX + high reliability**: “done” means gates pass (or the 
 All top-level commands are implemented as skills under `skills/*/SKILL.md` and exposed as `/at:<command>`.
 
 - `/at:run` orchestrates the workflow (default `deliver`; also `triage`, `review`, `ideate`)
+- `/at:ideate` generates an architecture brief + brainstormed options (session-only; no repo edits)
+- `/at:brainstorm` alias for `/at:ideate`
 - `/at:init-project` bootstraps a repo overlay (config, rules, docs scaffolding)
 - `/at:doctor` validates preconditions and can propose auto-remediation
 - Session tools: `/at:sessions`, `/at:session-progress`, resume by session id/dir

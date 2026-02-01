@@ -27,6 +27,7 @@ Authoritative contract: `CLAUDE.md`.
 ## Public Surface Area
 
 - Primary entrypoint: `/at:run` (deliver workflow)
+- Ideation entrypoint: `/at:ideate` (architecture brief + brainstorming; session-only)
 - Primary outputs: session-backed artifacts under `.session/<session_id>/`
 
 ## Deliver Workflow (always-on docs maintenance)
