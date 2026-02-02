@@ -1,6 +1,6 @@
 ---
 name: ideate
-version: "0.4.0"
+version: "0.5.0"
 updated: "2026-02-02"
 description: >
   Structured ideation for a request: generate an architecture brief and brainstorm options grounded in repo patterns and project constraints.

@@ -1,14 +1,13 @@
-# Deprecated Scripts — Migration Guide
+# Removed Scripts — Migration Guide
 
-> **Version:** 0.4.0
-> **Removal Target:** v0.5.0
+> **Version:** 0.5.0
 
-This guide documents scripts marked for deprecation and provides migration paths.
+This guide documents scripts that were removed in v0.5.0 and their migration paths.
 
 ## Timeline
 
-- **v0.4.0** (current): Deprecation warnings added to 28 scripts
-- **v0.5.0** (planned): Scripts removed, functionality replaced by agent instructions or Claude Code native features
+- **v0.4.0**: Deprecation warnings added to 28 scripts
+- **v0.5.0** (current): Scripts removed, functionality replaced by agent instructions or Claude Code native features
 
 ## Migration Summary
 

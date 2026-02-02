@@ -1,6 +1,6 @@
 ---
 name: project-pack-interviewer
-version: "0.4.0"
+version: "0.5.0"
 updated: "2026-02-02"
 description: "Guided wizard to install a project pack (enforcement runner + optional architecture boundaries + default-on god-class check)."
 argument-hint: "[--project-dir <path>] [--style none|hex] [--domain-path <path> --application-path <path> --adapters-path <path>] [--no-god-class-check] [--enforcement-mode warn|fail] [--sessions-dir <dir>] [--force]"

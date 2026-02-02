@@ -1,6 +1,6 @@
 ---
 name: status
-version: "0.4.0"
+version: "0.5.0"
 updated: "2026-02-02"
 description: Quick status view of the current or most recent session - shows progress, gates, and next action.
 argument-hint: "[--session <id|dir>]"

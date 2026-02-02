@@ -1,10 +1,10 @@
 ---
 name: run
-version: "0.4.0"
+version: "0.5.0"
 updated: "2026-02-02"
 description: >
   Orchestrate the at workflow kernel: `deliver|triage|review|ideate` (default: deliver).
-argument-hint: "[deliver|triage|review|ideate] [--tdd] [--session <id|dir>] [--dry-run] [--from-phase <phase>|--gate <gate>] [--rollback <id|dir> [--checkpoint <cp-id>]] <request>"
+argument-hint: "[deliver|triage|review|ideate] [--tdd] [--session <id|dir>] [--dry-run] [--from-phase <phase>] [--rollback <id|dir> [--checkpoint <cp-id>]] <request>"
 allowed-tools: Read, Write, Edit, Grep, Glob, Bash, Task
 ---
 
@@ -33,11 +33,9 @@ allowed-tools: Read, Write, Edit, Grep, Glob, Bash, Task
      - Run: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/checkpoint/restore_checkpoint.py" --session "<id|dir>" [--checkpoint <cp-id>]`
      - Print the restore report path under `SESSION_DIR/checkpoints/<cp-id>/RESTORE_REPORT.md` and stop.
 0.5) Deterministic rerun mode (optional; deliver sessions):
-   - If workflow=`deliver` and user provided `--from-phase <phase>` or `--gate <gate>`, rerun deterministic steps and stop:
+   - If workflow=`deliver` and user provided `--from-phase <phase>`, rerun deterministic steps and stop:
      - Run: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/workflow/run_deterministic.py" --session "<id|dir>" --from-phase "<phase>"`
-       - Phases: `validate_plan|task_contexts|checkpoint|gates|progress`
-     - Or: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/workflow/run_deterministic.py" --session "<id|dir>" --gate "<gate>"`
-       - Gates: `validate_actions|build_task_contexts|checkpoint|validate_task_artifacts|plan_adherence|parallel_conformance|quality|docs_gate|changed_files|compliance|progress`
+       - Phases: `task_contexts|checkpoint|quality|progress`
 1) Create or resume a session for the chosen workflow:
    - If user provided `--session`, resume; otherwise create a new session.
    - Run: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/session/create_session.py" --workflow "<deliver|triage|review|ideate>" [--strategy <default|tdd>] [--resume <id|dir>]`
@@ -52,28 +50,26 @@ allowed-tools: Read, Write, Edit, Grep, Glob, Bash, Task
      - Task: `ideation` → writes `planning/IDEATION.{md,json}`
      - Stop (session-only ideation; no planning/actions.json by default).
    - If workflow=`triage`:
-     - Run: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/workflow/run_triage.py" --session "${SESSION_DIR}"`
+     - Read session artifacts and build triage context inline
      - Task: `root-cause-analyzer` → writes `analysis/ROOT_CAUSE_ANALYSIS.{md,json}`
-     - Update progress (task board + session progress) and stop.
+     - Update progress and stop.
    - If workflow=`review`:
-     - Run: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/workflow/run_review.py" --session "${SESSION_DIR}"`
+     - Read session artifacts and build review context inline
      - Task: `reviewer` → writes `review/REVIEW_REPORT.{md,json}`
-     - Update progress (task board + session progress) and stop.
+     - Update progress and stop.
    - If workflow=`deliver` (default): continue with the full pipeline:
 5) Deliver: architecture brief + user stories + plan:
    - Task: `solution-architect` → `planning/ARCHITECTURE_BRIEF.{md,json}`
    - Task: `story-writer` → `planning/USER_STORIES.{md,json}`
    - Task: `action-planner` → `planning/actions.json` (+ checklists)
-     - Reminder: if `SESSION_STRATEGY=tdd`, the plan must satisfy `workflow.strategy=tdd` constraints (validated).
-6) Deliver: validate plan + preflight docs requirements:
-   - Run: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/validate/validate_actions.py" --session "${SESSION_DIR}"`
-   - Run (optional; when configured): `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/validate/user_stories_gate.py" --session "${SESSION_DIR}"`
-   - Run: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/docs/docs_requirements_for_plan.py" --session "${SESSION_DIR}"`
-7) Deliver dry-run (optional; plan-only):
-   - If user provided `--dry-run`, run and stop (no checkpoints, no repo edits, no code tasks):
-     - `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/workflow/generate_dry_run_report.py" --session "${SESSION_DIR}"`
-8) Deliver: build contexts + checkpoint:
+     - Reminder: if `SESSION_STRATEGY=tdd`, the plan must satisfy `workflow.strategy=tdd` constraints (validated by hook).
+6) Deliver: validate plan (via hook) + build contexts:
+   - Plan validation happens automatically via `validate_actions_write.py` hook when actions.json is written.
    - Run: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/context/build_task_contexts.py" --session "${SESSION_DIR}"`
+7) Deliver dry-run (optional; plan-only):
+   - If user provided `--dry-run`, generate report inline and stop (no checkpoints, no repo edits, no code tasks):
+     - Read actions.json, summarize tasks and write scopes, output dry-run report.
+8) Deliver: checkpoint:
    - Run: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/checkpoint/create_checkpoint.py" --session "${SESSION_DIR}"`
 9) Deliver: execute code tasks (parallel-safe, dependency-aware):
    - Read `SESSION_DIR/planning/actions.json` as a DAG (respect `depends_on[]`).
@@ -82,21 +78,14 @@ allowed-tools: Read, Write, Edit, Grep, Glob, Bash, Task
    - owner `implementor` → Task `implementor` with `SESSION_DIR/inputs/task_context/<task_id>.md`
    - owner `tests-builder` → Task `tests-builder` with `SESSION_DIR/inputs/task_context/<task_id>.md`
 10) Deliver: gates (binary done):
-    - Task artifacts: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/validate/validate_task_artifacts.py" --session "${SESSION_DIR}"`
     - If plan includes `type=lsp` verifications and `.claude/project.yaml` has `lsp.enabled=true` and `lsp.mode` is `fail|warn` (not `skip`): Task `lsp-verifier` → writes `quality/lsp_verifications.{md,json}`
-    - Plan adherence: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/validate/plan_adherence.py" --session "${SESSION_DIR}"`
-    - Parallel conformance: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/validate/parallel_conformance.py" --session "${SESSION_DIR}"`
     - Quality suite: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/quality/run_quality_suite.py" --session "${SESSION_DIR}"`
-    - E2E gate: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/validate/e2e_gate.py" --session "${SESSION_DIR}"`
     - Docs update (always-on, agentic): Task `docs-keeper` with `SESSION_DIR/inputs/task_context/docs-keeper.md`
-    - Docs gate: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/validate/docs_gate.py" --session "${SESSION_DIR}"`
-    - Changed files scope: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/validate/validate_changed_files.py" --session "${SESSION_DIR}"`
-    - Compliance report (deterministic): `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/compliance/generate_compliance_report.py" --session "${SESSION_DIR}" --rerun-supporting-checks`
-    - Optional narrative: Task `compliance-checker` (should not change decision rules)
-    - Summarize gates: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/validate/gates_summary.py" --session "${SESSION_DIR}"`
+    - Docs lint: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/docs/docs_lint.py"`
+    - Read quality report and docs lint results, generate compliance decision inline (APPROVE if all pass, REJECT otherwise)
     - If any gate fails: prefer controlled remediation:
       - Task: `remediator` (updates `planning/actions.json`, writes `planning/REMEDIATION_PLAN.md`)
-      - Re-run: validate actions → build task contexts → dispatch remediation tasks → rerun deterministic gates.
+      - Re-run: build task contexts → dispatch remediation tasks → rerun quality suite.
       - If remediation loops are exhausted, stop and optionally use `--rollback`.
 11) Deliver: update progress + report:
     - `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/session/task_board.py" --session "${SESSION_DIR}"`

@@ -6,7 +6,7 @@
 """
 at: Friendly error messages library
 
-Version: 0.4.0
+Version: 0.5.0
 Updated: 2026-02-02
 
 Provides user-friendly error messages with fix suggestions.

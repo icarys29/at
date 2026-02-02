@@ -6,7 +6,7 @@
 """
 at: Learning state helpers (repo-local, low-risk)
 
-Version: 0.4.0
+Version: 0.5.0
 Updated: 2026-02-02
 """
 from __future__ import annotations

@@ -1,6 +1,6 @@
 ---
 name: uninstall-hooks
-version: "0.4.0"
+version: "0.5.0"
 updated: "2026-02-02"
 description: Uninstall at-managed policy hooks from project/team/user settings (best-effort).
 argument-hint: "[--scope project|team|user] [--project-dir <path>]"

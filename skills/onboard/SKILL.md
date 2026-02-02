@@ -1,6 +1,6 @@
 ---
 name: onboard
-version: "0.4.0"
+version: "0.5.0"
 updated: "2026-02-02"
 description: "Analyze a repo and propose/apply an at overlay onboarding (safe: overlay + docs only)."
 argument-hint: "[--apply] [--force] [--project-dir <path>]"

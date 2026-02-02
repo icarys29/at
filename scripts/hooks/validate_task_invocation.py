@@ -10,7 +10,7 @@ Goal:
 - Prevent accidental invocation of at subagents without required session context.
 - Fail open for non-at usage (unknown agents, missing context).
 
-Version: 0.4.0
+Version: 0.5.0
 Updated: 2026-02-02
 """
 from __future__ import annotations

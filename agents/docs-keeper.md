@@ -5,7 +5,7 @@ model: haiku
 tools: Read, Write, Edit, Grep, Glob, Bash, LSP
 disallowedTools: Task
 permissionMode: acceptEdits
-version: "0.4.0"
+version: "0.5.0"
 updated: "2026-02-02"
 ---
 

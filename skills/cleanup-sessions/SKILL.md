@@ -1,6 +1,6 @@
 ---
 name: cleanup-sessions
-version: "0.4.0"
+version: "0.5.0"
 updated: "2026-02-02"
 description: Prune old sessions under workflow.sessions_dir (dry-run default; use --apply to delete).
 argument-hint: "[--keep N] [--days N] [--apply] [--project-dir <path>]"

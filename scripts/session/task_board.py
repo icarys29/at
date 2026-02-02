@@ -15,7 +15,7 @@ The board is designed to help with parallel execution:
 - shows per-task status from task artifacts (completed/partial/failed/missing)
 - shows gate statuses from deterministic reports
 
-Version: 0.4.0
+Version: 0.5.0
 Updated: 2026-02-02
 """
 from __future__ import annotations
@@ -36,6 +36,7 @@ from lib.project import detect_project_dir, get_sessions_dir  # noqa: E402
 from lib.session import resolve_session_dir  # noqa: E402
 from lib.session_env import get_session_from_env  # noqa: E402
 from lib.simple_yaml import load_minimal_yaml  # noqa: E402
+
 
 
 

@@ -1,6 +1,6 @@
 ---
 name: docs:lint
-version: "0.4.0"
+version: "0.5.0"
 updated: "2026-02-02"
 description: Run docs lint only (no edits).
 argument-hint: ""

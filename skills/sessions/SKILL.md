@@ -1,6 +1,6 @@
 ---
 name: sessions
-version: "0.4.0"
+version: "0.5.0"
 updated: "2026-02-02"
 description: List existing at sessions under `workflow.sessions_dir`.
 argument-hint: ""

@@ -1,6 +1,6 @@
 ---
 name: uninstall-learning-hooks
-version: "0.4.0"
+version: "0.5.0"
 updated: "2026-02-02"
 description: Uninstall at-managed learning hooks from project/team/user settings.
 argument-hint: "[--scope project|team|user] [--project-dir <path>]"

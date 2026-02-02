@@ -1,6 +1,6 @@
 ---
 name: setup-policy-hooks
-version: "0.4.0"
+version: "0.5.0"
 updated: "2026-02-02"
 description: Install at policy hooks into project/team/user settings (secrets + destructive command blocking, plus scope/contract enforcement).
 argument-hint: "[--scope project|team|user] [--project-dir <path>]"

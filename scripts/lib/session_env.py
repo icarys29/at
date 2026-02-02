@@ -6,7 +6,7 @@
 """
 at: Session environment utilities - single source of truth for session resolution
 
-Version: 0.4.0
+Version: 0.5.0
 Updated: 2026-02-02
 
 This module provides the canonical way to resolve the current session directory.

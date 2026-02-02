@@ -6,7 +6,7 @@
 """
 at: actions.json validation (shared)
 
-Version: 0.4.0
+Version: 0.5.0
 Updated: 2026-02-02
 """
 from __future__ import annotations
@@ -19,7 +19,6 @@ from typing import Any
 
 from lib.docs_registry import build_doc_id_to_path_map, get_docs_registry_path, get_docs_require_registry, load_docs_registry
 from lib.path_policy import forbid_globs_from_project_config, is_forbidden_path, normalize_repo_relative_posix_path
-from lib.paths import has_glob_chars, validate_write_scope  # noqa: F401
 from lib.project import detect_project_dir, load_project_config
 from docs.coverage_rules import evaluate_coverage_rules_for_write_scopes
 
@@ -45,8 +44,7 @@ CODE_OWNERS = {"implementor", "tests-builder"}
 
 
 def _contains_glob_chars(value: str) -> bool:
-    # Use lib.paths.has_glob_chars for consistency, but keep wrapper for backwards compat
-    return has_glob_chars(value)
+    return any(ch in value for ch in ["*", "?", "[", "]"])
 
 
 def _expect_type(errors: list[ValidationError], value: Any, expected: type, path: str) -> bool:
@@ -110,12 +108,7 @@ def _scopes_overlap(a: WriteScope, b: WriteScope) -> bool:
     return False
 
 
-def validate_actions_data(
-    data: dict[str, Any],
-    *,
-    project_root: Path | None = None,
-    strategy_override: str | None = None,
-) -> list[ValidationError]:
+def validate_actions_data(data: dict[str, Any], *, project_root: Path | None = None) -> list[ValidationError]:
     errors: list[ValidationError] = []
 
     if project_root is None:
@@ -128,8 +121,6 @@ def validate_actions_data(
     strategy = workflow_cfg.get("strategy") if isinstance(workflow_cfg.get("strategy"), str) else "default"
     if strategy not in {"default", "tdd"}:
         strategy = "default"
-    if isinstance(strategy_override, str) and strategy_override in {"default", "tdd"}:
-        strategy = strategy_override
     lsp_cfg = config.get("lsp") if isinstance(config.get("lsp"), dict) else {}
     lsp_enabled = bool(lsp_cfg.get("enabled") is True)
 
@@ -562,25 +553,4 @@ def validate_actions_file(path: Path, *, project_root: Path | None = None) -> li
         return [ValidationError(str(path), f"Invalid JSON: {exc}")]
     if not isinstance(data, dict):
         return [ValidationError(str(path), f"Root must be an object, got {type(data).__name__}")]
-
-    # Optional session override: allow the session to enforce TDD without mutating repo config.
-    # If present, it must be a stable, explicit value ("default"|"tdd").
-    strategy_override = None
-    try:
-        resolved = path.expanduser().resolve()
-    except Exception:
-        resolved = path
-    if resolved.name == "actions.json" and resolved.parent.name == "planning":
-        session_dir = resolved.parent.parent
-        sess = session_dir / "session.json"
-        if sess.exists():
-            try:
-                sess_data = json.loads(sess.read_text(encoding="utf-8"))
-            except Exception:
-                sess_data = None
-            if isinstance(sess_data, dict):
-                st = sess_data.get("workflow_strategy")
-                if isinstance(st, str) and st in {"default", "tdd"}:
-                    strategy_override = st
-
-    return validate_actions_data(data, project_root=project_root, strategy_override=strategy_override)
+    return validate_actions_data(data, project_root=project_root)

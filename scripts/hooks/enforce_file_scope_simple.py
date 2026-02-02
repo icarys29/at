@@ -6,7 +6,7 @@
 """
 at: Simplified file scope enforcement hook
 
-Version: 0.4.0
+Version: 0.5.0
 Updated: 2026-02-02
 
 This is a simplified replacement for enforce_file_scope.py.
@@ -36,6 +36,7 @@ def _read_hook_input() -> dict[str, Any] | None:
         return json.load(sys.stdin)
     except Exception:
         return None
+
 
 
 

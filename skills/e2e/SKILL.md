@@ -1,24 +1,59 @@
 ---
 name: e2e
-version: "0.4.0"
+version: "0.5.0"
 updated: "2026-02-02"
-description: Run configured E2E tests only (outside deliver), using `.claude/at/e2e.json` profiles and local env file loading.
-argument-hint: "[--session <id|dir>] [--profile <local|ci|...>]"
-allowed-tools: Read, Write, Edit, Grep, Glob, Bash
+description: Run E2E tests only (outside deliver workflow).
+argument-hint: "[--session <id|dir>] [--profile <local|ci>]"
+allowed-tools: Read, Bash
 ---
 
 # /at:e2e
 
-Runs E2E only (no planning/implementation), writing evidence under a session directory.
+Run E2E tests only, without the full deliver workflow.
 
 ## Procedure
-1) Create or resume a session:
-   - Run: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/session/create_session.py" --workflow deliver [--session <id|dir>]`
-   - Capture the printed `SESSION_DIR`.
-2) Run E2E command only:
-   - Run: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/quality/run_quality_suite.py" --session "${SESSION_DIR}" --only e2e --e2e-profile <profile>`
-3) Enforce E2E policy:
-   - Run: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/validate/e2e_gate.py" --session "${SESSION_DIR}"`
-4) Summarize gates:
-   - Run: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/validate/gates_summary.py" --session "${SESSION_DIR}"`
 
+### 1) Resolve or create session
+```bash
+SESSION_DIR=$(uv run "${CLAUDE_PLUGIN_ROOT}/scripts/session/create_session.py" --workflow deliver [--resume "${SESSION_ARG}"])
+```
+
+### 2) Run E2E via quality suite
+
+Use the quality suite with E2E profile:
+```bash
+uv run "${CLAUDE_PLUGIN_ROOT}/scripts/quality/run_quality_suite.py" \
+  --session "${SESSION_DIR}" \
+  --only e2e \
+  --e2e-profile "${PROFILE:-local}"
+```
+
+### 3) Read results
+
+Read `SESSION_DIR/quality/quality_report.json` for E2E results.
+
+### 4) Output report
+
+```
+# E2E Test Results
+
+- session_id: `{id}`
+- profile: `{profile}`
+- status: `{passed|failed}`
+
+## Results
+- command: `{e2e_command}`
+- exit_code: `{code}`
+- duration: `{seconds}s`
+
+## Output
+{test output summary}
+
+## Next Steps
+{if failed: "Review test output and fix failures"}
+{if passed: "E2E tests pass. Ready for /at:run review or commit."}
+```
+
+## Output
+
+E2E results to stdout. Updates session quality report.

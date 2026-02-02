@@ -1,6 +1,6 @@
 ---
 name: setup
-version: "0.4.0"
+version: "0.5.0"
 updated: "2026-02-02"
 description: Interactive setup wizard for at - auto-detects tooling and generates project.yaml with minimal user input.
 argument-hint: "[--force] [--minimal]"

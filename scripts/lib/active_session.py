@@ -9,7 +9,7 @@ at: Active session helpers (best-effort)
 Stores a small mapping under the configured sessions root to help hooks resolve
 the current at `SESSION_DIR` without transcript heuristics.
 
-Version: 0.4.0
+Version: 0.5.0
 Updated: 2026-02-02
 """
 from __future__ import annotations

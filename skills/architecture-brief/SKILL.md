@@ -1,6 +1,6 @@
 ---
 name: architecture-brief
-version: "0.4.0"
+version: "0.5.0"
 updated: "2026-02-02"
 description: Generate a concise, evidence-backed architecture brief for a request (patterns, constraints, docs anchors) without executing implementation.
 argument-hint: "[--session <id|dir>] <request>"

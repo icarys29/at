@@ -6,7 +6,7 @@
 """
 at: Plugin health check and diagnostics
 
-Version: 0.4.0
+Version: 0.5.0
 Updated: 2026-02-02
 """
 from __future__ import annotations
@@ -36,6 +36,7 @@ def _ok(msg: str) -> None:
 
 def _is_non_empty_string(value: Any) -> bool:
     return isinstance(value, str) and bool(value.strip())
+
 
 
 

@@ -1,6 +1,6 @@
 ---
 name: docs:new
-version: "0.4.0"
+version: "0.5.0"
 updated: "2026-02-02"
 description: Create a new doc from templates and register it.
 argument-hint: "<type>"

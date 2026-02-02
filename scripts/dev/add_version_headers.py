@@ -6,7 +6,7 @@
 """
 at: Stamp version metadata headers
 
-Version: 0.4.0
+Version: 0.5.0
 Updated: 2026-02-02
 """
 from __future__ import annotations
@@ -37,6 +37,7 @@ def _load_plugin_version() -> str:
     if version_file.exists():
         return version_file.read_text(encoding="utf-8").strip()
     return "unknown"
+
 
 
 

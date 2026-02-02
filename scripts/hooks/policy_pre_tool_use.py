@@ -10,7 +10,7 @@ Blocks:
 - Reads/writes of forbidden secret paths (`policies.forbid_secrets_globs`)
 - Destructive Bash commands (rm -rf, git push --force, etc.)
 
-Version: 0.4.0
+Version: 0.5.0
 Updated: 2026-02-02
 """
 from __future__ import annotations

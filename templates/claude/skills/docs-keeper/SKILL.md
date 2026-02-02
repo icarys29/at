@@ -1,6 +1,6 @@
 ---
 name: docs-keeper
-version: "0.4.0"
+version: "0.5.0"
 updated: "2026-02-02"
 description: >
   Corporate-grade Documentation Keeper: plan/sync/new/lint via the docs-keeper subagent.

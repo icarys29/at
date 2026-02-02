@@ -1,6 +1,6 @@
 ---
 name: setup-docs-keeper-hooks
-version: "0.4.0"
+version: "0.5.0"
 updated: "2026-02-02"
 description: Install the minimal docs-keeper hooks into project/team/user scope (2 hooks).
 argument-hint: "[--scope project|team|user]"

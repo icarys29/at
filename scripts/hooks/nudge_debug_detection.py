@@ -10,7 +10,7 @@ PostToolUse hook that scans edited files for high-confidence debug statements.
 Never blocks tool execution. Writes a small per-session state file to avoid
 repeating the same warning many times.
 
-Version: 0.4.0
+Version: 0.5.0
 Updated: 2026-02-02
 """
 from __future__ import annotations

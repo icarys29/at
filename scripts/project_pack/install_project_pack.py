@@ -15,7 +15,7 @@ Optionally (style=hex):
 - .claude/at/architecture_boundaries.json
 - .claude/at/scripts/check_architecture_boundaries.py
 
-Version: 0.4.0
+Version: 0.5.0
 Updated: 2026-02-02
 """
 from __future__ import annotations

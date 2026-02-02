@@ -1,6 +1,6 @@
 ---
 name: setup-ux-nudges-hooks
-version: "0.4.0"
+version: "0.5.0"
 updated: "2026-02-02"
 description: "Install optional UX nudge hooks (debug detection + compaction suggestion) into project/team/user settings."
 argument-hint: "[--scope project|team|user] [--project-dir <path>]"

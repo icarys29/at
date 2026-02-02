@@ -1,6 +1,6 @@
 ---
 name: setup-learning-hooks
-version: "0.4.0"
+version: "0.5.0"
 updated: "2026-02-02"
 description: Install opt-in learning hooks (SessionStart learning snippet) into project/team/user settings.
 argument-hint: "[--scope project|team|user] [--project-dir <path>]"

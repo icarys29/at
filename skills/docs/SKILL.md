@@ -1,17 +1,17 @@
 ---
 name: docs
-version: "0.4.0"
+version: "0.5.0"
 updated: "2026-02-02"
 description: >
-  Unified docs entry point: status/plan/sync/new/lint/audit. Wraps docs-keeper (for edits) plus deterministic scripts.
-argument-hint: "[status|plan|sync|generate|new <type>|lint|audit] [--session <id|dir>] [--project-dir <path>] [--code-index-mode changed|full]"
+  Unified docs entry point: status/plan/sync/new/lint. Wraps docs-keeper (for edits) plus deterministic scripts.
+argument-hint: "[status|plan|sync|new <type>|lint] [--session <id|dir>] [--project-dir <path>]"
 allowed-tools: Read, Write, Edit, Grep, Glob, Bash, Task
 ---
 
 # /at:docs
 
 Single umbrella command for documentation workflows:
-- Deterministic scripts do analysis/lint/plan (no repo edits)
+- Deterministic scripts do lint/plan (no repo edits)
 - `docs-keeper` subagent performs docs edits (minimal, registry-driven)
 
 ## Commands
@@ -20,8 +20,6 @@ Single umbrella command for documentation workflows:
   - Registry health overview (no edits).
 - `lint`
   - Run docs lint (registry + consistency checks; no edits).
-- `audit`
-  - Alias of `lint` (current plugin’s “audit” is deterministic lint/consistency, not bulk doc generation).
 - `plan [--session <id|dir>]`
   - Compute a deterministic docs plan for a session (no edits).
 - `sync [--session <id|dir>]`
@@ -29,8 +27,6 @@ Single umbrella command for documentation workflows:
 - `new <type> [--session <id|dir>]`
   - Create a new doc from templates and register it (edits via `docs-keeper`).
   - `<type>` must be one of: `context|architecture|adr|ard|pattern|runbook`
-- `generate [--session <id|dir>] [--code-index-mode changed|full]`
-  - Migration-friendly alias: “generate docs updates” = `docs-keeper sync`, with an optional code-index mode override (default: `full`).
 
 ## Procedure
 
@@ -39,9 +35,14 @@ Single umbrella command for documentation workflows:
 2) Branch:
 
 ### `status`
-- Run: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/docs/docs_status.py" <remaining args>`
 
-### `lint` / `audit`
+Read the documentation registry and report health:
+- Read `docs/DOCUMENTATION_REGISTRY.json`
+- Count docs by type and tier
+- Check for missing files, missing required fields
+- Output summary to stdout
+
+### `lint`
 - Run: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/docs/docs_lint.py" <remaining args>`
 
 ### `plan`
@@ -64,18 +65,6 @@ Single umbrella command for documentation workflows:
    - Provide:
      - `mode=new`
      - `type=<type>`
-     - `SESSION_DIR=<resolved>`
-
-### `generate`
-1) Resolve `SESSION_DIR` (same rules as `sync`).
-2) Choose `code_index_mode`:
-   - If user passed `--code-index-mode <changed|full>`, honor it.
-   - Else default to `full`.
-3) Delegate:
-   - Task: `docs-keeper`
-   - Provide:
-     - `mode=sync`
-     - `code_index_mode=<changed|full>`
      - `SESSION_DIR=<resolved>`
 
 ## Notes

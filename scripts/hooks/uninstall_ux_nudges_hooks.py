@@ -8,7 +8,7 @@ at: Uninstall UX nudge hooks (best-effort, idempotent)
 
 Removes hooks installed by scripts/hooks/install_ux_nudges_hooks.py.
 
-Version: 0.4.0
+Version: 0.5.0
 Updated: 2026-02-02
 """
 from __future__ import annotations
@@ -36,6 +36,7 @@ def _load_json(path: Path) -> dict[str, Any]:
         return data if isinstance(data, dict) else {}
     except Exception:
         return {}
+
 
 
 

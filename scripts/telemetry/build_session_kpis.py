@@ -10,7 +10,7 @@ Writes:
 - SESSION_DIR/telemetry/session_kpis.json
 - SESSION_DIR/telemetry/session_kpis.md
 
-Version: 0.4.0
+Version: 0.5.0
 Updated: 2026-02-02
 """
 from __future__ import annotations

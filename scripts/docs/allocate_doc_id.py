@@ -16,7 +16,7 @@ This script is intentionally deterministic and project/language agnostic:
 - reads docs/DOCUMENTATION_REGISTRY.json (v2) to find doc_types prefix + dir
 - scans registry docs[] and the managed doc dir for existing numeric IDs
 
-Version: 0.4.0
+Version: 0.5.0
 Updated: 2026-02-02
 """
 from __future__ import annotations

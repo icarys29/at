@@ -1,6 +1,6 @@
 ---
 name: docs:sync
-version: "0.4.0"
+version: "0.5.0"
 updated: "2026-02-02"
 description: Sync documentation (delegates to docs-keeper).
 argument-hint: "[--session <id|dir>]"

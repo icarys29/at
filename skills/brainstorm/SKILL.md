@@ -1,6 +1,6 @@
 ---
 name: brainstorm
-version: "0.4.0"
+version: "0.5.0"
 updated: "2026-02-02"
 description: Alias of /at:ideate for structured brainstorming (architecture brief + options + recommendation).
 argument-hint: "[--session <id|dir>] <request>"

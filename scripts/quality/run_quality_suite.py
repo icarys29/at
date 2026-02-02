@@ -6,7 +6,7 @@
 """
 at: Run configured quality suite (format/lint/typecheck/test/build)
 
-Version: 0.4.0
+Version: 0.5.0
 Updated: 2026-02-02
 """
 from __future__ import annotations
@@ -36,6 +36,7 @@ class CommandSpec:
     requires_env: list[str]
     requires_files: list[str]
     env_file: str | None
+
 
 
 

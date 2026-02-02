@@ -1,6 +1,6 @@
 ---
 name: resolve-failed-quality
-version: "0.4.0"
+version: "0.5.0"
 updated: "2026-02-02"
 description: "Resolve a failing quality command by iterating: rerun the failing command → minimal fix → rerun until pass."
 argument-hint: "<path/to/quality_report.json|--session <id|dir>> [<command_id>]"

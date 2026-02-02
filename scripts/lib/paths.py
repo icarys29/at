@@ -6,7 +6,7 @@
 """
 at: Canonical path utilities - single source of truth for path handling
 
-Version: 0.4.0
+Version: 0.5.0
 Updated: 2026-02-02
 
 This module provides canonical path utilities for consistent path handling

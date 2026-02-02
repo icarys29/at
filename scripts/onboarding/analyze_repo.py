@@ -12,7 +12,7 @@ Writes:
 
 No production code is modified.
 
-Version: 0.4.0
+Version: 0.5.0
 Updated: 2026-02-02
 """
 from __future__ import annotations
@@ -36,6 +36,7 @@ def _read_template(plugin_root: Path, rel: str) -> str:
     if not p.exists():
         raise RuntimeError(f"Missing template: {p}")
     return p.read_text(encoding="utf-8")
+
 
 
 

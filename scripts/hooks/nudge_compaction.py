@@ -9,7 +9,7 @@ at: UX nudge (compaction suggestion) — warning only
 Stop hook that suggests conversation compaction when the transcript is large.
 Never blocks stopping.
 
-Version: 0.4.0
+Version: 0.5.0
 Updated: 2026-02-02
 """
 from __future__ import annotations
@@ -36,6 +36,7 @@ def _read_hook_input() -> dict[str, Any] | None:
     except Exception:
         return None
     return data if isinstance(data, dict) else None
+
 
 
 

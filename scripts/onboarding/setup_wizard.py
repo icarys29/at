@@ -6,7 +6,7 @@
 """
 at: Setup wizard - auto-detect tooling and generate project.yaml
 
-Version: 0.4.0
+Version: 0.5.0
 Updated: 2026-02-02
 
 This script implements the detection logic for /at:setup skill.

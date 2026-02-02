@@ -19,7 +19,7 @@ Back-compat:
   where requires entries with explicit "id" become required_doc_ids, and requires entries with "type"
   become required_create_types (for known doc types).
 
-Version: 0.4.0
+Version: 0.5.0
 Updated: 2026-02-02
 """
 from __future__ import annotations
@@ -37,6 +37,7 @@ class RuleTrigger:
     matched_paths: list[str]
     note: str | None
     matched_keywords: list[str]
+
 
 
 

@@ -1,6 +1,6 @@
 ---
 name: init-project
-version: "0.4.0"
+version: "0.5.0"
 updated: "2026-02-02"
 description: Bootstrap a repo overlay (`.claude/project.yaml`, baseline rules, docs scaffolding) and install repo-local enforcements for at.
 argument-hint: "[--force]"

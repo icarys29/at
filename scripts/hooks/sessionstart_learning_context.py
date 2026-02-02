@@ -9,7 +9,7 @@ at: SessionStart hook to surface a small learning context snippet (best-effort, 
 This hook attempts to provide a short system message pointing to recent learning status.
 If the host does not surface `systemMessage` for SessionStart, it is harmless.
 
-Version: 0.4.0
+Version: 0.5.0
 Updated: 2026-02-02
 """
 from __future__ import annotations
