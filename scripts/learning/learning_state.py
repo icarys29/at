@@ -6,8 +6,8 @@
 """
 at: Learning state helpers (repo-local, low-risk)
 
-Version: 0.1.0
-Updated: 2026-02-01
+Version: 0.4.0
+Updated: 2026-02-02
 """
 from __future__ import annotations
 
@@ -26,4 +26,5 @@ def ensure_learning_dirs(project_root: Path) -> Path:
     root = learning_root(project_root)
     (root / "sessions").mkdir(parents=True, exist_ok=True)
     (root / "adr").mkdir(parents=True, exist_ok=True)
+    (root / "learnings").mkdir(parents=True, exist_ok=True)
     return root

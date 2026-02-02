@@ -6,8 +6,8 @@
 """
 at: I/O utilities for file operations and timestamps
 
-Version: 0.1.0
-Updated: 2026-02-01
+Version: 0.4.0
+Updated: 2026-02-02
 """
 from __future__ import annotations
 

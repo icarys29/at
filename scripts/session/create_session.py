@@ -6,8 +6,8 @@
 """
 at: Create new workflow session
 
-Version: 0.1.0
-Updated: 2026-02-01
+Version: 0.4.0
+Updated: 2026-02-02
 """
 from __future__ import annotations
 
@@ -25,6 +25,7 @@ sys.path.insert(0, str(SCRIPT_ROOT))
 from lib.io import utc_now_full, write_json  # noqa: E402
 from lib.project import detect_project_dir, get_plugin_version, get_sessions_dir  # noqa: E402
 from lib.active_session import write_active_session  # noqa: E402
+from lib.session_env import set_session_env  # noqa: E402
 
 
 def _new_session_id() -> str:
@@ -55,6 +56,12 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--project-dir", default=None)
     parser.add_argument("--workflow", default="deliver", choices=["deliver", "triage", "review", "ideate"])
+    parser.add_argument(
+        "--strategy",
+        default=None,
+        choices=["default", "tdd"],
+        help="Optional workflow strategy override for this session (default|tdd). Used by planning validation and action-planner.",
+    )
     parser.add_argument("--sessions-dir", default=None, help="Override sessions dir (else read from .claude/project.yaml)")
     parser.add_argument("--resume", default=None, help="Resume by session id or session directory")
     # Alias for consistency with skills that use --session. Semantics match --resume.
@@ -108,21 +115,26 @@ def main() -> int:
             data = {}
         if isinstance(data, dict):
             data["updated_at"] = utc_now_full()
+            if args.strategy:
+                data["workflow_strategy"] = args.strategy
             write_json(session_json, data)
     else:
+        payload = {
+            "version": 1,
+            "session_id": session_dir.name,
+            "workflow": args.workflow,
+            "status": "in_progress",
+            "created_at": utc_now_full(),
+            "updated_at": utc_now_full(),
+            "project_dir": str(project_dir),
+            "sessions_dir": sessions_dir,
+            "plugin_version": get_plugin_version(),
+        }
+        if args.strategy:
+            payload["workflow_strategy"] = args.strategy
         write_json(
             session_json,
-            {
-                "version": 1,
-                "session_id": session_dir.name,
-                "workflow": args.workflow,
-                "status": "in_progress",
-                "created_at": utc_now_full(),
-                "updated_at": utc_now_full(),
-                "project_dir": str(project_dir),
-                "sessions_dir": sessions_dir,
-                "plugin_version": get_plugin_version(),
-            },
+            payload,
         )
 
     # Best-effort: link this Claude session to the at SESSION_DIR to help hooks resolve context
@@ -132,6 +144,9 @@ def main() -> int:
         write_active_session(sessions_root, session_id=session_dir.name, claude_session_id=claude_session_id)
     except Exception:
         pass
+
+    # Set session environment variables for hooks and downstream scripts
+    set_session_env(session_dir)
 
     print(str(session_dir))
     return 0

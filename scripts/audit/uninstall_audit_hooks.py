@@ -6,8 +6,8 @@
 """
 at: Uninstall audit hooks (best-effort, idempotent)
 
-Version: 0.1.0
-Updated: 2026-02-01
+Version: 0.4.0
+Updated: 2026-02-02
 """
 from __future__ import annotations
 
@@ -61,15 +61,16 @@ def _prune(items: Any) -> list[dict[str, Any]]:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Remove at audit hooks from project or user settings (idempotent).")
     parser.add_argument("--project-dir", default=None)
-    parser.add_argument("--scope", default="project", choices=["project", "user"])
+    parser.add_argument("--scope", default="project", choices=["project", "team", "user"])
     args = parser.parse_args()
 
     project_root = detect_project_dir(args.project_dir)
-    settings_path = (
-        project_root / ".claude" / "settings.local.json"
-        if args.scope == "project"
-        else (Path.home() / ".claude" / "settings.json")
-    )
+    if args.scope == "project":
+        settings_path = project_root / ".claude" / "settings.local.json"
+    elif args.scope == "team":
+        settings_path = project_root / ".claude" / "settings.json"
+    else:
+        settings_path = Path.home() / ".claude" / "settings.json"
     if not settings_path.exists():
         print(f"SKIP\t(no settings file: {settings_path})")
         return 0
@@ -95,4 +96,3 @@ if __name__ == "__main__":
     except Exception as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         raise SystemExit(1)
-

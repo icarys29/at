@@ -1,6 +1,6 @@
 # User Stories (at)
 
-This document captures the user-facing stories that the rebuilt `at` plugin should support.
+This document captures the user-facing stories that the `at` plugin should support.
 
 These stories are meant to:
 - guide implementation sequencing (map to phases `P0..P3`)

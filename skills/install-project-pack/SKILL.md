@@ -1,9 +1,9 @@
 ---
 name: install-project-pack
-version: "0.1.0"
-updated: "2026-02-01"
+version: "0.4.0"
+updated: "2026-02-02"
 description: Install a minimal project pack (enforcement runner + default enforcements) into `.claude/at/`.
-argument-hint: "[--force] [--project-dir <path>] [--style none|hex --domain-path <path> --application-path <path> --adapters-path <path>] [--enforcement-mode fail|warn] [--sessions-dir <dir>]"
+argument-hint: "[--force] [--project-dir <path>] [--style none|hex --domain-path <path> --application-path <path> --adapters-path <path>] [--no-god-class-check] [--god-class-max-methods N --god-class-max-lines N] [--enforcement-mode warn|fail] [--sessions-dir <dir>]"
 allowed-tools: Read, Write, Edit, Bash
 ---
 

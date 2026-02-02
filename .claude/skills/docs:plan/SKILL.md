@@ -1,7 +1,7 @@
 ---
 name: docs:plan
-version: "0.1.0"
-updated: "2026-02-01"
+version: "0.4.0"
+updated: "2026-02-02"
 description: Show deterministic docs plan (no edits).
 argument-hint: "[--session <id|dir>]"
 allowed-tools: Read, Bash

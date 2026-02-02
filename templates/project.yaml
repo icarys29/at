@@ -23,6 +23,14 @@ docs:
   min_review_tier: 2
   # Corporate-grade default: enforce registry usage and prevent drift.
   require_registry: true
+  # Default-on (P2): generate a lightweight code index for docs grounding.
+  # This writes session artifacts only (never edits repo docs directly).
+  generate_from_code: true
+  # changed|full — use "changed" to avoid doc bloat and keep runs fast.
+  generate_from_code_mode: "changed"
+  # Default-on: use LSP tool to gather hover/definition snippets for a small symbol set (best-effort).
+  # Intended for large repos where semantic grounding improves docs quality. Keep low-sensitivity.
+  lsp_grounding: true
   sections_enabled: false
 
 learning:

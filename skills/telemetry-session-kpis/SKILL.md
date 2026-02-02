@@ -1,7 +1,7 @@
 ---
 name: telemetry-session-kpis
-version: "0.1.0"
-updated: "2026-02-01"
+version: "0.4.0"
+updated: "2026-02-02"
 description: Generate per-session KPIs under the session directory.
 argument-hint: "[--session <id|dir>] [--project-dir <path>]"
 allowed-tools: Read, Write, Edit, Bash

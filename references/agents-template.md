@@ -40,8 +40,8 @@ hooks:
           timeout: 10
 
 # plugin-specific (required in this repo)
-version: "0.7.42"
-updated: "2026-01-31 12:00:00"
+version: "0.3.1"
+updated: "2026-02-02 00:00:00"
 ---
 ```
 

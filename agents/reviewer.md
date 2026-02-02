@@ -1,12 +1,12 @@
 ---
 name: reviewer
 description: Produces an evidence-backed review report from session artifacts (scope/quality/docs/compliance), without making edits.
-model: sonnet
-tools: Read, Write, Edit, Grep, Glob, Bash
-disallowedTools: Task
+model: haiku
+tools: Read, Write, Grep, Glob
+disallowedTools: Task, Edit, Bash
 permissionMode: acceptEdits
-version: "0.1.0"
-updated: "2026-02-01"
+version: "0.4.0"
+updated: "2026-02-02"
 ---
 
 # Reviewer (at)

@@ -9,8 +9,8 @@ at: Active session helpers (best-effort)
 Stores a small mapping under the configured sessions root to help hooks resolve
 the current at `SESSION_DIR` without transcript heuristics.
 
-Version: 0.1.0
-Updated: 2026-02-01
+Version: 0.4.0
+Updated: 2026-02-02
 """
 from __future__ import annotations
 
@@ -162,4 +162,3 @@ def resolve_session_dir_from_hook(
         return ActiveSession(session_id=sid, session_dir=session_dir)
 
     return None
-

@@ -6,14 +6,23 @@
 """
 at: Print learning status (best-effort)
 
-Version: 0.1.0
-Updated: 2026-02-01
+Version: 0.4.0
+Updated: 2026-02-02
 """
 from __future__ import annotations
 
 import argparse
 import sys
+import warnings
 from pathlib import Path
+
+# DEPRECATION WARNING: This script will be removed in v0.5.0. See scripts/DEPRECATED.md
+warnings.warn(
+    "learning_status.py is deprecated and will be removed in v0.5.0. "
+    "Agent can read state directly. See scripts/DEPRECATED.md for migration.",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 SCRIPT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SCRIPT_ROOT))
@@ -39,4 +48,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

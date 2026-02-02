@@ -1,7 +1,7 @@
 ---
 name: self-audit
-version: "0.1.0"
-updated: "2026-02-01"
+version: "0.4.0"
+updated: "2026-02-02"
 description: Run deterministic integrity checks for the at plugin (script refs, version metadata, contract parity, fixtures).
 argument-hint: "[--out-dir <dir>] [--strict]"
 allowed-tools: Read, Bash

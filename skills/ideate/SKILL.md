@@ -1,7 +1,7 @@
 ---
 name: ideate
-version: "0.1.0"
-updated: "2026-02-01"
+version: "0.4.0"
+updated: "2026-02-02"
 description: >
   Structured ideation for a request: generate an architecture brief and brainstorm options grounded in repo patterns and project constraints.
 argument-hint: "[--session <id|dir>] <request>"

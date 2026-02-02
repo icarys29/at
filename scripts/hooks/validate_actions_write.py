@@ -6,8 +6,8 @@
 """
 at: Validate actions.json writes against the at contract
 
-Version: 0.1.0
-Updated: 2026-02-01
+Version: 0.4.0
+Updated: 2026-02-02
 """
 from __future__ import annotations
 
@@ -35,6 +35,33 @@ def _is_actions_json_path(file_path: str) -> bool:
         return False
     normalized = file_path.replace("\\", "/")
     return normalized.endswith("/planning/actions.json") or normalized == "planning/actions.json"
+
+
+def _strategy_override_for_actions_path(project_root: Path, file_path: str) -> str | None:
+    try:
+        p = Path(file_path).expanduser()
+    except Exception:
+        return None
+    if not p.is_absolute():
+        p = (project_root / p).resolve()
+    try:
+        resolved = p.resolve()
+    except Exception:
+        resolved = p
+    if resolved.name != "actions.json" or resolved.parent.name != "planning":
+        return None
+    session_dir = resolved.parent.parent
+    sess = session_dir / "session.json"
+    if not sess.exists():
+        return None
+    try:
+        data = json.loads(sess.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+    if not isinstance(data, dict):
+        return None
+    st = data.get("workflow_strategy")
+    return st if isinstance(st, str) and st in {"default", "tdd"} else None
 
 
 def main() -> int:
@@ -68,7 +95,8 @@ def main() -> int:
         return 2
 
     project_root = detect_project_dir()
-    errors = validate_actions_data(data, project_root=project_root)
+    strategy_override = _strategy_override_for_actions_path(project_root, file_path)
+    errors = validate_actions_data(data, project_root=project_root, strategy_override=strategy_override)
     if errors:
         print("BLOCKED: planning/actions.json does not conform to the at contract.", file=sys.stderr)
         for e in errors[:20]:

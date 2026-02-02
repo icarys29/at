@@ -15,8 +15,8 @@ Writes:
 - SESSION_DIR/quality/quality_report.md (regenerated summary)
 - SESSION_DIR/quality/fix_quality_report.{json,md}
 
-Version: 0.1.0
-Updated: 2026-02-01
+Version: 0.4.0
+Updated: 2026-02-02
 """
 from __future__ import annotations
 
@@ -24,8 +24,17 @@ import argparse
 import subprocess
 import sys
 import time
+import warnings
 from pathlib import Path
 from typing import Any
+
+# DEPRECATION WARNING: This script will be removed in v0.5.0. See scripts/DEPRECATED.md
+warnings.warn(
+    "rerun_quality_command.py is deprecated and will be removed in v0.5.0. "
+    "Command rerun will be in quality suite. See scripts/DEPRECATED.md for migration.",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 SCRIPT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SCRIPT_ROOT))
@@ -37,6 +46,9 @@ from lib.session import resolve_session_dir  # noqa: E402
 
 def _safe_id(value: str) -> str:
     return "".join(ch if ch.isalnum() or ch in ("-", "_", ".", ":") else "_" for ch in value)[:120]
+
+
+
 
 
 def _render_quality_md(report: dict[str, Any]) -> str:
@@ -86,8 +98,19 @@ def _git_changed_files(project_root: Path) -> list[str] | None:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Rerun one quality command from SESSION_DIR/quality/quality_report.json")
-    parser.add_argument("command_id", help="Command id from quality_report.json (e.g. 'python:lint')")
+    parser = argparse.ArgumentParser(description="Rerun one configured quality command for a session (targeted remediation helper).")
+    parser.add_argument(
+        "target",
+        nargs="?",
+        default=None,
+        help="Either a command id from quality_report.json (e.g. 'python:lint') OR a path to quality_report.json",
+    )
+    parser.add_argument(
+        "command_id",
+        nargs="?",
+        default=None,
+        help="Optional command id when target is a quality_report.json path (defaults to first failing command).",
+    )
     parser.add_argument("--project-dir", default=None)
     parser.add_argument("--sessions-dir", default=None)
     parser.add_argument("--session", default=None, help="Session id or directory (default: most recent)")
@@ -96,9 +119,42 @@ def main() -> int:
     project_root = detect_project_dir(args.project_dir)
     config = load_project_config(project_root) or {}
     sessions_dir = args.sessions_dir or get_sessions_dir(project_root, config)
-    session_dir = resolve_session_dir(project_root, sessions_dir, args.session)
 
-    report_path = session_dir / "quality" / "quality_report.json"
+    if not args.target or not str(args.target).strip():
+        raise RuntimeError("Provide a command id or a path to quality_report.json.")
+
+    target = str(args.target).strip()
+
+    # Mode A: target is a quality_report.json path.
+    report_path: Path
+    session_dir: Path
+    cmd_id: str | None = None
+    cand = Path(target).expanduser()
+    report_path_is_file = False
+    try:
+        abs_cand = cand if cand.is_absolute() else (project_root / cand).resolve()
+        report_path_is_file = abs_cand.is_file() and abs_cand.name.endswith(".json")
+    except Exception:
+        abs_cand = cand
+
+    if report_path_is_file:
+        if args.session:
+            raise RuntimeError("When providing an explicit quality_report.json path, do not also pass --session.")
+        report_path = abs_cand.resolve()
+        if report_path.name != "quality_report.json" and report_path.suffix.lower() != ".json":
+            raise RuntimeError(f"Expected a JSON report path, got: {report_path}")
+        # Expected layout: <SESSION_DIR>/quality/quality_report.json
+        session_dir = report_path.parent.parent
+        if not (session_dir / "session.json").exists():
+            raise RuntimeError(f"Report does not appear to be under a session dir: {report_path}")
+        if args.command_id and str(args.command_id).strip():
+            cmd_id = str(args.command_id).strip()
+    else:
+        # Mode B: target is a command id; resolve session normally.
+        cmd_id = target
+        session_dir = resolve_session_dir(project_root, sessions_dir, args.session)
+        report_path = session_dir / "quality" / "quality_report.json"
+
     report = load_json_safe(report_path, default=None)
     if not isinstance(report, dict):
         raise RuntimeError(f"Missing/invalid quality_report.json: {report_path}")
@@ -107,7 +163,20 @@ def main() -> int:
     if not isinstance(results, list):
         raise RuntimeError("Invalid quality_report.json: results[] missing")
 
-    cmd_id = str(args.command_id).strip()
+    if cmd_id is None:
+        # Default: pick the first failing command.
+        for r in results[:5000]:
+            if not isinstance(r, dict):
+                continue
+            status = r.get("status")
+            if status in {"failed", "error", "timeout"}:
+                rid = r.get("id")
+                if isinstance(rid, str) and rid.strip():
+                    cmd_id = rid.strip()
+                    break
+    if not cmd_id:
+        raise RuntimeError("No failing command found in quality_report.json (or no command id provided).")
+
     target: dict[str, Any] | None = None
     for r in results:
         if isinstance(r, dict) and r.get("id") == cmd_id:
@@ -219,4 +288,3 @@ if __name__ == "__main__":
     except Exception as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         raise SystemExit(1)
-

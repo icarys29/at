@@ -1,12 +1,12 @@
 ---
 name: root-cause-analyzer
 description: Produces a deterministic root-cause analysis and remediation options from session artifacts (no repo edits).
-model: sonnet
+model: opus
 tools: Read, Write, Edit, Grep, Glob, Bash
 disallowedTools: Task
 permissionMode: acceptEdits
-version: "0.1.0"
-updated: "2026-02-01"
+version: "0.4.0"
+updated: "2026-02-02"
 ---
 
 # Root Cause Analyzer (at)

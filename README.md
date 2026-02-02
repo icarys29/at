@@ -1,13 +1,14 @@
-# Agent Team (`at`) — Claude Code plugin (rebuild)
+# Agent Team (`at`) — Claude Code workflow kernel
 
-This repo rebuilds the **Agent Team (`at`)** Claude Code plugin from scratch.
+`at` is a corporate-grade, **session-backed** workflow kernel for Claude Code. It turns a request into a repeatable run with:
 
-- Canonical instructions: `CLAUDE.md` (also symlinked as `AGENT.md`)
-- Plans + requirements: `plan/`
-- Local reference library: `references/`
+- deterministic session artifacts (plans, task outputs, reports)
+- minimal, task-scoped context (context pack + per-task context slices)
+- binary gates (scope, quality, docs, compliance)
+- optional hooks for policy enforcement, audit logging, and UX nudges
 
-Run Claude Code with this plugin locally:
+## Quickstart
 
-`claude --plugin-dir .`
-
-Plugin manifest (Claude Code canonical location): `.claude-plugin/plugin.json`
+- Run Claude Code with this plugin: `claude --plugin-dir .`
+- Maintainer guide: `CLAUDE.md` (also available via `AGENT.md`)
+- Plugin manifest: `.claude-plugin/plugin.json`

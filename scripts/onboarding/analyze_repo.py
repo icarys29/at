@@ -12,12 +12,13 @@ Writes:
 
 No production code is modified.
 
-Version: 0.1.0
-Updated: 2026-02-01
+Version: 0.4.0
+Updated: 2026-02-02
 """
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from pathlib import Path
 from typing import Any
@@ -26,7 +27,7 @@ SCRIPT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SCRIPT_ROOT))
 
 from lib.io import utc_now, write_json, write_text  # noqa: E402
-from lib.project import detect_project_dir, get_plugin_root  # noqa: E402
+from lib.project import detect_project_dir, get_plugin_root, load_project_config  # noqa: E402
 from onboarding.onboarding_utils import detect_languages, render_project_yaml, suggest_commands  # noqa: E402
 
 
@@ -35,6 +36,42 @@ def _read_template(plugin_root: Path, rel: str) -> str:
     if not p.exists():
         raise RuntimeError(f"Missing template: {p}")
     return p.read_text(encoding="utf-8")
+
+
+
+
+
+
+def _load_json(path: Path) -> dict[str, Any]:
+    if not path.exists():
+        return {}
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def _has_managed_hook(settings: dict[str, Any], *, managed_by: str) -> bool:
+    hooks = settings.get("hooks")
+    if not isinstance(hooks, dict):
+        return False
+    for items in hooks.values():
+        if not isinstance(items, list):
+            continue
+        for entry in items:
+            if not isinstance(entry, dict):
+                continue
+            hs = entry.get("hooks")
+            if not isinstance(hs, list):
+                continue
+            for h in hs:
+                if not isinstance(h, dict):
+                    continue
+                meta = h.get("metadata")
+                if isinstance(meta, dict) and meta.get("managed_by") == managed_by:
+                    return True
+    return False
 
 
 def main() -> int:
@@ -48,6 +85,7 @@ def main() -> int:
 
     project_root = detect_project_dir(args.project_dir)
     plugin_root = get_plugin_root()
+    existing_cfg = load_project_config(project_root)
 
     languages = detect_languages(project_root) or ["python"]
     commands_by_lang = suggest_commands(project_root, languages)
@@ -62,6 +100,22 @@ def main() -> int:
 
     supported_packs = {"python", "go", "typescript", "rust"}
     recommended_packs = [l for l in languages if l in supported_packs]
+
+    overlay_exists = bool((project_root / ".claude" / "project.yaml").exists())
+    docs_registry_exists = bool((project_root / "docs" / "DOCUMENTATION_REGISTRY.json").exists())
+    settings_local = _load_json(project_root / ".claude" / "settings.local.json")
+    settings_team = _load_json(project_root / ".claude" / "settings.json")
+    hooks_status = {
+        "policy_hooks": _has_managed_hook(settings_local, managed_by="at-policy-hooks") or _has_managed_hook(settings_team, managed_by="at-policy-hooks"),
+        "audit_hooks": _has_managed_hook(settings_local, managed_by="at-audit-hooks") or _has_managed_hook(settings_team, managed_by="at-audit-hooks"),
+        "docs_keeper_hooks": _has_managed_hook(settings_local, managed_by="docs-keeper-hooks") or _has_managed_hook(
+            settings_team, managed_by="docs-keeper-hooks"
+        ),
+        "learning_hooks": _has_managed_hook(settings_local, managed_by="at-learning-hooks") or _has_managed_hook(settings_team, managed_by="at-learning-hooks"),
+        "ux_nudges_hooks": _has_managed_hook(settings_local, managed_by="at-ux-nudges-hooks") or _has_managed_hook(
+            settings_team, managed_by="at-ux-nudges-hooks"
+        ),
+    }
 
     planned_creates: list[str] = []
     for p in (
@@ -92,6 +146,12 @@ def main() -> int:
         "project_root": str(project_root).replace("\\", "/"),
         "detected_languages": languages,
         "recommended_language_packs": recommended_packs,
+        "existing": {
+            "overlay_present": overlay_exists,
+            "docs_registry_present": docs_registry_exists,
+            "project_yaml_parse_ok": bool(existing_cfg is not None),
+            "hooks": hooks_status,
+        },
         "proposed": {
             "project_yaml_path": ".claude/project.yaml",
             "project_yaml_preview_head": proposed_project_yaml.splitlines()[:120],
@@ -99,6 +159,8 @@ def main() -> int:
         "planned_creates": sorted(set(planned_creates)),
         "notes": [
             "This is a proposal only. Use /at:onboard --apply to write overlay + docs with backups.",
+            "If this repo already has an at overlay, prefer /at:upgrade-project unless you explicitly want to overwrite onboarding files (--force).",
+            "Hooks are optional and should be installed deliberately (policy/audit/docs-keeper/learning/UX nudges).",
             "No production code files are modified by onboarding.",
         ],
     }
@@ -112,6 +174,21 @@ def main() -> int:
     md.append("")
     md.append(f"- generated_at: `{report['generated_at']}`")
     md.append(f"- project_root: `{report['project_root']}`")
+    md.append("")
+    md.append("## Existing state")
+    md.append("")
+    md.append(f"- overlay_present: `{str(report['existing']['overlay_present']).lower()}`")
+    md.append(f"- docs_registry_present: `{str(report['existing']['docs_registry_present']).lower()}`")
+    md.append(f"- project_yaml_parse_ok: `{str(report['existing']['project_yaml_parse_ok']).lower()}`")
+    md.append("")
+    md.append("### Hooks (project)")
+    md.append("")
+    hooks = report["existing"]["hooks"]
+    md.append(f"- policy_hooks: `{str(bool(hooks.get('policy_hooks'))).lower()}`")
+    md.append(f"- audit_hooks: `{str(bool(hooks.get('audit_hooks'))).lower()}`")
+    md.append(f"- docs_keeper_hooks: `{str(bool(hooks.get('docs_keeper_hooks'))).lower()}`")
+    md.append(f"- learning_hooks: `{str(bool(hooks.get('learning_hooks'))).lower()}`")
+    md.append(f"- ux_nudges_hooks: `{str(bool(hooks.get('ux_nudges_hooks'))).lower()}`")
     md.append("")
     md.append("## Detected languages")
     md.append("")
@@ -141,6 +218,19 @@ def main() -> int:
     md.append("```yaml")
     md.extend(report["proposed"]["project_yaml_preview_head"])
     md.append("```")
+    md.append("")
+    md.append("## Suggested next steps")
+    md.append("")
+    if report["existing"]["overlay_present"]:
+        md.append("- If you already use at in this repo: run `/at:upgrade-project` (safe dry-run default).")
+    else:
+        md.append("- Apply the overlay: `/at:onboard --apply` (creates backups).")
+    if not hooks.get("policy_hooks"):
+        md.append("- Optional (recommended): install policy hooks: `/at:setup-policy-hooks --scope project`")
+    if not hooks.get("audit_hooks"):
+        md.append("- Optional: install audit hooks: `/at:setup-audit-hooks --scope project`")
+    if not hooks.get("docs_keeper_hooks"):
+        md.append("- Optional (teams): install docs-keeper hooks: `/at:setup-docs-keeper-hooks --scope project`")
     md.append("")
     write_text(out_dir / "onboarding_report.md", "\n".join(md))
 

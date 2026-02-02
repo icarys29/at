@@ -6,8 +6,8 @@
 """
 at: Onboarding helpers (repo analysis + deterministic overlay proposals)
 
-Version: 0.1.0
-Updated: 2026-02-01
+Version: 0.4.0
+Updated: 2026-02-02
 """
 from __future__ import annotations
 
@@ -37,6 +37,10 @@ IGNORE_DIRS = {
     ".claude",
     ".session",
 }
+
+
+
+
 
 EXT_TO_LANG = {
     ".py": "python",
@@ -198,4 +202,3 @@ def render_project_yaml(*, template_text: str, project_name: str, languages: lis
         j += 1
 
     return "\n".join(final).rstrip() + "\n"
-

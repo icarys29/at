@@ -1,6 +1,6 @@
 # Capability Tables (at)
 
-This document is a **capability checklist** for the rebuilt `at` Claude Code plugin.
+This document is a **capability checklist** for the `at` Claude Code plugin.
 
 Goal: for each capability, define **what it is**, **where it is implemented**, and **how to verify it** (preferably via deterministic scripts + session artifacts).
 

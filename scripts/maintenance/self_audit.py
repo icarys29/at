@@ -12,8 +12,8 @@ This is intended to be a deterministic gate that validates:
 - actions contract enums align across schema + validator
 - validator fixtures behave as expected
 
-Version: 0.1.0
-Updated: 2026-02-01
+Version: 0.4.0
+Updated: 2026-02-02
 """
 from __future__ import annotations
 
@@ -21,9 +21,18 @@ import argparse
 import json
 import re
 import sys
+import warnings
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable
+
+# DEPRECATION WARNING: This script will be removed in v0.5.0. See scripts/DEPRECATED.md
+warnings.warn(
+    "self_audit.py is deprecated and will be removed in v0.5.0. "
+    "Agent reasoning task. See scripts/DEPRECATED.md for migration.",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 SCRIPT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SCRIPT_ROOT))
@@ -180,6 +189,42 @@ def _parse_frontmatter_yaml(text: str) -> tuple[dict[str, Any] | None, str | Non
         return None, str(exc)
 
 
+def _frontmatter_strict_yaml_risk_lines(frontmatter: str) -> list[str]:
+    """
+    Heuristic lint: strict YAML parsers reject unquoted plain scalars that contain `: `
+    (colon followed by a space). This often happens in descriptions like "(default: X)".
+
+    We intentionally require such values to be quoted to keep plugin frontmatter portable.
+    """
+    bad: list[str] = []
+    # Eliminate false positives from block scalar content by collapsing block scalars first.
+    frontmatter = _collapse_block_scalars(frontmatter)
+    for raw in frontmatter.splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        # Skip list items in frontmatter (rare; but allowed-tools could be a list).
+        if line.startswith("- "):
+            continue
+        if ":" not in line:
+            continue
+        key, rest = line.split(":", 1)
+        key = key.strip()
+        rest = rest.lstrip(" ")
+        if not key:
+            continue
+        # Block scalars handled elsewhere.
+        if rest.startswith(("|", ">")):
+            continue
+        # Quoted scalar is fine.
+        if rest.startswith(("\"", "'")):
+            continue
+        # Strict YAML risk: colon-space inside unquoted scalar.
+        if ": " in rest:
+            bad.append(raw)
+    return bad
+
+
 def _schema_get(schema: dict[str, Any], path: list[str]) -> Any:
     cur: Any = schema
     for key in path:
@@ -250,6 +295,34 @@ def main() -> int:
         f"root.plugin.json.version={version_root!r} canonical..claude-plugin/plugin.json.version={version_canonical!r} VERSION={version_file!r}",
     )
 
+    # 1.5) LSP server manifest wiring (if declared, the file must exist and be valid JSON).
+    lsp_ref_root = root_manifest.get("lspServers")
+    lsp_ref_canon = canonical_manifest.get("lspServers")
+    lsp_paths: list[str] = []
+    for ref in (lsp_ref_root, lsp_ref_canon):
+        if isinstance(ref, str) and ref.strip():
+            lsp_paths.append(ref.strip())
+    lsp_paths = sorted(set(lsp_paths))
+    lsp_issues: list[str] = []
+    for ref in lsp_paths:
+        # Spec: plugin manifests typically use a relative path like "./.lsp.json".
+        rel = ref[2:] if ref.startswith("./") else ref
+        p = (plugin_root / rel).resolve()
+        if not p.exists():
+            lsp_issues.append(f"{ref}: missing file at {rel}")
+            continue
+        try:
+            json.loads(p.read_text(encoding="utf-8"))
+        except Exception as exc:
+            lsp_issues.append(f"{ref}: invalid JSON ({exc})")
+    check(
+        "plugin.lsp_servers_config",
+        len(lsp_issues) == 0,
+        "lspServers configured files exist and parse as JSON",
+        paths=lsp_issues,
+        severity="warning",
+    )
+
     # 2) Hook script references resolve
     hooks_json = _load_json(plugin_root / "hooks" / "hooks.json")
     missing_hook_scripts: list[str] = []
@@ -294,17 +367,34 @@ def main() -> int:
 
     md_missing: list[str] = []
     frontmatter_invalid: list[str] = []
+    frontmatter_strict_risks: list[str] = []
     for p in md_paths:
-        fm, err = _parse_frontmatter_yaml(_read_text(p))
+        raw = _read_text(p)
+        fm, err = _parse_frontmatter_yaml(raw)
         if err:
             frontmatter_invalid.append(f"{p.relative_to(plugin_root)}: {err}")
             continue
         if not isinstance(fm, dict):
             frontmatter_invalid.append(f"{p.relative_to(plugin_root)}: invalid YAML (non-mapping)")
             continue
+        fm_block = _extract_frontmatter_block(raw)
+        if fm_block is not None:
+            bad_lines = _frontmatter_strict_yaml_risk_lines(fm_block)
+            if bad_lines:
+                head = str(p.relative_to(plugin_root))
+                # Include only a small sample for deterministic output.
+                sample = "; ".join([x.strip() for x in bad_lines[:3] if isinstance(x, str) and x.strip()])
+                frontmatter_strict_risks.append(f"{head}: unquoted ': ' in scalar (quote the value). Sample: {sample}")
         if "version" not in fm or "updated" not in fm:
             md_missing.append(str(p.relative_to(plugin_root)))
     check("frontmatter.yaml_valid", len(frontmatter_invalid) == 0, "all skills/agents frontmatter parses as YAML", paths=frontmatter_invalid)
+    check(
+        "frontmatter.strict_yaml_safe",
+        len(frontmatter_strict_risks) == 0,
+        "skills/agents frontmatter avoids known strict-YAML hazards (unquoted ': ')",
+        paths=frontmatter_strict_risks,
+        severity="warning",
+    )
     check("versioning.frontmatter", len(md_missing) == 0, "all agents/skills have version+updated frontmatter", paths=md_missing, severity="warning")
 
     # 5) Contract drift prevention: schema enums align with validator enums.

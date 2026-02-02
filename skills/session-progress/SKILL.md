@@ -1,8 +1,8 @@
 ---
 name: session-progress
-version: "0.1.0"
-updated: "2026-02-01"
-description: Generate a best-effort progress summary for a session (default: most recent).
+version: "0.4.0"
+updated: "2026-02-02"
+description: "Generate a best-effort progress summary for a session (default: most recent)."
 argument-hint: "[--session <id|dir>]"
 allowed-tools: Bash
 ---

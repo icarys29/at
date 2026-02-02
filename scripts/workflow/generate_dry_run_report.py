@@ -12,15 +12,24 @@ Writes:
 - SESSION_DIR/final/dry_run_report.json
 - SESSION_DIR/final/dry_run_report.md
 
-Version: 0.1.0
-Updated: 2026-02-01
+Version: 0.4.0
+Updated: 2026-02-02
 """
 from __future__ import annotations
 
 import argparse
 import sys
+import warnings
 from pathlib import Path
 from typing import Any
+
+# DEPRECATION WARNING: This script will be removed in v0.5.0. See scripts/DEPRECATED.md
+warnings.warn(
+    "generate_dry_run_report.py is deprecated and will be removed in v0.5.0. "
+    "Agent will generate dry-run reports directly. See scripts/DEPRECATED.md for migration.",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 SCRIPT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SCRIPT_ROOT))
@@ -28,6 +37,7 @@ sys.path.insert(0, str(SCRIPT_ROOT))
 from lib.io import load_json_safe, safe_read_text, utc_now, write_json, write_text  # noqa: E402
 from lib.project import detect_project_dir, get_sessions_dir, load_project_config  # noqa: E402
 from lib.session import resolve_session_dir  # noqa: E402
+
 
 
 def main() -> int:
@@ -145,4 +155,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

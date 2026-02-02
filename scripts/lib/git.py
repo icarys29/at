@@ -6,8 +6,8 @@
 """
 at: Git helpers (best-effort)
 
-Version: 0.1.0
-Updated: 2026-02-01
+Version: 0.4.0
+Updated: 2026-02-02
 """
 from __future__ import annotations
 
@@ -92,4 +92,3 @@ def git_changed_files(project_root: Path) -> tuple[set[str], list[str]]:
     _add_from(untracked, "ls-files --others --exclude-standard")
 
     return (files, warnings)
-

@@ -1,12 +1,12 @@
 ---
 name: action-planner
 description: Creates `planning/actions.json` (+ checklists) for an at session. Use first in /at:run.
-model: sonnet
+model: opus
 tools: Read, Write, Edit, Grep, Glob, Bash
 disallowedTools: Task
 permissionMode: acceptEdits
-version: "0.1.0"
-updated: "2026-02-01"
+version: "0.4.0"
+updated: "2026-02-02"
 ---
 
 # Action Planner (at)
@@ -72,7 +72,9 @@ Produce a **valid, parallel-safe** `planning/actions.json` for the current sessi
 - For code tasks, include at least one meaningful verification (usually `command`) unless the request is explicitly non-code.
 
 ### Workflow strategy (default vs TDD)
-- Read `.claude/project.yaml` → `workflow.strategy` (default is `default`).
+- Resolve the strategy in this order:
+  1) If `SESSION_DIR/session.json` contains `workflow_strategy` (string): use it (session-level override).
+  2) Else read `.claude/project.yaml` → `workflow.strategy` (default is `default`).
 - If `workflow.strategy=tdd`:
   - Create `tests-builder` tasks that produce failing/expected tests **before** implementation tasks.
   - Every `implementor` task must include `depends_on[]` referencing at least one `tests-builder` task id.
@@ -104,9 +106,45 @@ Produce a **valid, parallel-safe** `planning/actions.json` for the current sessi
 3) Assign owners (`implementor` vs `tests-builder` vs non-code owners).
 4) Add acceptance criteria and explicit file scopes.
 5) Define `parallel_execution.groups` (safe by default).
-6) Write artifacts.
-7) Run: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/validate/validate_actions.py" --session "${SESSION_DIR}"`
-8) If validation fails: fix `planning/actions.json` until it passes.
+6) Self-validate against schema rules (see below).
+7) Write artifacts.
+
+## Self-Validation Rules (apply before writing actions.json)
+
+Before writing `planning/actions.json`, verify ALL of these rules:
+
+### Required Fields
+- `version` must be `1` (integer)
+- `workflow` must be one of: `deliver`, `triage`, `review`, `ideate`
+- `tasks` array must have at least 1 task
+- `parallel_execution` object is required
+
+### Task Structure (for each task)
+- `id`: unique non-empty string
+- `owner`: one of `action-planner`, `implementor`, `tests-builder`, `quality-gate`, `compliance-checker`, `root-cause-analyzer`, `reviewer`, `ideation`
+- `summary`: non-empty string
+- `file_scope.allow[]`: at least one glob pattern
+- `acceptance_criteria[]`: at least one criterion with `id` and `statement`
+
+### Parallel Execution Rules (CRITICAL)
+When `parallel_execution.enabled=true`:
+1. Every `implementor` and `tests-builder` task MUST declare `file_scope.writes[]`
+2. `writes[]` entries must be exact file paths OR directory prefixes ending in `/` (NO GLOBS)
+3. Tasks in the same parallel group must have NON-OVERLAPPING `writes[]`
+4. Every code task must appear in exactly ONE `parallel_execution.groups[*].tasks[]`
+5. Each group needs: `group_id` (unique), `execution_order` (integer >=1), `tasks[]` (non-empty)
+
+### TDD Mode (when workflow.strategy=tdd)
+- `tests-builder` tasks must have lower `execution_order` than `implementor` tasks
+- Every `implementor` task must have `depends_on[]` referencing at least one `tests-builder` task
+
+### Common Validation Errors to Avoid
+- Duplicate task IDs
+- `depends_on[]` referencing non-existent task IDs
+- Circular dependencies in the task graph
+- Glob patterns in `writes[]` (use exact paths)
+- Missing tasks in `parallel_execution.groups` when `enabled=true`
+- Overlapping write scopes in the same parallel group
 
 ## Final reply contract (mandatory)
 

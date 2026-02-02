@@ -4,12 +4,17 @@
 # dependencies = []
 # ///
 """
-at: Uninstall policy hooks from project scope (best-effort, idempotent)
+at: Uninstall policy hooks (best-effort, idempotent)
 
-Updates: <project>/.claude/settings.local.json
+Removes hooks installed by scripts/hooks/install_policy_hooks.py.
 
-Version: 0.1.0
-Updated: 2026-02-01
+Targets:
+- project: <project>/.claude/settings.local.json
+- team:    <project>/.claude/settings.json
+- user:    ~/.claude/settings.json
+
+Version: 0.4.0
+Updated: 2026-02-02
 """
 from __future__ import annotations
 
@@ -63,15 +68,16 @@ def _prune_event(items: Any) -> list[dict[str, Any]]:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Remove at-managed policy hooks from project or user settings (idempotent).")
     parser.add_argument("--project-dir", default=None)
-    parser.add_argument("--scope", default="project", choices=["project", "user"], help="Remove hooks from project or user settings.")
+    parser.add_argument("--scope", default="project", choices=["project", "team", "user"], help="Remove hooks from project/team/user settings.")
     args = parser.parse_args()
 
     project_root = detect_project_dir(args.project_dir)
-    settings_path = (
-        project_root / ".claude" / "settings.local.json"
-        if args.scope == "project"
-        else (Path.home() / ".claude" / "settings.json")
-    )
+    if args.scope == "project":
+        settings_path = project_root / ".claude" / "settings.local.json"
+    elif args.scope == "team":
+        settings_path = project_root / ".claude" / "settings.json"
+    else:
+        settings_path = Path.home() / ".claude" / "settings.json"
     if not settings_path.exists():
         print(f"SKIP\t(no settings file: {settings_path})")
         return 0

@@ -9,8 +9,8 @@ at: Docs pre-commit/PR gate (blocks)
 Intercepts likely "commit/pr" Bash commands and runs docs lint.
 Hooks must not modify docs: they detect and block; docs-keeper fixes.
 
-Version: 0.1.0
-Updated: 2026-02-01
+Version: 0.4.0
+Updated: 2026-02-02
 """
 from __future__ import annotations
 
@@ -92,4 +92,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

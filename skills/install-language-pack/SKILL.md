@@ -1,7 +1,7 @@
 ---
 name: install-language-pack
-version: "0.1.0"
-updated: "2026-02-01"
+version: "0.4.0"
+updated: "2026-02-02"
 description: Install a language pack into `.claude/` (rules + structured metadata) for predictable planning and enforcement.
 argument-hint: "--lang <python|go|typescript|rust> [--force] [--project-dir <path>]"
 allowed-tools: Read, Write, Bash

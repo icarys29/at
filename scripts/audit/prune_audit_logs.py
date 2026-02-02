@@ -9,8 +9,8 @@ at: Prune audit logs (dry-run default)
 Prunes JSONL files under `.claude/audit_logs/` older than a cutoff (by mtime),
 or when total size exceeds a limit.
 
-Version: 0.1.0
-Updated: 2026-02-01
+Version: 0.4.0
+Updated: 2026-02-02
 """
 from __future__ import annotations
 
@@ -106,4 +106,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

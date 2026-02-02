@@ -6,8 +6,8 @@
 """
 at: Enforce file scope restrictions on Write/Edit tools
 
-Version: 0.1.0
-Updated: 2026-02-01
+Version: 0.4.0
+Updated: 2026-02-02
 """
 from __future__ import annotations
 
@@ -25,6 +25,7 @@ from lib.project import detect_project_dir, get_sessions_dir  # noqa: E402
 from lib.path_policy import normalize_repo_relative_posix_path  # noqa: E402
 from lib.active_session import resolve_session_dir_from_hook  # noqa: E402
 from lib.io import load_json_safe, utc_now_full, write_json  # noqa: E402
+from lib.session_env import get_file_scope_from_env, get_session_from_env  # noqa: E402
 
 
 def _read_hook_input() -> dict[str, Any] | None:
@@ -221,6 +222,41 @@ def main() -> int:
 
     project_root = detect_project_dir()
     sessions_dir = get_sessions_dir(project_root)
+
+    # PREFERRED: Check env-based file scope first (set by orchestrator via set_file_scope_env)
+    env_writes = get_file_scope_from_env()
+    if env_writes:
+        target = Path(file_path).expanduser()
+        try:
+            target_abs = target.resolve()
+        except Exception:
+            return _deny(f"Refusing to {tool_name} an unresolvable path: {file_path!r}")
+
+        try:
+            repo_rel = target_abs.relative_to(project_root)
+        except Exception:
+            return _deny(f"Out-of-scope {tool_name}: {file_path!r} is outside the project root")
+
+        repo_rel_posix = str(repo_rel).replace("\\", "/")
+
+        # Always allow session artifacts
+        sessions_prefix = sessions_dir.rstrip("/") + "/"
+        if repo_rel_posix == sessions_dir.rstrip("/") or repo_rel_posix.startswith(sessions_prefix):
+            return 0
+
+        # Check against env scope
+        if _allowed_by_writes(repo_rel_posix, env_writes):
+            return 0
+
+        preview = ", ".join(env_writes[:8])
+        more = "" if len(env_writes) <= 8 else f" (+{len(env_writes) - 8} more)"
+        return _deny(
+            f"Out-of-scope {tool_name}: {repo_rel_posix!r}. "
+            f"Allowed writes (from AT_FILE_SCOPE_WRITES): {preview}{more}. "
+            "Stop and report if the plan file scope is wrong."
+        )
+
+    # FALLBACK: Use manifest-based resolution (legacy behavior)
 
     # Prefer deterministic resolution of the active SESSION_DIR using hook input (session_id),
     # falling back to transcript heuristics only when necessary.

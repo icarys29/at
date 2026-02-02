@@ -15,8 +15,8 @@ The board is designed to help with parallel execution:
 - shows per-task status from task artifacts (completed/partial/failed/missing)
 - shows gate statuses from deterministic reports
 
-Version: 0.1.0
-Updated: 2026-02-01
+Version: 0.4.0
+Updated: 2026-02-02
 """
 from __future__ import annotations
 
@@ -34,7 +34,9 @@ sys.path.insert(0, str(SCRIPT_ROOT))
 from lib.io import load_json_safe, utc_now, write_json, write_text  # noqa: E402
 from lib.project import detect_project_dir, get_sessions_dir  # noqa: E402
 from lib.session import resolve_session_dir  # noqa: E402
+from lib.session_env import get_session_from_env  # noqa: E402
 from lib.simple_yaml import load_minimal_yaml  # noqa: E402
+
 
 
 CODE_OWNERS = {"implementor", "tests-builder"}
@@ -216,7 +218,13 @@ def main() -> int:
 
     project_root = detect_project_dir(args.project_dir)
     sessions_dir = args.sessions_dir or get_sessions_dir(project_root)
-    session_dir = resolve_session_dir(project_root, sessions_dir, args.session)
+
+    # Prefer environment-based resolution (set by orchestrator) over heuristics
+    session_ctx = get_session_from_env()
+    if session_ctx and not args.session:
+        session_dir = session_ctx.session_dir
+    else:
+        session_dir = resolve_session_dir(project_root, sessions_dir, args.session)
 
     session_json = load_json_safe(session_dir / "session.json", default={})
     workflow = session_json.get("workflow") if isinstance(session_json.get("workflow"), str) else "deliver"
@@ -372,4 +380,3 @@ if __name__ == "__main__":
     except Exception as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         raise SystemExit(1)
-

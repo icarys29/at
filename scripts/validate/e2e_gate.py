@@ -19,15 +19,24 @@ Policy:
 - workflow.e2e_mode=optional: ok if E2E passed or skipped (warn if missing).
 - workflow.e2e_mode=required: fail if E2E is missing, skipped, or failed.
 
-Version: 0.1.0
-Updated: 2026-02-01
+Version: 0.4.0
+Updated: 2026-02-02
 """
 from __future__ import annotations
 
 import argparse
 import json
 import sys
+import warnings
 from pathlib import Path
+
+# DEPRECATION WARNING: This script will be removed in v0.5.0. See scripts/DEPRECATED.md
+warnings.warn(
+    "e2e_gate.py is deprecated and will be removed in v0.5.0. "
+    "E2E checking will be merged into quality suite. See scripts/DEPRECATED.md for migration.",
+    DeprecationWarning,
+    stacklevel=2
+)
 from typing import Any
 
 SCRIPT_ROOT = Path(__file__).resolve().parents[1]
@@ -36,6 +45,9 @@ sys.path.insert(0, str(SCRIPT_ROOT))
 from lib.io import load_json_safe, utc_now, write_json, write_text  # noqa: E402
 from lib.project import detect_project_dir, get_sessions_dir, load_project_config  # noqa: E402
 from lib.session import resolve_session_dir  # noqa: E402
+
+
+
 
 
 def _load_e2e_cfg(project_root: Path) -> dict[str, Any] | None:
@@ -151,4 +163,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

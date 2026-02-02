@@ -1,0 +1,50 @@
+{
+  "python": {
+    "command": "pylsp",
+    "args": [],
+    "extensionToLanguage": {
+      ".py": "python",
+      ".pyi": "python"
+    }
+  },
+  "typescript": {
+    "command": "typescript-language-server",
+    "args": ["--stdio"],
+    "extensionToLanguage": {
+      ".ts": "typescript",
+      ".tsx": "typescriptreact",
+      ".js": "javascript",
+      ".jsx": "javascriptreact"
+    }
+  },
+  "go": {
+    "command": "gopls",
+    "args": ["serve"],
+    "extensionToLanguage": {
+      ".go": "go"
+    }
+  },
+  "rust": {
+    "command": "rust-analyzer",
+    "args": [],
+    "extensionToLanguage": {
+      ".rs": "rust"
+    }
+  },
+  "java": {
+    "command": "jdtls",
+    "args": [],
+    "extensionToLanguage": {
+      ".java": "java"
+    }
+  },
+  "csharp": {
+    "command": "OmniSharp",
+    "args": [
+      "-lsp"
+    ],
+    "extensionToLanguage": {
+      ".cs": "csharp"
+    }
+  }
+}

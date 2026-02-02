@@ -1,12 +1,12 @@
 ---
 name: docs-keeper
-description: Corporate-grade docs keeper: deterministic impact analysis + minimal doc updates + registry maintenance.
-model: sonnet
-tools: Read, Write, Edit, Grep, Glob, Bash
+description: "Corporate-grade docs keeper: deterministic impact analysis + minimal doc updates + registry maintenance."
+model: haiku
+tools: Read, Write, Edit, Grep, Glob, Bash, LSP
 disallowedTools: Task
 permissionMode: acceptEdits
-version: "0.1.0"
-updated: "2026-02-01"
+version: "0.4.0"
+updated: "2026-02-02"
 ---
 
 # Docs Keeper (at) — Corporate-grade
@@ -28,6 +28,7 @@ This subagent is the **only component** that should modify repo documentation (d
 ## Inputs (expected)
 - `SESSION_DIR/planning/actions.json`
 - `SESSION_DIR/implementation/tasks/*.yaml` and `SESSION_DIR/testing/tasks/*.yaml` (for changed_files + summaries)
+- `SESSION_DIR/documentation/code_index.json` and `SESSION_DIR/documentation/code_index.md` (generated from code; used as grounding)
 - `.claude/project.yaml` (docs config)
 - `docs/DOCUMENTATION_REGISTRY.json` (registry, v2)
  - `SESSION_DIR/inputs/task_context/docs-keeper.md` (required for deterministic scope enforcement when hooks are enabled)
@@ -71,6 +72,30 @@ Repo docs must be updated (always-on when running `sync` mode):
    - Run: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/docs/docs_plan.py" --session "${SESSION_DIR}"`
    - Read: `SESSION_DIR/documentation/docs_plan.json` and `docs_plan.md`.
    - Do not invent new requirements beyond what coverage rules mandate. If rules are missing, report and stop unless the user explicitly asks to extend coverage_rules.
+	1.5) Code grounding (default-on; session-backed)
+	   - Read: `.claude/project.yaml` and check `docs.generate_from_code`.
+	     - If missing: treat as `true` (enabled by default).
+	     - If `false`: skip this step.
+	   - Run: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/docs/code_index.py" --session "${SESSION_DIR}" --mode <changed|full>`
+	     - Mode selection: if the task input explicitly requests `code_index_mode=<changed|full>`, honor it; otherwise use `docs.generate_from_code_mode` if set, else default to `changed`.
+	   - Read: `SESSION_DIR/documentation/code_index.json` and `code_index.md`.
+	   - Use these artifacts to ground edits (symbol/module names only; do not restate code).
+	1.6) LSP grounding (default-on; session-backed; best-effort)
+	   - Read: `.claude/project.yaml` and check `docs.lsp_grounding`.
+	     - If missing: treat as `true` (enabled by default).
+	     - If `false`: skip this step.
+	   - Preconditions:
+	     - `.claude/project.yaml` has `lsp.enabled: true` (otherwise skip with a note).
+	   - If enabled:
+	     - Use `SESSION_DIR/documentation/code_index.json` to pick a small, deterministic symbol set (max 20), prioritizing changed files.
+	     - For each symbol, use the `LSP` tool to gather one of:
+	       - hover text (truncate to 160 chars), and/or
+	       - definition location (path + line range)
+	     - Write low-sensitivity artifacts:
+	       - `SESSION_DIR/documentation/lsp_grounding.json`
+	       - `SESSION_DIR/documentation/lsp_grounding.md`
+	     - If the `LSP` tool errors or no server is available, skip this step and continue (note it in the plan output).
+	     - Use these artifacts only as grounding (do not paste large code or raw tool outputs into docs).
 2) Ensure core docs exist (create only if missing)
    - Ensure these exist (create from `docs/_templates/*.tpl` if missing):
      - `docs/PROJECT_CONTEXT.md`
@@ -101,6 +126,10 @@ Repo docs must be updated (always-on when running `sync` mode):
 
 ## Final reply contract (mandatory)
 
+If `docs.lsp_grounding=true` and you generated the LSP grounding artifacts (files exist), also include:
+- `documentation/lsp_grounding.json`
+- `documentation/lsp_grounding.md`
+
 STATUS: DONE
 SUMMARY: <1–3 bullets: docs plan + what changed>
 REPO_DIFF:
@@ -112,5 +141,7 @@ DRIFT_STATUS:
 SESSION_ARTIFACTS:
 documentation/docs_plan.json
 documentation/docs_plan.md
+documentation/code_index.json
+documentation/code_index.md
 documentation/docs_lint_report.json
 documentation/docs_lint_report.md

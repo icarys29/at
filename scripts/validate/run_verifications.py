@@ -19,8 +19,8 @@ Writes:
 - SESSION_DIR/quality/verifications_report.md
 - SESSION_DIR/quality/verification_evidence/** (per-verification JSON + logs)
 
-Version: 0.1.0
-Updated: 2026-02-01
+Version: 0.4.0
+Updated: 2026-02-02
 """
 from __future__ import annotations
 
@@ -28,6 +28,15 @@ import argparse
 import json
 import re
 import subprocess
+import warnings
+
+# DEPRECATION WARNING: This script will be removed in v0.5.0. See scripts/DEPRECATED.md
+warnings.warn(
+    "run_verifications.py is deprecated and will be removed in v0.5.0. "
+    "Merged into quality suite. See scripts/DEPRECATED.md for migration.",
+    DeprecationWarning,
+    stacklevel=2
+)
 import sys
 from dataclasses import dataclass
 from pathlib import Path

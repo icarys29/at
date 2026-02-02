@@ -8,8 +8,8 @@ at: Docs registry validation utilities (v2)
 
 Designed to be shared by docs gate, docs lint, and hooks.
 
-Version: 0.1.0
-Updated: 2026-02-01
+Version: 0.4.0
+Updated: 2026-02-02
 """
 from __future__ import annotations
 
@@ -348,4 +348,3 @@ def match_globs(path: str, globs: list[str]) -> bool:
         if fnmatch.fnmatch(p, g.strip()):
             return True
     return False
-

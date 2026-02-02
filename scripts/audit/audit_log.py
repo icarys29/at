@@ -6,8 +6,8 @@
 """
 at: Audit log helpers (JSONL, best-effort, fail-open)
 
-Version: 0.1.0
-Updated: 2026-02-01
+Version: 0.4.0
+Updated: 2026-02-02
 """
 from __future__ import annotations
 
@@ -64,4 +64,3 @@ def append_jsonl(path: Path, obj: dict[str, Any]) -> None:
 def traces_enabled() -> bool:
     v = os.environ.get("AT_AUDIT_TRACES_ENABLED", "").strip().lower()
     return v in {"1", "true", "yes", "on"}
-

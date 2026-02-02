@@ -1,112 +1,97 @@
-# CLAUDE.md — Agent Team (`at`) Claude Code plugin
+# Agent Team (`at`) — Maintainer Guide (CLAUDE.md)
 
-This repo rebuilds the **Agent Team (`at`)** Claude Code plugin from scratch, based on the intent and operating model of the previous implementation.
+`at` is a corporate-grade workflow kernel for Claude Code. It turns a request into a **repeatable, contract-driven session** with:
 
-## Purpose (what this plugin is)
-
-`at` is a **workflow-kernel** for Claude Code: it turns a user request into a **repeatable, contract-driven session** with:
 - deterministic session artifacts (plans, task outputs, reports)
-- minimal, task-scoped context (context packs + per-task context slices)
-- binary gates (plan validation, scope conformance, quality, compliance, docs)
-- optional audit/policy hooks and persistent per-project learning/memory
+- minimal, task-scoped context (context pack + per-task context slices)
+- binary gates (scope, quality, docs, compliance)
+- optional hooks (policy enforcement, audit logging, UX nudges)
 
-The goal is **high UX + high reliability**: “done” means gates pass (or the workflow stops as blocked with actionable remediation).
+This document is for maintainers and contributors to the plugin itself.
 
-## Non-negotiables (design invariants)
+## What “done” means
 
-- **Sessions are first-class**: every run creates/resumes a `SESSION_DIR` and writes artifacts there.
-- **Orchestrator does not modify repo code**: it only reads/writes under `SESSION_DIR`; all repo changes happen via subagents.
-- **No nested subagents (Claude Code limitation)**: subagents **cannot** spawn other subagents; all orchestration/dispatch lives in `/at:run`.
-- **Skills are injected, not invoked**: if a subagent needs “skill content”, attach it via the subagent frontmatter (`skills:`) so the full text is injected into its context.
-- **Least context**: code-writing subagents must operate from **per-task context slices**, not repo-wide context dumps.
-- **Fail-the-gate semantics**: if a gate fails, stop and report the exact remediation path.
-- **Scope enforcement**: implement/test tasks declare `file_scope.writes[]`, and (when enabled) hooks enforce writes at tool-time.
-- **Portable overlays**: per-repo specifics live in an overlay (e.g. `.claude/project.yaml`, `.claude/rules/**`, docs registry), not in plugin code.
-- **Minimal dependencies**: prefer Python stdlib + small internal helpers; avoid heavy deps that reduce portability.
+For deliver workflows, “done” means:
+- tasks execute within declared file scope
+- required verifications run and produce evidence
+- gates pass (or the workflow stops as BLOCKED with an actionable remediation path)
 
-## Canonical workflows (expected UX)
+## Design invariants (non‑negotiable)
+
+- **Sessions are first-class**: every `/at:run` creates or resumes a `SESSION_DIR` and writes artifacts there.
+- **Orchestrator does not modify repo code**: it reads/writes session artifacts only; repo edits happen via subagents.
+- **No nested subagents**: subagents must not invoke other subagents; orchestration lives in `/at:run`.
+- **Least context**: code-writing subagents operate on per-task context slices, not repo-wide dumps.
+- **Fail-the-gate semantics**: if a gate fails, stop and report remediation (don’t paper over failures).
+- **Scope enforcement**: code tasks must declare `file_scope.writes[]`; hooks can enforce writes at tool-time.
+- **Overlay-owned config**: repo-specific policy/commands live under `.claude/` (project overlay), not in plugin code.
+- **Determinism first**: scripts produce stable outputs; evidence is written as JSON + a concise MD summary.
+- **No network required at runtime**: workflows must not depend on network availability.
+
+## User-facing commands (public API)
 
 All top-level commands are implemented as skills under `skills/*/SKILL.md` and exposed as `/at:<command>`.
 
-- `/at:run` orchestrates the workflow (default `deliver`; also `triage`, `review`, `ideate`)
-- `/at:ideate` generates an architecture brief + brainstormed options (session-only; no repo edits)
-- `/at:brainstorm` alias for `/at:ideate`
-- `/at:setup-e2e` scaffolds a safe E2E setup (README + env example + config; no secrets)
-- `/at:e2e` runs E2E only (session-backed evidence; supports `.claude/at/e2e.json` profiles)
-- `/at:init-project` bootstraps a repo overlay (config, rules, docs scaffolding)
-- `/at:doctor` validates preconditions and can propose auto-remediation
-- Session tools: `/at:sessions`, `/at:session-progress`, resume by session id/dir
-- Controls: `/at:setup-policy-hooks`, `/at:setup-audit-hooks`, `/at:uninstall-hooks`, `/at:prune-audit-logs`
-- Learning/memory: `/at:learning-status`, `/at:learning-update`, `/at:retrospective`
+Core workflows:
+- `/at:run` — workflow kernel (`deliver|triage|review|ideate`)
+- `/at:ideate` — structured ideation (session-only; no repo edits)
+- `/at:brainstorm` — alias for ideation
 
-## Local reference library (templates + upstream conventions)
+Project setup and governance:
+- `/at:init-project` — bootstrap `.claude/` overlay + docs scaffolding
+- `/at:doctor` — validate repo overlay + prerequisites
+- `/at:docs` — docs status/plan/sync/new/lint
+- `/at:verify` — CI-friendly verify (quality + docs lint)
 
-Use the repo’s reference library under `references/` to keep skills/agents/hooks aligned and DRY:
+Operational tools:
+- `/at:sessions`, `/at:session-progress`, `/at:session-diagnostics`, `/at:session-auditor`
+- `/at:telemetry-session-kpis`, `/at:telemetry-rollup`
 
-- Skill template: `references/skills-template.md`
-- Agent template: `references/agents-template.md`
-- Claude Code (plugins/skills/subagents/hooks): `references/claude-code/README.md`
-- Hook implementation guidelines: `references/claude-code/hooks-guidelines.md`
-- KISS/YAGNI/SRP/DRY: `references/claude-code/keep-it-simple.md`
+Hooks installers (opt-in):
+- `/at:setup-policy-hooks`, `/at:setup-audit-hooks`, `/at:setup-docs-keeper-hooks`, `/at:setup-learning-hooks`, `/at:setup-ux-nudges-hooks`
+- matching uninstall skills
 
-## Repo layout (target structure)
+## Repo layout (plugin source)
 
-Keep the repo structured so each concern is isolated and testable:
+- `.claude-plugin/plugin.json` — Claude Code manifest (canonical)
+- `plugin.json` — convenience manifest (kept in sync for local tooling)
+- `VERSION` — convenience version file (must match manifest version)
+- `hooks/` — default hooks config (plugin-scoped)
+- `skills/` — user-invocable commands (`/at:*`)
+- `agents/` — subagent definitions
+- `scripts/` — deterministic implementation (sessions/context/validation/gates/docs/audit/learning)
+- `schemas/` — JSON schemas for session artifacts
+- `templates/` — overlay templates (project.yaml, docs templates, rules, language packs)
+- `references/` — templates + condensed upstream conventions
 
-- `plugin.json`: plugin manifest (name/version/metadata)
-- `hooks/hooks.json`: Claude Code hooks config (scope enforcement, audit, session lifecycle)
-- `agents/*.md`: subagent definitions (frontmatter + instructions)
-- `skills/*/SKILL.md`: command definitions (orchestrators, utilities, installers)
-- `scripts/**/*.py`: deterministic implementation (session mgmt, context, validation, gates, learning, audit)
-- `schemas/*.json`: schemas for `planning/actions.json`, `.claude/project.yaml`, and other artifacts
-- `templates/**`: repo overlay templates (`project.yaml`, baseline rules, docs scaffolding, optional skills)
-- `docs/**`: plugin docs (contracts, gates, configuration, troubleshooting)
+## Versioning & change discipline (required)
 
-## Versioning + headers (copy the previous plugin’s discipline)
+Version sources (must stay consistent):
+- `.claude-plugin/plugin.json` → `version` (authoritative)
+- `plugin.json` → `version` (mirror)
+- `VERSION` file (mirror)
 
-The previous plugin enforced a strict versioning system to make upgrades/diffs auditable:
+Per-file version metadata:
+- Python scripts: `Version:` + `Updated:` in the header docstring
+- Agent/skill markdown: `version:` + `updated:` in YAML frontmatter
 
-- One authoritative plugin version in `plugin.json`.
-- A root `VERSION` file kept in sync.
-- **Per-file version metadata**:
-  - Python scripts begin with an `at:` docstring header including `Version:` and `Updated:`.
-  - Agent/Skill markdown files include `version` and `updated` in frontmatter.
+### How to bump version (canonical)
 
-When you rebuild this repo’s implementation, keep the same discipline and add an automated “version bump” script early (the prior plugin used `scripts/dev/add_version_headers.py`) so updates are consistent.
+1) Update `.claude-plugin/plugin.json` (`version`) and `plugin.json` to match.
+2) Update `VERSION` to match.
+3) Run: `uv run scripts/dev/add_version_headers.py --include-templates`
+4) Sanity check: `uv run python -m compileall -q scripts`
 
-### How to bump the plugin version (canonical)
+## Script authoring rules (determinism + safety)
 
-1) Update `plugin.json` (`version`).
-2) Update `VERSION` to match `plugin.json`.
-3) Run `uv run scripts/dev/add_version_headers.py` to stamp `Version:`/`Updated:` across scripts and frontmatter (agents/skills).
-   - Recommended (also keeps installable templates aligned): `uv run scripts/dev/add_version_headers.py --include-templates`
-4) Run a quick sanity check: `uv run python -m compileall -q scripts`.
+- Prefer explicit inputs/outputs; avoid implicit global state.
+- Emit JSON (machine) + MD (human) artifacts.
+- Enforce path safety (no `..`, no absolute paths escaping the project root).
+- Respect `policies.forbid_secrets_globs` and never embed forbidden files in context artifacts.
+- Keep hooks fast and fail-open unless they are explicitly a guardrail (policy/scope).
 
-## Determinism rules (how to write scripts)
+## Local development
 
-- Prefer **explicit inputs/outputs** (paths, json/yaml) over implicit global state.
-- Write machine-readable artifacts (`.json`) alongside human reports (`.md`).
-- Do not require network access at runtime.
-- Be strict about **path safety**: reject absolute paths / `..` traversal; ensure doc registry paths resolve under project root.
-- Treat secrets carefully: respect `policies.forbid_secrets_globs` in config; never embed forbidden files into context artifacts.
-- **Python scripts MUST be “self-sufficient uv/Astral scripts”** (invoked as `uv run ...` with dependencies declared/pinned) for:
-  - One-command run (`uv run ...`) with dependencies handled automatically
-  - Reproducible installs via lockfile/pinned deps
-  - Faster dependency resolution/install than `pip` in many workflows
-  - Cleaner automation/CI (less environment drift)
-  - If a script has non-stdlib deps, declare them in the script metadata and pin versions (e.g. `package==1.2.3`).
-
-## Local development expectations
-
-- Run Claude Code with this plugin locally: `claude --plugin-dir .`
-- Run Python scripts via `uv run ...` (even stdlib-only), so execution is consistent across automation and CI.
-- Keep hook scripts fast and robust (they run frequently and must degrade gracefully).
-
-## When modifying or adding capabilities
-
-- Start with the user-facing contract (skill + docs) and only then add scripts/schemas.
-- Prefer extending schemas + validators over adding “smart” heuristics in the orchestrator.
-- If you add a new workflow phase or gate, also add:
-  - a deterministic artifact contract (what it writes)
-  - documentation in `docs/`
-  - validation wiring (so failures are actionable)
+- Run Claude Code with this plugin: `claude --plugin-dir .`
+- Run Python scripts via `uv run ...` (even stdlib-only) for reproducibility.
+- Keep skill/agent markdown concise (≤ 500 lines); move long material into `references/` or `skills/<id>/references/`.

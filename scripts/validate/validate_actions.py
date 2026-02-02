@@ -6,8 +6,8 @@
 """
 at: Validate actions.json structure
 
-Version: 0.1.0
-Updated: 2026-02-01
+Version: 0.4.0
+Updated: 2026-02-02
 """
 from __future__ import annotations
 
@@ -18,9 +18,43 @@ from pathlib import Path
 SCRIPT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SCRIPT_ROOT))
 
+from lib.errors import format_error  # noqa: E402
 from lib.project import detect_project_dir, get_sessions_dir  # noqa: E402
 from lib.session import resolve_session_dir  # noqa: E402
 from validate.actions_validator import validate_actions_file  # noqa: E402
+
+
+def _categorize_error(path: str, message: str) -> tuple[str | None, dict[str, str]]:
+    """Map validation error to friendly error code + kwargs."""
+    msg_lower = message.lower()
+    path_lower = path.lower()
+
+    if "acceptance_criteria" in path_lower and ("required" in msg_lower or "empty" in msg_lower):
+        task_id = path.split("[")[1].split("]")[0] if "[" in path else "unknown"
+        return "ACTIONS_MISSING_ACCEPTANCE_CRITERIA", {"task_id": f"tasks[{task_id}]"}
+
+    if "file_scope" in path_lower and "writes" in path_lower and ("required" in msg_lower or "empty" in msg_lower):
+        task_id = path.split("[")[1].split("]")[0] if "[" in path else "unknown"
+        return "ACTIONS_MISSING_WRITES", {"task_id": f"tasks[{task_id}]"}
+
+    if "file_scope.allow" in path_lower and ("required" in msg_lower or "empty" in msg_lower):
+        task_id = path.split("[")[1].split("]")[0] if "[" in path else "unknown"
+        return "ACTIONS_MISSING_FILE_SCOPE", {"task_id": f"tasks[{task_id}]"}
+
+    if "overlap" in msg_lower:
+        return "ACTIONS_OVERLAPPING_WRITES", {"task1": "task-A", "task2": "task-B", "path": "overlapping/file"}
+
+    if "glob" in msg_lower and "forbidden" in msg_lower:
+        task_id = path.split("[")[1].split("]")[0] if "[" in path else "unknown"
+        return "ACTIONS_GLOB_IN_WRITES", {"task_id": f"tasks[{task_id}]", "pattern": "*"}
+
+    if "parallel_execution.groups" in path_lower and "missing" in msg_lower:
+        return "ACTIONS_TASK_NOT_IN_GROUP", {"task_id": "missing-task"}
+
+    if "cycle" in msg_lower or "circular" in msg_lower:
+        return "ACTIONS_CIRCULAR_DEPENDENCY", {"cycle": "A → B → A"}
+
+    return None, {}
 
 
 def _resolve_actions_path(project_root: Path, sessions_dir: str, actions_path: str | None, session: str | None) -> Path:
@@ -50,7 +84,17 @@ def main() -> int:
     if errors:
         print("FAIL: actions.json does not conform to the contract.", file=sys.stderr)
         print(f"File: {actions}", file=sys.stderr)
-        for e in errors[:50]:
+
+        # Show first error with friendly message if possible
+        first_err = errors[0]
+        code, kwargs = _categorize_error(first_err.path, first_err.message)
+        if code:
+            print(format_error(code, **kwargs), file=sys.stderr)
+        else:
+            print(f"\n- {first_err.path}: {first_err.message}", file=sys.stderr)
+
+        # Show remaining errors (raw)
+        for e in errors[1:50]:
             print(f"- {e.path}: {e.message}", file=sys.stderr)
         if len(errors) > 50:
             print(f"- … ({len(errors) - 50} more)", file=sys.stderr)

@@ -8,8 +8,8 @@ at: Generate docs/DOCUMENTATION_REGISTRY.md from docs/DOCUMENTATION_REGISTRY.jso
 
 Deterministic, repo-local, and safe to run in CI.
 
-Version: 0.1.0
-Updated: 2026-02-01
+Version: 0.4.0
+Updated: 2026-02-02
 """
 from __future__ import annotations
 

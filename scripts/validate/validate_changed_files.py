@@ -6,8 +6,8 @@
 """
 at: Validate git changed files against plan scope (best-effort)
 
-Version: 0.1.0
-Updated: 2026-02-01
+Version: 0.4.0
+Updated: 2026-02-02
 """
 from __future__ import annotations
 
@@ -22,28 +22,14 @@ sys.path.insert(0, str(SCRIPT_ROOT))
 from lib.git import git_changed_files  # noqa: E402
 from lib.io import load_json_safe, utc_now, write_json, write_text  # noqa: E402
 from lib.path_policy import normalize_repo_relative_posix_path  # noqa: E402
+from lib.paths import path_matches_scope  # noqa: E402
 from lib.project import detect_project_dir, get_sessions_dir, load_project_config  # noqa: E402
 from lib.session import resolve_session_dir  # noqa: E402
 
 
 def _allowed_by_any_scope(path_posix: str, scopes: list[str]) -> bool:
-    for w in scopes:
-        if not isinstance(w, str) or not w.strip():
-            continue
-        raw = w.strip().replace("\\", "/")
-        is_dir = raw.endswith("/")
-        norm = normalize_repo_relative_posix_path(raw)
-        if not norm:
-            continue
-        if is_dir and not norm.endswith("/"):
-            norm = norm + "/"
-        if is_dir:
-            if path_posix.startswith(norm):
-                return True
-        else:
-            if path_posix == norm:
-                return True
-    return False
+    # Use the canonical path_matches_scope from lib/paths.py
+    return path_matches_scope(path_posix, scopes)
 
 
 def main() -> int:
@@ -137,4 +123,3 @@ if __name__ == "__main__":
     except Exception as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         raise SystemExit(1)
-

@@ -6,8 +6,8 @@
 """
 at: Build per-task context slices from actions.json
 
-Version: 0.1.0
-Updated: 2026-02-01
+Version: 0.4.0
+Updated: 2026-02-02
 """
 from __future__ import annotations
 
@@ -36,6 +36,10 @@ from lib.path_policy import (  # noqa: E402
 )
 from lib.project import detect_project_dir, get_sessions_dir, load_project_config  # noqa: E402
 from lib.session import resolve_session_dir  # noqa: E402
+
+
+
+
 
 
 CODE_OWNERS = {"implementor", "tests-builder"}

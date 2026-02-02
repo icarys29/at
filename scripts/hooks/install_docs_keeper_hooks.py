@@ -11,9 +11,10 @@ Adds exactly two hooks:
 2) PreToolUse(Bash) gate for commit/PR commands via docs lint
 
 Updates: <project>/.claude/settings.local.json (or user settings)
+Also supports team scope: <project>/.claude/settings.json
 
-Version: 0.1.0
-Updated: 2026-02-01
+Version: 0.4.0
+Updated: 2026-02-02
 """
 from __future__ import annotations
 
@@ -83,16 +84,17 @@ def _filter_managed(items: Any) -> list[dict[str, Any]]:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Install docs-keeper hooks (idempotent).")
     parser.add_argument("--project-dir", default=None)
-    parser.add_argument("--scope", default="project", choices=["project", "user"], help="Install hooks into project or user settings.")
+    parser.add_argument("--scope", default="project", choices=["project", "team", "user"], help="Install hooks into project/team/user settings.")
     args = parser.parse_args()
 
     project_root = detect_project_dir(args.project_dir)
     plugin_root = get_plugin_root()
-    settings_path = (
-        project_root / ".claude" / "settings.local.json"
-        if args.scope == "project"
-        else (Path.home() / ".claude" / "settings.json")
-    )
+    if args.scope == "project":
+        settings_path = project_root / ".claude" / "settings.local.json"
+    elif args.scope == "team":
+        settings_path = project_root / ".claude" / "settings.json"
+    else:
+        settings_path = Path.home() / ".claude" / "settings.json"
     settings = _load_json(settings_path)
     hooks_cfg = settings.get("hooks") if isinstance(settings.get("hooks"), dict) else {}
 
@@ -132,4 +134,3 @@ if __name__ == "__main__":
     except Exception as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         raise SystemExit(1)
-

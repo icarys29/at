@@ -1,7 +1,7 @@
 ---
 name: audit-report
-version: "0.1.0"
-updated: "2026-02-01"
+version: "0.4.0"
+updated: "2026-02-02"
 description: Generate an audit report from `.claude/audit_logs` into `.claude/audit_reports/`.
 argument-hint: "[--out <dir>] [--project-dir <path>]"
 allowed-tools: Read, Write, Edit, Bash

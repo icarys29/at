@@ -8,8 +8,8 @@ at: Upgrade project overlay to current templates (conservative, dry-run default)
 
 This is a thin wrapper around `scripts/upgrade/migrate_overlay.py`.
 
-Version: 0.1.0
-Updated: 2026-02-01
+Version: 0.4.0
+Updated: 2026-02-02
 """
 from __future__ import annotations
 

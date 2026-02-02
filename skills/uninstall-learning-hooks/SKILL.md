@@ -1,9 +1,9 @@
 ---
 name: uninstall-learning-hooks
-version: "0.1.0"
-updated: "2026-02-01"
-description: Uninstall at-managed learning hooks from project or user settings.
-argument-hint: "[--scope project|user] [--project-dir <path>]"
+version: "0.4.0"
+updated: "2026-02-02"
+description: Uninstall at-managed learning hooks from project/team/user settings.
+argument-hint: "[--scope project|team|user] [--project-dir <path>]"
 allowed-tools: Read, Write, Edit, Bash
 ---
 
@@ -11,4 +11,3 @@ allowed-tools: Read, Write, Edit, Bash
 
 ## Procedure
 1) Run: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/learning/uninstall_learning_hooks.py" $ARGUMENTS`
-

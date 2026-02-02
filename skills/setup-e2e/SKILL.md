@@ -1,7 +1,7 @@
 ---
 name: setup-e2e
-version: "0.1.0"
-updated: "2026-02-01"
+version: "0.4.0"
+updated: "2026-02-02"
 description: Setup guided E2E scaffolding (README + env example + config) without touching secrets.
 argument-hint: "[--force] [--project-dir <path>]"
 allowed-tools: Read, Write, Bash

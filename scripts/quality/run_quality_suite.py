@@ -6,8 +6,8 @@
 """
 at: Run configured quality suite (format/lint/typecheck/test/build)
 
-Version: 0.1.0
-Updated: 2026-02-01
+Version: 0.4.0
+Updated: 2026-02-02
 """
 from __future__ import annotations
 
@@ -36,6 +36,10 @@ class CommandSpec:
     requires_env: list[str]
     requires_files: list[str]
     env_file: str | None
+
+
+
+
 
 
 def _has_glob_chars(s: str) -> bool:

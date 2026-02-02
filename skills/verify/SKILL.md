@@ -1,7 +1,7 @@
 ---
 name: verify
-version: "0.1.0"
-updated: "2026-02-01"
+version: "0.4.0"
+updated: "2026-02-02"
 description: Run a CI-friendly verify (quality suite + docs lint) and emit one report.
 argument-hint: "[--session <id|dir>] [--project-dir <path>] [--e2e-profile <name>]"
 allowed-tools: Read, Bash

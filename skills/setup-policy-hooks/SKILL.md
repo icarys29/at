@@ -1,9 +1,9 @@
 ---
 name: setup-policy-hooks
-version: "0.1.0"
-updated: "2026-02-01"
-description: Install at policy hooks into project scope (secrets + destructive command blocking, plus scope/contract enforcement).
-argument-hint: "[--scope project|user] [--project-dir <path>]"
+version: "0.4.0"
+updated: "2026-02-02"
+description: Install at policy hooks into project/team/user settings (secrets + destructive command blocking, plus scope/contract enforcement).
+argument-hint: "[--scope project|team|user] [--project-dir <path>]"
 allowed-tools: Read, Write, Edit, Bash
 ---
 
@@ -18,4 +18,4 @@ allowed-tools: Read, Write, Edit, Bash
 
 ## Procedure
 1) Run: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/hooks/install_policy_hooks.py" $ARGUMENTS`
-2) Verify: `.claude/settings.local.json` contains `hooks.PreToolUse` entries managed by `at-policy-hooks`.
+2) Verify: the selected settings file contains `hooks.PreToolUse` entries managed by `at-policy-hooks`.

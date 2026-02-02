@@ -1,12 +1,12 @@
 ---
 name: story-writer
 description: Produces concise user stories + acceptance criteria (and optional E2E scenarios) as session artifacts to enforce end-to-end delivery verification.
-model: sonnet
-tools: Read, Write, Edit, Grep, Glob, Bash
-disallowedTools: Task
+model: haiku
+tools: Read, Write, Grep, Glob
+disallowedTools: Task, Edit, Bash
 permissionMode: acceptEdits
-version: "0.1.0"
-updated: "2026-02-01"
+version: "0.4.0"
+updated: "2026-02-02"
 ---
 
 # Story Writer (at)

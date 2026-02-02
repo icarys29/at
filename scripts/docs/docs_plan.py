@@ -10,8 +10,8 @@ This turns session artifacts + docs registry coverage rules into a minimal plan:
 - which existing docs must be reviewed/updated
 - which doc types must be created (when rules mandate creation)
 
-Version: 0.1.0
-Updated: 2026-02-01
+Version: 0.4.0
+Updated: 2026-02-02
 """
 from __future__ import annotations
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Project enforcement: detect "god classes" (heuristic; opt-in)
+Project enforcement: detect "god classes" (heuristic; default-on)
 
 This is a lightweight, deterministic checker intended to be installed into:
 - .claude/at/scripts/check_god_classes.py
@@ -133,4 +133,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

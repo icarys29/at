@@ -11,18 +11,25 @@ Moves existing planning artifacts into:
 
 This keeps iterative runs (ideate/planning) predictable without losing previous outputs.
 
-Version: 0.1.0
-Updated: 2026-02-01
+Version: 0.4.0
+Updated: 2026-02-02
 """
 from __future__ import annotations
 
 import argparse
+import sys
+import warnings
 from pathlib import Path
 
+# DEPRECATION WARNING: This script will be removed in v0.5.0. See scripts/DEPRECATED.md
+warnings.warn(
+    "archive_planning_outputs.py is deprecated and will be removed in v0.5.0. "
+    "Inline file operations. See scripts/DEPRECATED.md for migration.",
+    DeprecationWarning,
+    stacklevel=2
+)
+
 SCRIPT_ROOT = Path(__file__).resolve().parents[1]
-
-import sys
-
 sys.path.insert(0, str(SCRIPT_ROOT))
 
 from lib.io import utc_now, write_json  # noqa: E402
@@ -130,4 +137,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

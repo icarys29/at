@@ -4,12 +4,15 @@
 # dependencies = []
 # ///
 """
-at: Install policy hooks into project scope (idempotent)
+at: Install policy hooks (opt-in, idempotent)
 
-Writes/updates: <project>/.claude/settings.local.json
+Installs into:
+- project: <project>/.claude/settings.local.json
+- team:    <project>/.claude/settings.json
+- user:    ~/.claude/settings.json
 
-Version: 0.1.0
-Updated: 2026-02-01
+Version: 0.4.0
+Updated: 2026-02-02
 """
 from __future__ import annotations
 
@@ -58,19 +61,25 @@ def _managed_hook(command: str, timeout: int, matcher: str) -> dict[str, Any]:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Install at policy hooks into project or user settings (idempotent).")
+    parser = argparse.ArgumentParser(description="Install at policy hooks into project/team/user settings (idempotent).")
     parser.add_argument("--project-dir", default=None)
-    parser.add_argument("--scope", default="project", choices=["project", "user"], help="Install hooks into project or user settings.")
+    parser.add_argument(
+        "--scope",
+        default="project",
+        choices=["project", "team", "user"],
+        help="Install hooks into project (local), team (committable), or user settings.",
+    )
     args = parser.parse_args()
 
     project_root = detect_project_dir(args.project_dir)
     plugin_root = get_plugin_root()
 
-    settings_path = (
-        project_root / ".claude" / "settings.local.json"
-        if args.scope == "project"
-        else (Path.home() / ".claude" / "settings.json")
-    )
+    if args.scope == "project":
+        settings_path = project_root / ".claude" / "settings.local.json"
+    elif args.scope == "team":
+        settings_path = project_root / ".claude" / "settings.json"
+    else:
+        settings_path = Path.home() / ".claude" / "settings.json"
     settings = _load_json(settings_path)
 
     hooks_cfg = settings.get("hooks") if isinstance(settings.get("hooks"), dict) else {}
@@ -99,6 +108,15 @@ def main() -> int:
     pre = _filter_managed("PreToolUse")
     post = _filter_managed("PostToolUse")
     sub_stop = _filter_managed("SubagentStop")
+
+    # Add: validate Task invocations for at agents (guardrail)
+    pre.append(
+        _managed_hook(
+            f"uv run \"{plugin_root}/scripts/hooks/validate_task_invocation.py\"",
+            timeout=10,
+            matcher="Task",
+        )
+    )
 
     # Add: policy guardrails (secrets + destructive bash)
     pre.append(

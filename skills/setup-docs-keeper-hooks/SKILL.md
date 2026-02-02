@@ -1,9 +1,9 @@
 ---
 name: setup-docs-keeper-hooks
-version: "0.1.0"
-updated: "2026-02-01"
-description: Install the minimal docs-keeper hooks into project or user scope (2 hooks).
-argument-hint: "[--scope project|user]"
+version: "0.4.0"
+updated: "2026-02-02"
+description: Install the minimal docs-keeper hooks into project/team/user scope (2 hooks).
+argument-hint: "[--scope project|team|user]"
 allowed-tools: Bash, Read
 ---
 
@@ -17,4 +17,4 @@ Installs exactly two hooks into Claude Code settings (idempotent):
 ## Procedure
 
 - Run: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/hooks/install_docs_keeper_hooks.py" --scope project`
-
+  - For a committable team config, use: `--scope team`

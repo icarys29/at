@@ -6,8 +6,8 @@
 """
 at: Initialize project with at overlay
 
-Version: 0.1.0
-Updated: 2026-02-01
+Version: 0.4.0
+Updated: 2026-02-02
 """
 from __future__ import annotations
 
@@ -80,6 +80,43 @@ def _install_language_pack(project_root: Path, *, lang: str, force: bool) -> lis
         )
     )
     return results
+
+
+def _install_project_pack(project_root: Path, *, force: bool) -> list[tuple[str, str]]:
+    """
+    Install the repo-local project pack (enforcement runner + default checks).
+
+    Best-effort: failures should not block initial overlay bootstrap.
+    """
+    try:
+        import subprocess
+
+        cmd = [sys.executable, str(_plugin_root() / "scripts" / "project_pack" / "install_project_pack.py"), "--project-dir", str(project_root)]
+        if force:
+            cmd.append("--force")
+        proc = subprocess.run(
+            cmd,
+            cwd=str(project_root),
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            check=False,
+        )
+        out: list[tuple[str, str]] = []
+        for line in (proc.stdout or "").splitlines():
+            if "\t" not in line:
+                continue
+            status, rel = line.split("\t", 1)
+            status = status.strip()
+            rel = rel.strip()
+            if status and rel:
+                out.append((status, rel))
+        if proc.returncode != 0 and not out:
+            out.append(("ERROR", ".claude/at/enforcement.json"))
+        return out
+    except Exception:
+        return [("ERROR", ".claude/at/enforcement.json")]
 
 
 def main() -> int:
@@ -241,6 +278,9 @@ def main() -> int:
         results.append(("CREATE", ".claude/agent-team/learning/STATUS.md"))
     else:
         results.append(("SKIP", ".claude/agent-team/learning/STATUS.md"))
+
+    # Project pack (repo-local enforcements). Default-on and safe to re-run.
+    results.extend(_install_project_pack(project_root, force=args.force))
 
     for status, rel in results:
         print(f"{status}\t{rel}")

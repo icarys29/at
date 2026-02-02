@@ -11,8 +11,8 @@ moving planning/implementation (agentic tasks) into code.
 
 Phases are best-effort and will error if required artifacts are missing.
 
-Version: 0.1.0
-Updated: 2026-02-01
+Version: 0.4.0
+Updated: 2026-02-02
 """
 from __future__ import annotations
 
@@ -37,6 +37,10 @@ class Step:
     label: str
     script: Path
     args: list[str]
+
+
+
+
 
 
 PHASE_ORDER = ["validate_plan", "task_contexts", "checkpoint", "gates", "progress"]

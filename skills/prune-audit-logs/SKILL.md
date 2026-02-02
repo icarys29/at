@@ -1,7 +1,7 @@
 ---
 name: prune-audit-logs
-version: "0.1.0"
-updated: "2026-02-01"
+version: "0.4.0"
+updated: "2026-02-02"
 description: Prune `.claude/audit_logs` (dry-run default; use --apply to delete).
 argument-hint: "[--days N] [--max-total-mb N] [--apply] [--project-dir <path>]"
 allowed-tools: Read, Write, Edit, Bash

@@ -1,6 +1,6 @@
 # Requirements (at)
 
-This folder contains long-lived requirements artifacts for the rebuild:
+This folder contains long-lived requirements artifacts for the plugin:
 
 - Capability checklist: `plan/requirements/CAPABILITY_TABLES.md`
 - User stories: `plan/requirements/USER_STORIES.md`

@@ -6,8 +6,8 @@
 """
 at: Build context pack for agent workflows
 
-Version: 0.1.0
-Updated: 2026-02-01
+Version: 0.4.0
+Updated: 2026-02-02
 """
 from __future__ import annotations
 
@@ -285,12 +285,40 @@ def _render_language_verifications(packs: dict[str, dict[str, Any]]) -> list[str
     return lines
 
 
+def _build_from_template(project_root: Path, session_dir: Path, config: dict[str, Any]) -> str:
+    """Build context pack using @import template (experimental).
+
+    This uses Claude Code's native @import directives for file inclusion,
+    reducing ~430 lines to a template file + variable substitution.
+    """
+    # Find template file
+    plugin_root = Path(__file__).resolve().parents[2]
+    template_path = plugin_root / "templates" / "context_pack.md.tpl"
+    if not template_path.exists():
+        raise RuntimeError(f"Template not found: {template_path}")
+
+    template = template_path.read_text(encoding="utf-8")
+
+    # Determine primary language for language rules
+    proj = config.get("project") if isinstance(config.get("project"), dict) else {}
+    langs = proj.get("primary_languages") if isinstance(proj.get("primary_languages"), list) else []
+    primary_lang = langs[0] if langs and isinstance(langs[0], str) else "python"
+
+    # Substitute variables
+    content = template.replace("${SESSION_DIR}", str(session_dir))
+    content = content.replace("${SESSION_ID}", session_dir.name)
+    content = content.replace("${PRIMARY_LANGUAGE}", primary_lang)
+
+    return content
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Build the at context pack for the current session.")
     parser.add_argument("--project-dir", default=None)
     parser.add_argument("--sessions-dir", default=None)
     parser.add_argument("--session", default=None, help="Session id or directory (default: most recent)")
     parser.add_argument("--max-chars", type=int, default=40_000)
+    parser.add_argument("--use-template", action="store_true", help="Use @import template (experimental)")
     args = parser.parse_args()
 
     project_root = detect_project_dir(args.project_dir)
@@ -298,6 +326,17 @@ def main() -> int:
     session_dir = resolve_session_dir(project_root, sessions_dir, args.session)
 
     config = load_project_config(project_root) or {}
+
+    # Experimental: use template-based context pack
+    if args.use_template:
+        try:
+            out = _build_from_template(project_root, session_dir, config)
+            write_text(session_dir / "inputs" / "context_pack.md", out)
+            print(str(session_dir / "inputs" / "context_pack.md"))
+            return 0
+        except Exception as exc:
+            print(f"Template mode failed, falling back to full build: {exc}", file=sys.stderr)
+
     forbid = forbid_globs_from_project_config(config)
 
     lines: list[str] = []

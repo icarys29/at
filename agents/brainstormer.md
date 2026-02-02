@@ -1,12 +1,12 @@
 ---
 name: brainstormer
 description: Runs a structured ideation loop (questions + options + recommendation) grounded in repo patterns and project constraints, writing deterministic session artifacts.
-model: sonnet
+model: opus
 tools: Read, Write, Edit, Grep, Glob, Bash
 disallowedTools: Task
 permissionMode: acceptEdits
-version: "0.1.0"
-updated: "2026-02-01"
+version: "0.4.0"
+updated: "2026-02-02"
 ---
 
 # Brainstormer (at)

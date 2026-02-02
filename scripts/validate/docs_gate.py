@@ -6,16 +6,25 @@
 """
 at: Docs gate (registry validation + deterministic summary)
 
-Version: 0.1.0
-Updated: 2026-02-01
+Version: 0.4.0
+Updated: 2026-02-02
 """
 from __future__ import annotations
 
 import argparse
 import json
 import sys
+import warnings
 from pathlib import Path
 from typing import Any
+
+# DEPRECATION WARNING: This script will be removed in v0.5.0. See scripts/DEPRECATED.md
+warnings.warn(
+    "docs_gate.py is deprecated and will be removed in v0.5.0. "
+    "Docs validation will be merged into docs-keeper workflow. See scripts/DEPRECATED.md for migration.",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 SCRIPT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SCRIPT_ROOT))

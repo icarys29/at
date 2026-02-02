@@ -6,16 +6,25 @@
 """
 at: Validate per-task YAML artifacts
 
-Version: 0.1.0
-Updated: 2026-02-01
+Version: 0.4.0
+Updated: 2026-02-02
 """
 from __future__ import annotations
 
 import argparse
 import sys
+import warnings
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+
+# DEPRECATION WARNING: This script will be removed in v0.5.0. See scripts/DEPRECATED.md
+warnings.warn(
+    "validate_task_artifacts.py is deprecated and will be removed in v0.5.0. "
+    "Agent validates own outputs per contract. See scripts/DEPRECATED.md for migration.",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 SCRIPT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SCRIPT_ROOT))

@@ -15,8 +15,8 @@ Optionally (style=hex):
 - .claude/at/architecture_boundaries.json
 - .claude/at/scripts/check_architecture_boundaries.py
 
-Version: 0.1.0
-Updated: 2026-02-01
+Version: 0.4.0
+Updated: 2026-02-02
 """
 from __future__ import annotations
 
@@ -48,6 +48,7 @@ def _write_json_if_missing(path: Path, data: dict[str, Any], *, force: bool) -> 
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return "OVERWRITE" if path.exists() and force else "CREATE"
+
 
 def _plugin_root() -> Path:
     return Path(__file__).resolve().parents[2]
@@ -94,15 +95,60 @@ def _regex_for_path_segment(seg: str) -> str:
     return rf"(^|/){esc}(/|$)"
 
 
+def _load_json(path: Path) -> dict[str, Any]:
+    if not path.exists():
+        return {}
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def _write_json(path: Path, data: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def _check_entry(*, check_id: str, script: str, args: list[str], timeout_ms: int = 60000) -> dict[str, Any]:
+    return {"id": check_id, "type": "python", "script": script, "args": args, "timeout_ms": int(timeout_ms)}
+
+
+def _merge_check(checks: list[dict[str, Any]], desired: dict[str, Any], *, force: bool) -> list[dict[str, Any]]:
+    check_id = desired.get("id")
+    if not isinstance(check_id, str) or not check_id.strip():
+        return checks
+    out: list[dict[str, Any]] = []
+    replaced = False
+    for c in checks:
+        if not isinstance(c, dict) or c.get("id") != check_id:
+            out.append(c if isinstance(c, dict) else {})
+            continue
+        if force:
+            out.append(desired)
+        else:
+            out.append(c)
+        replaced = True
+    if not replaced:
+        out.append(desired)
+    return out
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Install minimal at project pack (rules + enforcement runner).")
     parser.add_argument("--project-dir", default=None)
     parser.add_argument("--sessions-dir", default=".session")
-    parser.add_argument("--enforcement-mode", choices=["fail", "warn"], default="fail")
+    parser.add_argument("--enforcement-mode", choices=["fail", "warn"], default="warn")
     parser.add_argument("--style", choices=["none", "hex"], default="none")
     parser.add_argument("--domain-path", default=None)
     parser.add_argument("--application-path", default=None)
     parser.add_argument("--adapters-path", default=None)
+    god_class_group = parser.add_mutually_exclusive_group()
+    god_class_group.add_argument("--include-god-class-check", dest="include_god_class_check", action="store_true", help="Install python.god_class enforcement (SRP heuristic).")
+    god_class_group.add_argument("--no-god-class-check", dest="include_god_class_check", action="store_false", help="Do not install python.god_class enforcement.")
+    parser.set_defaults(include_god_class_check=True)
+    parser.add_argument("--god-class-max-methods", type=int, default=25)
+    parser.add_argument("--god-class-max-lines", type=int, default=400)
     parser.add_argument("--force", action="store_true")
     args = parser.parse_args()
 
@@ -127,7 +173,7 @@ def main() -> int:
     except Exception:
         pass
 
-    # Enforcement config: safe default is "no checks" until configured.
+    # Enforcement config: safe default is warn-mode with low-sensitivity checks.
     enforcement_cfg: dict[str, Any] = {"version": 1, "generated_at": utc_now(), "mode": args.enforcement_mode, "checks": []}
 
     # Optional: install hexagonal architecture boundary enforcement.
@@ -224,16 +270,69 @@ def main() -> int:
         )
 
         enforcement_cfg["checks"] = [
-            {
-                "id": "architecture.boundaries",
-                "type": "python",
-                "script": ".claude/at/scripts/check_architecture_boundaries.py",
-                "args": ["--config", ".claude/at/architecture_boundaries.json"],
-                "timeout_ms": 60000,
-            }
+            _check_entry(
+                check_id="architecture.boundaries",
+                script=".claude/at/scripts/check_architecture_boundaries.py",
+                args=["--config", ".claude/at/architecture_boundaries.json"],
+                timeout_ms=60000,
+            )
         ]
 
-    results.append((_write_json_if_missing(project_root / ".claude" / "at" / "enforcement.json", enforcement_cfg, force=args.force), ".claude/at/enforcement.json"))
+    # Optional: install python god-class checker.
+    if args.include_god_class_check:
+        results.append(
+            (
+                _write_if_missing(
+                    project_root / ".claude" / "at" / "scripts" / "check_god_classes.py",
+                    _read_template("project_pack/enforcement/check_god_classes.py"),
+                    force=args.force,
+                ),
+                ".claude/at/scripts/check_god_classes.py",
+            )
+        )
+        try:
+            (project_root / ".claude" / "at" / "scripts" / "check_god_classes.py").chmod(0o755)
+        except Exception:
+            pass
+        enforcement_cfg["checks"].append(
+            _check_entry(
+                check_id="python.god_class",
+                script=".claude/at/scripts/check_god_classes.py",
+                args=["--project-root", ".", "--max-methods", str(int(args.god_class_max_methods)), "--max-lines", str(int(args.god_class_max_lines))],
+                timeout_ms=60000,
+            )
+        )
+
+    # enforcement.json: by default we create it once and then leave it alone.
+    # If the user explicitly enables checks (style!=none or include god-class), we merge in the required checks
+    # without forcing an overwrite (unless --force).
+    enforcement_path = project_root / ".claude" / "at" / "enforcement.json"
+    desired_checks = enforcement_cfg.get("checks") if isinstance(enforcement_cfg.get("checks"), list) else []
+    wants_checks = bool(desired_checks)
+    if enforcement_path.exists() and not args.force and wants_checks:
+        existing = _load_json(enforcement_path)
+        merged: dict[str, Any] = existing if isinstance(existing, dict) else {}
+        merged.setdefault("version", 1)
+        merged["generated_at"] = utc_now()
+        # Preserve existing mode when present.
+        mode = merged.get("mode")
+        if mode not in {"fail", "warn"}:
+            merged["mode"] = args.enforcement_mode
+        checks = merged.get("checks")
+        if not isinstance(checks, list):
+            checks = []
+        checks_out: list[dict[str, Any]] = [c for c in checks if isinstance(c, dict)]
+        for desired in desired_checks:
+            if isinstance(desired, dict):
+                checks_out = _merge_check(checks_out, desired, force=False)
+        merged["checks"] = checks_out
+        _write_json(enforcement_path, merged)
+        results.append(("MERGE", ".claude/at/enforcement.json"))
+    elif enforcement_path.exists() and not args.force and not wants_checks:
+        results.append(("SKIP", ".claude/at/enforcement.json"))
+    else:
+        # If file is missing, create it. If --force, overwrite.
+        results.append((_write_json_if_missing(enforcement_path, enforcement_cfg, force=True), ".claude/at/enforcement.json"))
 
     for status, rel in results:
         print(f"{status}\t{rel}")
